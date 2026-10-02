@@ -4,3 +4,6 @@ __pycache__/
 *.raw
 *.log
 runs/
+digital/test/sim_build_*/
+digital/test/results_*.xml
+digital/synth/*.syn.v

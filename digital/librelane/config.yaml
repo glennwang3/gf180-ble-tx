@@ -1,0 +1,24 @@
+# LibreLane flow for the BLE modulator, gf180mcuD / gf180mcu_fd_sc_mcu7t5v0.
+# Run in the IIC-OSIC-TOOLS container from this folder:
+#   librelane --manual-pdk --pdk-root $PDK_ROOT --pdk gf180mcuD \
+#             --scl gf180mcu_fd_sc_mcu7t5v0 config.yaml
+DESIGN_NAME: ble_tx
+VERILOG_FILES:
+  - dir::../rtl/ble_tx.v
+  - dir::../rtl/ble_gauss_lut.v
+
+# 2 MHz reference clock, 2 samples per 1 us symbol.
+# For a 32 MHz clock use SPS: 16 and CLOCK_PERIOD: 31.25.
+SYNTH_PARAMETERS: ["SPS=2"]
+CLOCK_PORT: clk
+CLOCK_PERIOD: 500
+
+FP_SIZING: relative
+FP_CORE_UTIL: 40
+PL_TARGET_DENSITY_PCT: 50
+
+# The ss_125C_4v50 corner breaks the 3 ns max-slew limit with default repair
+# (bit_idx fans out to the 39-byte PDU read mux). Repair with margin.
+MAX_FANOUT_CONSTRAINT: 4
+DESIGN_REPAIR_MAX_SLEW_PCT: 30
+GRT_DESIGN_REPAIR_MAX_SLEW_PCT: 30
