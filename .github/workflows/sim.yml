@@ -1,0 +1,27 @@
+name: sim
+on: [push, pull_request]
+jobs:
+  verilog:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: sudo apt-get update && sudo apt-get install -y iverilog
+      - run: pip install -r model/requirements.txt cocotb
+      - name: RTL against the golden model
+        run: python test_ble_tx.py
+        working-directory: digital/test
+      - name: RTL corner cases
+        run: python test_ble_tx_edge.py
+        working-directory: digital/test
+      - name: Full chain with behavioral DAC, PLL and amplifier
+        run: python test_tx_chain.py
+        working-directory: behavioral
+      - name: Check results
+        run: >
+          python scripts/check_cocotb_results.py
+          digital/test/results_sps2.xml digital/test/results_sps16.xml
+          digital/test/results_edge_sps2.xml digital/test/results_edge_sps16.xml
+          behavioral/results_sps2.xml behavioral/results_sps16.xml

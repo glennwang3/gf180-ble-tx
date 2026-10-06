@@ -7,3 +7,5 @@ runs/
 digital/test/sim_build_*/
 digital/test/results_*.xml
 digital/synth/*.syn.v
+behavioral/sim_build_*/
+behavioral/results_*.xml
