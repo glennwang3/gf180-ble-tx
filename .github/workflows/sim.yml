@@ -22,6 +22,6 @@ jobs:
       - name: Check results
         run: >
           python scripts/check_cocotb_results.py
-          digital/test/results_sps2.xml digital/test/results_sps16.xml
-          digital/test/results_edge_sps2.xml digital/test/results_edge_sps16.xml
-          behavioral/results_sps2.xml behavioral/results_sps16.xml
+          digital/test/results_sps2.xml digital/test/results_sps8.xml digital/test/results_sps16.xml
+          digital/test/results_edge_sps2.xml digital/test/results_edge_sps8.xml digital/test/results_edge_sps16.xml
+          behavioral/results_sps2.xml behavioral/results_sps8.xml behavioral/results_sps16.xml
