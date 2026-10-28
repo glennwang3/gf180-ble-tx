@@ -7,11 +7,11 @@ VERILOG_FILES:
   - dir::../rtl/ble_tx.v
   - dir::../rtl/ble_gauss_lut.v
 
-# 2 MHz reference clock, 2 samples per 1 us symbol.
-# For a 32 MHz clock use SPS: 16 and CLOCK_PERIOD: 31.25.
-SYNTH_PARAMETERS: ["SPS=2"]
+# 8 MHz clock, 8 samples per 1 us symbol: one 8 MS/s DAC code per clock.
+# For SPS=2 use CLOCK_PERIOD: 500; for SPS=16 use 62.5.
+SYNTH_PARAMETERS: ["SPS=8"]
 CLOCK_PORT: clk
-CLOCK_PERIOD: 500
+CLOCK_PERIOD: 125
 
 FP_SIZING: relative
 FP_CORE_UTIL: 40

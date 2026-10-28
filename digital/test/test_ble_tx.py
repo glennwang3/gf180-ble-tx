@@ -1,7 +1,7 @@
 """cocotb: ble_tx must match model/ble_adv.py bit for bit.
 
-Run: python test_ble_tx.py          RTL, SPS=2 and SPS=16 (Icarus)
-     GL=1 SPS=2 python test_ble_tx.py   gate level, on digital/synth/ble_tx_sps2.syn.v
+Run: python test_ble_tx.py          RTL, SPS=2, 8 and 16 (Icarus)
+     GL=1 SPS=8 python test_ble_tx.py   gate level, on digital/synth/ble_tx_sps8.syn.v
 """
 
 import os
@@ -24,7 +24,7 @@ from ble_adv import (  # noqa: E402
     frequency_trajectory,
 )
 
-STEP_HZ = 20e3
+STEP_HZ = 2e3
 
 
 def sps_of(dut):
@@ -142,10 +142,14 @@ def test_sps2():
     run(2)
 
 
+def test_sps8():
+    run(8)
+
+
 def test_sps16():
     run(16)
 
 
 if __name__ == "__main__":
-    for s in [int(x) for x in os.environ.get("SPS", "2 16").split()]:
+    for s in [int(x) for x in os.environ.get("SPS", "2 8 16").split()]:
         run(s, gl=bool(os.environ.get("GL")))

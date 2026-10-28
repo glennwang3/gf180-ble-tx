@@ -11,7 +11,7 @@ block behaves around them:
 - PDU writes while busy do not disturb the packet already being sent
 - the RF view: the codes, demodulated as a receiver would, decode with a good CRC
 
-Run: python test_ble_tx_edge.py          RTL, SPS=2 and SPS=16
+Run: python test_ble_tx_edge.py          RTL, SPS=2, 8 and 16
 """
 
 import os
@@ -36,7 +36,7 @@ from ble_adv import (  # noqa: E402
     frequency_trajectory,
 )
 
-STEP_HZ = 20e3
+STEP_HZ = 2e3
 
 
 def sps_of():
@@ -188,9 +188,9 @@ async def reset_mid_packet(dut):
 async def write_while_busy(dut):
     """Payload bytes already on air can be overwritten without harm.
 
-    The buffer is read live while sending. The length byte (pdu[1]) sets where
-    the packet ends, so it must NOT be written while busy; this test only
-    rewrites payload bytes the sequencer has passed.
+    The buffer is read live while sending; this test only rewrites payload
+    bytes the sequencer has passed. The length byte is latched at start
+    (see length_rewrite_while_busy).
     """
     await setup(dut)
     pdu = adv_nonconn_pdu(bytes(6), bytes(range(31)))
@@ -212,6 +212,28 @@ async def write_while_busy(dut):
     check(pdu, 37, bits, codes)
 
 
+@cocotb.test()
+async def length_rewrite_while_busy(dut):
+    """The length is latched at start: rewriting pdu[1] mid-packet changes nothing."""
+    await setup(dut)
+    pdu = adv_nonconn_pdu(bytes(6), bytes(range(20)))
+    await load(dut, pdu)
+    await start(dut, 38)
+    sps = sps_of()
+    # byte 1 is on air at bits 48..55; rewrite it right after, then mid-payload
+    at = {(40 + 24) * sps: 3, (40 + 100) * sps: 37}
+
+    async def overwrite(cycle):
+        dut.wr_en.value = 1 if cycle in at else 0
+        if cycle in at:
+            dut.wr_addr.value = 1
+            dut.wr_data.value = at[cycle]
+
+    bits, codes = await collect(dut, overwrite)
+    dut.wr_en.value = 0
+    check(pdu, 38, bits, codes)
+
+
 def run(sps):
     from cocotb_tools.runner import get_runner
 
@@ -230,10 +252,14 @@ def test_edge_sps2():
     run(2)
 
 
+def test_edge_sps8():
+    run(8)
+
+
 def test_edge_sps16():
     run(16)
 
 
 if __name__ == "__main__":
-    for s in [int(x) for x in os.environ.get("SPS", "2 16").split()]:
+    for s in [int(x) for x in os.environ.get("SPS", "2 8 16").split()]:
         run(s)

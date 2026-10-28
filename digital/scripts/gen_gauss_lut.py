@@ -7,7 +7,7 @@ np.convolve(mode="same") in the model). The LUT holds the model's quantized
 fine code for every (phase, 4-symbol window), computed with the model's own
 functions so the RTL matches it bit for bit.
 
-Usage: python gen_gauss_lut.py [--step-hz 20000] [--sps 2 16]
+Usage: python gen_gauss_lut.py [--step-hz 2000] [--sps 2 8 16] [--width 8]
 """
 
 import argparse
@@ -90,9 +90,9 @@ endmodule
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--step-hz", type=float, default=20e3)
-    ap.add_argument("--sps", type=int, nargs="+", default=[2, 16])
-    ap.add_argument("--width", type=int, default=6)
+    ap.add_argument("--step-hz", type=float, default=2e3)
+    ap.add_argument("--sps", type=int, nargs="+", default=[2, 8, 16])
+    ap.add_argument("--width", type=int, default=8)
     ap.add_argument("--out", default=os.path.join(HERE, "..", "rtl", "ble_gauss_lut.v"))
     a = ap.parse_args()
     mods = [gen_module(s, a.step_hz, a.width)[0] for s in a.sps]

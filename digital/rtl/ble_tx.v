@@ -2,8 +2,9 @@
 //
 // Load the PDU (2-byte header + payload) through the byte write port, set
 // channel, pulse start. The block sends preamble, access address, then the
-// whitened PDU and CRC24, and outputs one Gaussian-filtered DCO fine code per
-// clock. With SPS clocks per 1 us symbol the clock is SPS MHz (2 MHz -> SPS=2).
+// whitened PDU and CRC24, and outputs one Gaussian-filtered signed DAC code per
+// clock (2 kHz/LSB, +-125 at full deviation). With SPS clocks per 1 us symbol
+// the clock is SPS MHz; the default SPS=8 gives 8 MS/s from an 8 MHz clock.
 //
 // Matches model/ble_adv.py bit for bit:
 //   air_bit  == air_bits(pdu, channel)
@@ -13,8 +14,8 @@
 `default_nettype none
 
 module ble_tx #(
-  parameter integer SPS     = 2,           // samples (clocks) per symbol: 2 or 16
-  parameter integer CODE_W  = 6,           // signed fine code width
+  parameter integer SPS     = 8,           // samples (clocks) per symbol: 2, 8 or 16
+  parameter integer CODE_W  = 8,           // signed DAC code width
   parameter [31:0]  ACCESS_ADDRESS = 32'h8E89BED6,
   parameter [23:0]  CRC_INIT       = 24'h555555
 ) (
@@ -46,8 +47,10 @@ module ble_tx #(
     if (wr_en && {26'd0, wr_addr} < PDU_MAX) pdu[wr_addr] <= wr_data;
   end
 
+  // Length is latched at start, so rewriting pdu[1] mid-packet is harmless.
   wire [5:0] payload_len = (pdu[1][5:0] > 6'd37) ? 6'd37 : pdu[1][5:0];
-  wire [8:0] pdu_bits    = {payload_len + 6'd2, 3'b000};
+  reg  [5:0] len_q;
+  wire [8:0] pdu_bits    = {len_q + 6'd2, 3'b000};
 
   // ---------------------------------------------------------- bit sequencer
   localparam [2:0] S_IDLE = 3'd0, S_PRE = 3'd1, S_AA = 3'd2,
@@ -91,6 +94,7 @@ module ble_tx #(
       phase    <= {PW{1'b0}};
       win      <= 10'd0;
       tail_cnt <= 2'd0;
+      len_q    <= 6'd0;
     end else if (state == S_IDLE) begin
       if (start) begin
         state    <= S_PRE;
@@ -100,6 +104,7 @@ module ble_tx #(
         phase    <= {PW{1'b0}};
         win      <= 10'd0;
         tail_cnt <= 2'd0;
+        len_q    <= payload_len;
       end
     end else begin
       phase <= last_phase ? {PW{1'b0}} : phase + 1'b1;
@@ -138,6 +143,8 @@ module ble_tx #(
   generate
     if (SPS == 2) begin : g_lut
       ble_gauss_lut_sps2 u_lut (.phase(phase), .win(lut_win), .code(lut_code));
+    end else if (SPS == 8) begin : g_lut
+      ble_gauss_lut_sps8 u_lut (.phase(phase), .win(lut_win), .code(lut_code));
     end else if (SPS == 16) begin : g_lut
       ble_gauss_lut_sps16 u_lut (.phase(phase), .win(lut_win), .code(lut_code));
     end else begin : g_lut_bad

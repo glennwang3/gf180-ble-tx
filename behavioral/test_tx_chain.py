@@ -10,7 +10,7 @@ RF signal the way a BLE tester would:
 - frequency deviation 225..275 kHz on settled symbols (modulation index 0.45..0.55)
 - output power within power class 3 (-20..0 dBm)
 
-Run: python test_tx_chain.py              SPS=2 and SPS=16
+Run: python test_tx_chain.py              SPS=2, 8 and 16
      SPS=2 python test_tx_chain.py        one rate
 """
 
@@ -40,7 +40,7 @@ from ble_adv import (  # noqa: E402
     frequency_trajectory,
 )
 
-STEP_HZ = 20e3
+STEP_HZ = 2e3
 F_REF = 2e6
 
 # BLE 1M PHY transmitter limits (Core spec Vol 6 Part A 4.4)
@@ -296,10 +296,14 @@ def test_sps2():
     run(2)
 
 
+def test_sps8():
+    run(8)
+
+
 def test_sps16():
     run(16)
 
 
 if __name__ == "__main__":
-    for s in [int(x) for x in os.environ.get("SPS", "2 16").split()]:
+    for s in [int(x) for x in os.environ.get("SPS", "2 8 16").split()]:
         run(s)

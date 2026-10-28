@@ -8,7 +8,7 @@
 `default_nettype none
 
 module tb_tx_chain #(
-  parameter integer SPS      = 2,
+  parameter integer SPS      = 8,
   parameter integer DAC_BITS = 8,
   parameter real    REF_PPM  = 0.0,
   parameter real    ILEAK    = 0.0,
@@ -28,7 +28,7 @@ module tb_tx_chain #(
   output wire       code_valid,
   output wire       air_bit,
   output wire       sym_strobe,
-  output wire signed [5:0] fine_code,
+  output wire signed [7:0] fine_code,
   output wire       locked,
   output wire [10:0] n_div
 );
@@ -55,16 +55,17 @@ module tb_tx_chain #(
     .air_bit(air_bit), .sym_strobe(sym_strobe)
   );
 
-  // 6-bit fine code (20 kHz/LSB) sign-extended onto the 8-bit DAC. With
-  // VFS = 1 V the LSB is 3.906 mV, and KMOD = 20 kHz / 3.906 mV = 5.12 MHz/V.
-  wire signed [DAC_BITS-1:0] dac_code = {{(DAC_BITS-6){fine_code[5]}}, fine_code};
+  // 8-bit signed code (2 kHz/LSB, +-125 at full deviation) straight onto the
+  // 8-bit DAC. With VFS = 1 V the LSB is 3.906 mV, and KMOD = 2 kHz / 3.906 mV
+  // = 512 kHz/V.
+  wire signed [DAC_BITS-1:0] dac_code = fine_code;
   wire [63:0] vmod_bits, f_vco_bits, vctrl_bits, f_rf_bits, pout_bits;
 
   dac_behav #(.BITS(DAC_BITS), .VFS(1.0), .VMID(0.5)) u_dac (
     .clk(clk), .code(dac_code), .vout_bits(vmod_bits)
   );
 
-  pll_behav #(.F_REF(F_REF), .REF_PPM(REF_PPM), .KMOD(20.0e3 * (2.0 ** DAC_BITS)),
+  pll_behav #(.F_REF(F_REF), .REF_PPM(REF_PPM), .KMOD(2.0e3 * (2.0 ** DAC_BITS)),
               .VMOD0(0.5), .ILEAK(ILEAK)) u_pll (
     .en(pll_en), .n_div(n_div), .hold(pll_hold), .vmod_bits(vmod_bits),
     .f_vco_bits(f_vco_bits), .vctrl_bits(vctrl_bits), .locked(locked)

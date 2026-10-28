@@ -28,9 +28,9 @@ Real values cross module ports as `$realtobits` so it runs on Icarus.
    modulation input directly.
 3. Release `pll_hold` after the packet.
 
-The modulator's 6-bit fine code (20 kHz/LSB) is sign-extended onto the 8-bit
-DAC. With a 1 V span the DAC LSB is 3.906 mV, so the VCO modulation gain is
-20 kHz / 3.906 mV = 5.12 MHz/V.
+The modulator's 8-bit code (2 kHz/LSB, +-125 at full deviation) drives the
+8-bit DAC directly. With a 1 V span the DAC LSB is 3.906 mV, so the VCO
+modulation gain is 2 kHz / 3.906 mV = 512 kHz/V.
 
 ## Default analog parameters
 
@@ -53,12 +53,12 @@ Per packet, the way a BLE tester would (Core spec Vol 6 Part A 4.4):
 - the RF frequency, demodulated at symbol centres, decodes to the PDU with a good CRC
 - centre-frequency error within +-150 kHz, drift within the packet under 50 kHz, drift rate under 400 Hz/us
 - deviation on settled symbols 225..275 kHz (modulation index 0.45..0.55); the
-  current 20 kHz fine-code step gives 240 kHz, h = 0.48
+  2 kHz code step gives 250 kHz, h = 0.5
 - output power within class 3 (-20..0 dBm)
 
 | Test | Result with the defaults |
 |------|--------------------------|
-| `nominal_channels` (37, 38, 39, 0, 36) | lock in about 46 us, centre error about 1 kHz, h = 0.48, -0.12 dBm |
+| `nominal_channels` (37, 38, 39, 0, 36) | lock in about 46 us, centre error about 1 kHz, h = 0.50, -0.12 dBm |
 | `random_payloads` | decode with a good CRC |
 | `crystal_error` (40 ppm) | carrier 99 kHz high, still inside +-150 kHz |
 | `loop_filter_leakage` | 0.1 nA passes (129 Hz/us); 1 nA fails at 1290 Hz/us. Leakage on the loop filter must stay below about 0.3 nA |
@@ -71,7 +71,7 @@ That is a real target for the PLL's charge pump and loop filter switches.
 ## Running
 
 ```sh
-cd behavioral && python3 test_tx_chain.py        # SPS=2 and 16, about 1 minute
+cd behavioral && python3 test_tx_chain.py        # SPS=2, 8 and 16, about 2 minutes
 SPS=2 python3 test_tx_chain.py                   # one rate
 ```
 
