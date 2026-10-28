@@ -9,3 +9,4 @@ digital/test/results_*.xml
 digital/synth/*.syn.v
 behavioral/sim_build_*/
 behavioral/results_*.xml
+digital/sta/reports/

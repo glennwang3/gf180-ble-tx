@@ -42,3 +42,18 @@ cd ../test && GL=1 SPS=8 python3 test_ble_tx.py           # gate-level sim of th
 cd ../librelane && librelane --manual-pdk --pdk-root $PDK_ROOT --pdk gf180mcuD \
     --scl gf180mcu_fd_sc_mcu7t5v0 config.yaml
 ```
+
+## Pre-layout timing
+
+`sta/sta.tcl` runs OpenSTA on the Yosys netlist at the ss_125C_4v50,
+tt_025C_5v00 and ff_n40C_5v50 corners with the constraints in
+`sta/ble_tx.sdc`: 8 MHz clock (period from `SPS`, or `CLOCK_PERIOD` in ns),
+30% of the period for I/O on each side, 1 ns setup / 0.25 ns hold uncertainty
+for the ideal clock, and the 3 ns max-slew limit LibreLane signs off against.
+There are no wire parasitics yet, so expect post-layout slack to be a few ns
+lower.
+
+```sh
+cd synth && SPS=8 yosys -c synth.tcl          # netlist
+cd ../sta && SPS=8 sta -exit sta.tcl          # worst slack per corner + sta/reports/sta_sps8.rpt
+```
