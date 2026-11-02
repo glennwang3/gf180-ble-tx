@@ -1,0 +1,42 @@
+# ble_tx, the BLE GFSK modulator, on gf180mcuD / gf180mcu_fd_sc_mcu7t5v0.
+#
+# The agent never edits this file. It proposes overrides for the seven knobs in
+# pd/stages.py; everything else, including every ERROR_ON_* check, stays as set
+# here. The RTL is the repo's own, so a change to digital/rtl is picked up here
+# (and invalidates the remembered baseline) without copying anything.
+DESIGN_NAME: ble_tx
+VERILOG_FILES:
+  - dir::../../../rtl/ble_tx.v
+  - dir::../../../rtl/ble_gauss_lut.v
+
+# 8 MHz clock, 8 samples per 1 us symbol: one 8 MS/s DAC code per clock. This is
+# the pass/fail timing target: a result needs setup slack >= 0 against it at tt
+# and at the worst corner (pd/ledger.py, SETUP_FLOOR_NS). Keep it in step with
+# digital/librelane/config.yaml.
+SYNTH_PARAMETERS: ["SPS=8"]
+CLOCK_PORT: clk
+CLOCK_PERIOD: 125
+
+# The floorplan runs once, in the baseline, and every branch reuses it, so the
+# die is fixed for a search. What a branch changes is how much of it the cells
+# fill (buffers and upsizing), which is the area the score counts.
+FP_SIZING: relative
+FP_CORE_UTIL: 40
+PL_TARGET_DENSITY_PCT: 50
+IO_DELAY_CONSTRAINT: 10
+
+# The ss_125C_4v50 corner breaks the 3 ns max-slew limit with default repair
+# (bit_idx fans out to the 39-byte PDU read mux). Repair with margin.
+MAX_FANOUT_CONSTRAINT: 4
+DESIGN_REPAIR_MAX_SLEW_PCT: 30
+GRT_DESIGN_REPAIR_MAX_SLEW_PCT: 30
+
+# Locked, as in the lab: the default 'half' clock NDR fails detailed routing on
+# this PDK (DRT-0073).
+CTS_APPLY_NDR: none
+
+# Timing is judged by the agent flow's own gate from the reported slack, so
+# LibreLane's end-of-flow timing checkers match no corner; left on, they abort a
+# run and its results are lost. DRC, LVS and antenna keep their default strictness.
+SETUP_VIOLATION_CORNERS: [""]
+HOLD_VIOLATION_CORNERS: [""]

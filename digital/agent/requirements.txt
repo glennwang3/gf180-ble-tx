@@ -1,0 +1,6 @@
+# Pinned to what the lab was built and run against. ADK ships roughly every two
+# weeks and has changed behaviour between minor versions; do not upgrade mid-term.
+google-adk==2.11.0
+# 1.82.7 and 1.82.8 carried unauthorised code. 1.104.2 is the version tested here.
+litellm==1.104.2
+python-dotenv

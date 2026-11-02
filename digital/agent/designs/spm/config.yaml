@@ -1,0 +1,32 @@
+# spm — a 32-bit serial-parallel multiplier, a few hundred cells.
+#
+# This is the plumbing testbed, never the graded design. A full flow takes well
+# under a minute, so a whole agent run finishes while you are still looking at
+# the screen. Use it to check that your prompts, views and stopping rule work
+# together before spending five minutes per run on picorv32.
+#
+# The RTL is LibreLane's own example (Apache-2.0). Do not read anything into the
+# scores here: the design is so small that most knobs change nothing.
+DESIGN_NAME: spm
+VERILOG_FILES: [dir::src/spm.v]
+
+CLOCK_PORT: clk
+CLOCK_PERIOD: 24
+
+FP_CORE_UTIL: 38
+MAX_FANOUT_CONSTRAINT: 4
+IO_DELAY_CONSTRAINT: 10
+
+# A die this small needs a tighter power grid than the PDK default.
+PDN_VOFFSET: 5
+PDN_HOFFSET: 5
+PDN_VWIDTH: 2
+PDN_HWIDTH: 2
+PDN_VPITCH: 30
+PDN_HPITCH: 30
+PDN_SKIPTRIM: true
+
+# Same locked settings as picorv32, for the same reasons; see that config.
+CTS_APPLY_NDR: none
+SETUP_VIOLATION_CORNERS: [""]
+HOLD_VIOLATION_CORNERS: [""]
