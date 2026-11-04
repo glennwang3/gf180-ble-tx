@@ -14,7 +14,7 @@
 `default_nettype none
 
 module ble_tx #(
-  parameter integer SPS     = 8,           // samples (clocks) per symbol: 2, 8 or 16
+  parameter integer SPS     = 8,           // samples (clocks) per symbol
   parameter integer CODE_W  = 8,           // signed DAC code width
   parameter [31:0]  ACCESS_ADDRESS = 32'h8E89BED6,
   parameter [23:0]  CRC_INIT       = 24'h555555
