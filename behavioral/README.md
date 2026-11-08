@@ -85,5 +85,3 @@ against the model, `test_ble_tx_edge.py` for corner cases). CI
 - VCO and reference phase noise, charge pump mismatch and reference spurs
 - DAC INL/DNL, glitches and settling
 - Amplifier ramp shape and harmonics
-- 8 samples per symbol: the proposal's DAC runs at 8 MS/s, but `ble_tx`
-  only has Gaussian tables for 2 and 16 samples per symbol today
