@@ -4,16 +4,49 @@ A branch at stage S reuses everything before S from a saved state and re-runs S
 onward. Three stages are open for branching: placement, clock tree, global
 routing. Floorplan is fixed. Re-running it reuses nothing, so it costs a whole
 flow, and it is the only place die area can change — two CTS branches with very
-different settings returned byte-identical die area. The die is therefore fixed
-in this lab. What a branch does change is how much of it the standard cells
+different settings returned byte-identical die area. The die is therefore fixed.
+What a branch does change is how much of it the standard cells
 fill: every buffer that timing repair inserts and every cell it upsizes is cell
 area, and that is the area the score counts.
 
-Seven knobs, and each one earned its place by being measured. Every knob listed
-here was changed on its own, on picorv32, and moved at least one of the numbers
-the search cares about: effective clock period, hold slack, power or cell area.
-That is a higher bar than "LibreLane has a variable by that name", and several
-plausible knobs did not clear it:
+Nine knobs, and each one earned its place by being measured. Every knob listed
+here was changed on its own and moved at least one of the numbers the search cares
+about: effective clock period, hold slack, power or cell area. Seven were measured
+on picorv32 and two on ble_tx. That is a higher bar than "LibreLane has a variable
+by that name", and several plausible knobs did not clear it:
+
+  * MAX_FANOUT_CONSTRAINT and DESIGN_REPAIR_MAX_SLEW_PCT were measured on ble_tx,
+    one at a time from the baseline's placement state. The repair after placement
+    adds 824 buffers, about 40% of the final area. Taken through signoff, a fanout
+    limit of 6, 8 and 10 instead of 4 cut cell area 14%, 19% and 22% (96,512 to
+    75,640 um2) with no slew violation at tt and no more capacitance violations than
+    the baseline; 12 and 16 saved about 1% more and failed (2 and 3 capacitance
+    violations at tt, 16 also 17 slew), so the range stops at 10. A slew margin of 10
+    or 0 instead of 30 cut area 0.4%. DESIGN_REPAIR_MAX_CAP_PCT gave bit-identical
+    results at 0 and at 40, so it is not a knob. The repair only works at the tt
+    corner: the 1284 max-slew violations at ss_125C_4v50 did not move in any case, and
+    at signoff the all-corner slew count grows with the fanout limit (30 at 4, 480 at 10).
+    Loosening the repair is what saves area, but the baseline already has 30 slew
+    and one capacitance violation at the slow corner (max_ss_125C_4v50), nearly all
+    of them added by detailed routing after the repair has run. ledger.electrical_problems
+    therefore allows none, at the typical or the slow corner. A slew margin of 50 took
+    the slow-corner slew count from 30 to 2 at a fanout of 4 (area +3.4%); at a fanout of
+    8 it left 85 and cleared the capacitance violation, which is on the clock tree's
+    root buffer. Neither clock-tree cluster diameter tried (120, 400) cleared it, and
+    neither did a repair after routing (RUN_POST_GRT_DESIGN_REPAIR) or a repair
+    at the slow corner (PNR_CORNERS): both left the layout unchanged at fanout 4. What
+    did clear it is a shorter clock wire and buffer spacing (CTS_CLK_MAX_WIRE_LENGTH 150,
+    CTS_DISTANCE_BETWEEN_BUFFERS 100), now set in config.yaml. With those, margin 50
+    leaves 2 slow-corner slew violations at fanouts 4, 5 and 6 (area +3%, -3%, -10%),
+    all of them one net (an oai33_1 driving one load), and no capacitance violation.
+    Two later changes moved all of this. The repair had been inserting the delay
+    cell dlyb_1 as its buffer (35 um2, against 13 for buf_1 at the same drive), so
+    config.yaml now excludes delay cells: the baseline fell to 78,972 um2 at the same
+    power. And signoff now upsizes the drivers of whatever slew or capacitance
+    violations detailed routing leaves (pd/runner.py). From the new baseline's
+    placement at margin 30, fanout 4, 6 and 8 signed off with no violation at any
+    corner (79,328, 74,180 and 73,379 um2; 12, 17 and 39 drivers upsized); fanout 10
+    kept 22 at max_ss after three passes, and fanout 6 at margin 0 kept 3.
 
   * GRT_RESIZER_SETUP_SLACK_MARGIN and GRT_RESIZER_HOLD_SLACK_MARGIN belong to
     OpenROAD.ResizerTimingPostGRT, which the Classic flow does not run unless
@@ -57,10 +90,14 @@ SIGNOFF_START = "OpenROAD.DetailedRouting"
 
 # ----------------------------------------------------------------- the score
 # LibreLane's bare `timing__setup__ws` is the worst of all nine corners, which on
-# this PDK is max_ss_125C_4v50 and sits several ns below typical. Labs 2 and 3
-# told students tt is the signoff corner, so the score is read there; the worst
+# this PDK is max_ss_125C_4v50 and sits several ns below typical. The score is
+# read at tt, the signoff corner; the worst
 # corner is reported next to it so the gap is visible rather than hidden.
 FOM_CORNER = "nom_tt_025C_5v00"
+# The slowest corner. In-loop estimates report it as nom_ss; signoff also has it with
+# maximum interconnect parasitics, which is where most of its violations are counted.
+SLOW_CORNER = "nom_ss_125C_4v50"
+SLOW_CORNER_MAX = "max_ss_125C_4v50"
 WS_KEY = f"timing__setup__ws__corner:{FOM_CORNER}"
 WS_WORST_KEY = "timing__setup__ws"
 HOLD_KEY = f"timing__hold__ws__corner:{FOM_CORNER}"
@@ -152,8 +189,22 @@ STAGES: tuple[Stage, ...] = (
             "PL_WIRE_LENGTH_COEF": Param(
                 "float", 0.05, 0.50, 0.25,
                 "global placement wirelength weight"),
+            # The repair after placement (RepairDesignPostGPL) buffers every net that
+            # breaks these limits, and on ble_tx it adds about 40% of the final cell
+            # area. Both are set in designs/ble_tx/config.yaml; a branch overrides them.
+            "MAX_FANOUT_CONSTRAINT": Param(
+                "int", 4, 10, 4,
+                "most cells one net may drive before the repair after placement buffers it; "
+                "higher means fewer buffers and less area, and more slow-corner slew violations "
+                "for signoff to fix; at margin 30, 4 to 8 signed off clean and 10 did not"),
+            "DESIGN_REPAIR_MAX_SLEW_PCT": Param(
+                "float", 0.0, 30.0, 30.0,
+                "margin below the slew limit the repair after placement aims for, in percent; "
+                "higher means more buffers and fewer slow-corner slew violations; with delay "
+                "cells excluded the repair crashed at 50 (fanout 5 and 6), so 30 is the top"),
         },
-        note="Redoes placement, clock tree and routing. Moves timing, power and cell area; "
+        note="Redoes placement, repair, clock tree and routing. Moves timing, power and cell "
+             "area, mostly through the buffers the repair after placement inserts; "
              "its switch changes the kind of layout.",
     ),
     Stage(
@@ -301,7 +352,7 @@ UNSET_CHANCE = 0.25      # how often a random setting leaves a "tool decides" kn
 
 
 def sample(stage: str, rng: random.Random, bounds: dict[str, Param] | None = None) -> dict:
-    """One random setting for `stage`. The staff-provided proposer is built on this.
+    """One random setting for `stage`. The proposer in agents/policy.py is built on this.
 
     A knob whose default is None is one the flow settles for itself when nobody
     sets it — from the design's config, or by a method of the tool's own. "Not
@@ -318,7 +369,7 @@ def sample(stage: str, rng: random.Random, bounds: dict[str, Param] | None = Non
 
 
 def cheat_sheet(bounds: dict[str, Param] | None = None, only: str | None = None) -> str:
-    """One screen of text describing the knobs, for a prompt or the handout."""
+    """One screen of text describing the knobs, for a prompt."""
     bounds = bounds or bounds_for()
     lines = []
     for s in STAGES:

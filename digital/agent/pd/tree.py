@@ -35,7 +35,9 @@ from dataclasses import dataclass, field, asdict
 from pathlib import Path
 
 from . import runner, stages as S
-from .ledger import TERMS, WEIGHTS, combine, gate, setup_problems, versus
+from .ledger import TERMS, WEIGHTS, combine, electrical_problems, gate, setup_problems, versus
+
+FANOUT, MARGIN = "MAX_FANOUT_CONSTRAINT", "DESIGN_REPAIR_MAX_SLEW_PCT"
 
 
 @dataclass
@@ -221,6 +223,35 @@ class Tree:
         """Estimated standard-cell area of a node over the baseline's."""
         return self.vs_baseline(nid)["area"]
 
+    def setting(self, nid: str, key: str) -> float:
+        """A repair setting a node was made with; the baseline's where it is unset."""
+        return float(self.nodes[nid].params.get(key, S.BY_NAME["PL"].params[key].default))
+
+    def predicted_failure(self, nid: str) -> str | None:
+        """Why a node that was not signed off is expected to fail signoff, or None.
+
+        A looser fanout limit leaves more nets unrepaired and a smaller slew margin
+        repairs them less, so a node signed off with violations predicts the same for
+        any node whose fanout limit is at least as high and whose margin is no
+        larger. Only a signoff that fixed what it could counts (it reports
+        eco__passes, see runner.signoff): the baseline's own signoff does not upsize
+        drivers, so its violations say nothing about a node that will be. This is
+        an assumption, not a measurement, and it saves a flow run per use; a node
+        that was itself signed off is judged on what signoff found."""
+        f, m = self.setting(nid, FANOUT), self.setting(nid, MARGIN)
+        for i in self.order:
+            if i == nid or not (self.nodes[i].ok and self.signed_off(i)):
+                continue
+            if "eco__passes" not in (self.nodes[i].signoff_metrics or {}):
+                continue
+            if not any(w.startswith("max-") for w in self.problems(i)):
+                continue
+            if self.setting(i, FANOUT) <= f and self.setting(i, MARGIN) >= m:
+                return (f"fanout limit {f:g} with slew margin {m:g} is no safer than {i}'s "
+                        f"({self.setting(i, FANOUT):g}, {self.setting(i, MARGIN):g}), "
+                        "which failed signoff on slew or capacitance violations")
+        return None
+
     def why_not(self, nid: str) -> str | None:
         """Why a scored node is not a candidate for the final answer, or None.
         The baseline always is one: it is what gets submitted if nothing else can be."""
@@ -231,6 +262,10 @@ class Tree:
             return ("evaluated and failed: " + "; ".join(found)) if found else None
         h, p = self.hold(nid), self.power_ratio(nid)
         why = ["estimated " + w for w in setup_problems(self.nodes[nid].metrics)]
+        predicted = self.predicted_failure(nid)
+        if predicted:
+            why.append(predicted)
+        why += ["estimated " + w for w in electrical_problems(self.nodes[nid].metrics, (S.FOM_CORNER,))]
         if h is not None and h < self.hold_floor:
             why.append(f"estimated hold slack {h:.3f} ns is below the floor of {self.hold_floor:g}")
         if self.power_ceiling is not None and p is not None and p > self.power_ceiling:
@@ -375,6 +410,9 @@ class Tree:
                    **self.row(nid), "ok": n.ok}
             if not n.ok:                 # what the diagnostician made of it, if it ran
                 row["why_it_failed"] = (n.note or n.error)[:300]
+            elif self.signed_off(nid):   # signoff outranks every estimate, so say what it found
+                found = self.problems(nid)
+                row["signoff"] = ("failed: " + "; ".join(found)) if found else "passed"
             out.append(row)
         return out[-limit:]
 

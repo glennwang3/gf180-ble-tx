@@ -1,9 +1,9 @@
 # spm — a 32-bit serial-parallel multiplier, a few hundred cells.
 #
-# This is the plumbing testbed, never the graded design. A full flow takes well
+# This is the plumbing testbed, never the real design. A full flow takes well
 # under a minute, so a whole agent run finishes while you are still looking at
 # the screen. Use it to check that your prompts, views and stopping rule work
-# together before spending five minutes per run on picorv32.
+# together before spending minutes per run on ble_tx.
 #
 # The RTL is LibreLane's own example (Apache-2.0). Do not read anything into the
 # scores here: the design is so small that most knobs change nothing.
@@ -26,7 +26,7 @@ PDN_VPITCH: 30
 PDN_HPITCH: 30
 PDN_SKIPTRIM: true
 
-# Same locked settings as picorv32, for the same reasons; see that config.
+# Same locked settings as ble_tx, for the same reasons; see designs/ble_tx/config.yaml.
 CTS_APPLY_NDR: none
 SETUP_VIOLATION_CORNERS: [""]
 HOLD_VIOLATION_CORNERS: [""]

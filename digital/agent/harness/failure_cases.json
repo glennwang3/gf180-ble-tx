@@ -1,7 +1,7 @@
 [
   {
     "name": "clock-buffer pin with no access point",
-    "provenance": "picorv32 on gf180mcuD, reproduced on five different die / density / clock combinations while preparing this lab",
+    "provenance": "picorv32 on gf180mcuD, reproduced on five different die / density / clock combinations while preparing this flow",
     "stage_branched_at": "CTS",
     "configuration": {
       "DIE_AREA": [
@@ -21,7 +21,7 @@
   },
   {
     "name": "a constraint command the timer does not have",
-    "provenance": "first hand-written SDC for picorv32 in this lab; failed nine seconds into the flow",
+    "provenance": "first hand-written SDC for picorv32; failed nine seconds into the flow",
     "stage_branched_at": null,
     "configuration": {
       "PNR_SDC_FILE": "src/impl.sdc",
@@ -34,7 +34,7 @@
   },
   {
     "name": "two builds of the timer on the path",
-    "provenance": "lab-2 top on the course image, with /foss/tools/bin ahead of /foss/tools/openroad-librelane/bin on PATH",
+    "provenance": "an earlier top-level design on the container image, with /foss/tools/bin ahead of /foss/tools/openroad-librelane/bin on PATH",
     "stage_branched_at": null,
     "configuration": {
       "PATH_order": "/foss/tools/bin before /foss/tools/openroad-librelane/bin",

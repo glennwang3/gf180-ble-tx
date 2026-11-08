@@ -225,12 +225,12 @@ def build(work: Path, note: str = "") -> dict:
     }
 
 
-HEAD = r"""<title>Lab 4 Run Replay</title>
+HEAD = r"""<title>BLE TX agent run replay</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600&display=swap">
 <style>
 /* Layout: the run as a column of flow runs on the left; on the right, the selected
    iteration read top to bottom in the order the loop executes it. Boxes follow the
-   lab's loop diagram: amber outline = an LLM agent answered, solid = plain Python,
+   loop diagram: amber outline = an LLM agent answered, solid = plain Python,
    dashed = the code that builds what the next agent is shown. */
 :root {
   --bg: #f3f5f8; --surface: #ffffff; --sunk: #eceff4; --ink: #18202c; --muted: #596475;
@@ -407,7 +407,7 @@ details.more[open] > summary { margin-bottom: 6px }
 BODY = r"""<div class="page">
   <header class="top">
     <div>
-      <p class="eyebrow">Lab 4 &middot; agent loop over a LibreLane backend flow</p>
+      <p class="eyebrow">ble_tx &middot; agent loop over a LibreLane backend flow</p>
       <h1 id="title"></h1>
       <p class="sub" id="subtitle"></p>
     </div>

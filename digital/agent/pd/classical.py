@@ -1,6 +1,6 @@
-"""Search without a language model. Optional: not part of the lab's comparison.
+"""Search without a language model. Optional: not part of the main comparison.
 
-The lab measures an agent against its baseline, LibreLane's flow untouched. This
+An agent is measured against its baseline, LibreLane's flow untouched. This
 file shows what a search without judgement finds on the same budget, for anyone
 who wants that reference too. Two policies, both starting from that baseline:
 

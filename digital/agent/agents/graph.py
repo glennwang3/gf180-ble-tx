@@ -1,4 +1,4 @@
-"""STAFF FILE — the graph and the command line.
+"""The graph and the command line.
 
     python -m agents.graph --offline          dry run: fake model, real LibreLane, no spend
     python -m agents.graph --runs 20 --usd 1  the real thing; needs an OpenRouter key
@@ -183,11 +183,11 @@ def cli():
     p.add_argument("--model", action="append", default=[], metavar="ROLE=ID",
                    help="give one agent another model for this run, for example "
                         "navigator=openrouter/anthropic/claude-opus-5.5; repeat for several. "
-                        "The default is ROLE_MODEL in student/policy.py")
+                        "The default is ROLE_MODEL in agents/policy.py")
     p.add_argument("--offline", nargs="?", type=int, const=8801, default=None, metavar="PORT",
                    help="use harness/mock_openrouter.py on PORT (default 8801)")
     p.add_argument("--patience", type=int, default=None, metavar="N",
-                   help="override PATIENCE in student/policy.py for this run, if the policy has "
+                   help="override PATIENCE in agents/policy.py for this run, if the policy has "
                         "one: runs without a gain before the stopping rule ends the search. "
                         "For long runs that should use their whole budget")
     a = p.parse_args()
@@ -197,7 +197,7 @@ def cli():
         if hasattr(policy, "PATIENCE"):
             policy.PATIENCE = a.patience
         else:
-            print("  --patience ignored: student/policy.py has no PATIENCE", flush=True)
+            print("  --patience ignored: agents/policy.py has no PATIENCE", flush=True)
     for item in a.model:
         who, _, name = item.partition("=")
         who = role(who)

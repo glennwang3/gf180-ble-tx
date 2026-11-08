@@ -4,8 +4,8 @@
     python tools/compare_runs.py --md  ...        # the same as a Markdown table
     python tools/compare_runs.py --weights 1,1,1 ...   # what if the priorities were these
 
-Reads report.json and tree.json from each work directory. Useful for a student
-comparing two versions of their agent, and for staff comparing a class.
+Reads report.json and tree.json from each work directory. Useful for
+comparing two versions of the agent.
 
 --weights T,P,A adds a column: the score each run's answer would get under
 those weights for timing, power and area. It re-scores the answer the run

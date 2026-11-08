@@ -68,6 +68,14 @@ def logic() -> None:
     check("a CTS branch cannot change a placement knob",
           mixed == {"PL_TARGET_DENSITY_PCT": 50, "GRT_ADJUSTMENT": 0.2})
     check("a CTS node can only seed a GR branch", S.after("CTS") == ("GR",))
+    check("the repair knobs take values inside their range",
+          not S.validate({"MAX_FANOUT_CONSTRAINT": 8, "DESIGN_REPAIR_MAX_SLEW_PCT": 10.0}, b))
+    check("the repair knobs refuse values outside it",
+          bool(S.validate({"MAX_FANOUT_CONSTRAINT": 2}, b))
+          and bool(S.validate({"DESIGN_REPAIR_MAX_SLEW_PCT": 90.0}, b)))
+    check("a CTS branch cannot change a repair knob of placement",
+          S.blend({"MAX_FANOUT_CONSTRAINT": 8}, {"MAX_FANOUT_CONSTRAINT": 16}, "CTS")
+          == {"MAX_FANOUT_CONSTRAINT": 8})
 
     print("tree")
     tmp = Path(tempfile.mkdtemp(prefix="llm_pd_selftest_"))
@@ -239,11 +247,19 @@ def logic() -> None:
           score(base, good, 40.0, led)["score"] == 0.0)
     check("a run with no model has no dollar limit",
           Ledger(max_flow_runs=3, max_usd=None).must_stop() is None)
+    ld = Ledger(max_flow_runs=20, max_usd=1.00)
+    for _ in range(10):
+        ld.charge_run(10)
+    ld.charge_call("stage_agent", 0.85)                   # $0.085 a run, $0.15 left
+    check("the search goes on while the dollars left cover another move", ld.must_stop() is None)
+    ld.charge_call("stage_agent", 0.05)                   # $0.09 a run, $0.10 left
+    check("and stops before the last move could overshoot the cap",
+          "dollar" in (ld.must_stop() or "") and ld.overspent() is None)
 
 
 def renames() -> None:
     """The judge became the navigator and the critic the stop agent, and the
-    move called signoff became evaluate. Runs saved before that, and student
+    move called signoff became evaluate. Runs saved before that, and policy/prompts/views
     files written before it, must still be read."""
     from types import SimpleNamespace
     from . import names
@@ -293,7 +309,7 @@ def renames() -> None:
     try:
         from agents import compat
     except ImportError as e:            # pydantic missing: outside the venv
-        check("student files with the old names are accepted", False, f"{e}")
+        check("policy, prompts and views with the old names are accepted", False, f"{e}")
         return
     policy = SimpleNamespace(ROLE_MODEL={"judge": "a", "stage_agent": "b", "critic": "c"},
                              STOP_POLICY="critic")
@@ -308,7 +324,7 @@ def renames() -> None:
           len(said.getvalue().splitlines()) == 8
           and all(line.startswith("  deprecated: ") for line in said.getvalue().splitlines()),
           said.getvalue())
-    check("student files with the old names are accepted",
+    check("policy, prompts and views with the old names are accepted",
           list(policy.ROLE_MODEL) == ["navigator", "stage_agent", "stop_agent"]
           and policy.STOP_POLICY == "agent"
           and prompts.NAVIGATOR == "j" and prompts.STOP_AGENT == "c"
@@ -535,7 +551,8 @@ def gate_8mhz() -> None:
     lean = dict(base, **{S.WS_KEY: 70.0, S.POWER_KEY: 0.009, S.AREA_KEY: 4.5e4})
     check("a slower layout that still meets 8 MHz scores on power and area alone",
           score(base, lean, 125.0, led)["score"]
-          == round((0.010 / 0.009) * (5.0e4 / 4.5e4), 5))
+          == round((0.010 / 0.009) ** L.WEIGHTS["power"]
+                   * (5.0e4 / 4.5e4) ** L.WEIGHTS["area"], 5))
     check("negative setup slack at tt fails the gate",
           score(base, dict(lean, **{S.WS_KEY: -0.1}), 125.0, led)["score"] == 0.0)
     check("negative setup slack at the worst corner fails the gate",
@@ -546,6 +563,67 @@ def gate_8mhz() -> None:
     t.add("n0", "PL", {}, RunResult(True, 1.0, lean, {}))
     check("an estimate that misses 8 MHz is not a candidate",
           "setup slack" in (t.why_not("n1") or "") and t.why_not("n2") is None)
+
+    # Loosening the repair saves area by leaving violations behind, and the baseline
+    # already has some at the slow corner, so the rule is none, at the typical and slow corners.
+    tt_s, tt_c, ss_s, ss_c, mx_s, mx_c = (key for key, _ in L.ELECTRICAL)
+    clean = dict(lean, **{k: 0 for k, _ in L.ELECTRICAL})
+    dirty = dict(base, **{ss_s: 14, mx_s: 30, mx_c: 1})          # the baseline at signoff
+    check("a result with no slew or capacitance violations passes the gate",
+          L.gate(dirty, clean) == [])
+    check("a slow-corner slew violation fails it, even if the baseline had more",
+          any("max-slew" in r and "max_ss" in r for r in L.gate(dirty, dict(clean, **{mx_s: 2}))))
+    check("a typical-corner capacitance violation fails it",
+          any("max-capacitance" in r for r in L.gate(dirty, dict(clean, **{tt_c: 1}))))
+    check("the baseline itself does not meet the rule", bool(L.electrical_problems(dirty)))
+    check("counts that are not reported are not checked", L.gate(base, lean) == [])
+    te = Tree(125.0, hold_floor=0.0, power_ceiling=1.05)
+    te.add(None, None, {}, RunResult(True, 1.0, dirty, {}))
+    te.add("n0", "PL", {}, RunResult(True, 1.0, dict(clean, **{tt_c: 2}), {}))
+    te.add("n0", "PL", {}, RunResult(True, 1.0, clean, {}))
+    te.add("n0", "PL", {}, RunResult(True, 1.0, dict(clean, **{ss_s: 1284}), {}))
+    check("an estimate with typical-corner violations is not a candidate",
+          "max-capacitance" in (te.why_not("n1") or "") and te.why_not("n2") is None)
+    check("an estimate's slow-corner count is ignored, because only signoff reads it",
+          te.why_not("n3") is None)
+
+    # A failure at one fanout limit and slew margin predicts failure at a limit at least as
+    # high with a margin no larger, because the estimates cannot see the violations that
+    # signoff finds. Only a signoff that upsized drivers counts (it reports eco__passes):
+    # the baseline's own signoff does not, so its violations predict nothing.
+    fo, mg = "MAX_FANOUT_CONSTRAINT", "DESIGN_REPAIR_MAX_SLEW_PCT"
+    tf = Tree(125.0, hold_floor=0.0, power_ceiling=1.05)
+    tf.add(None, None, {}, RunResult(True, 1.0, dirty, {}))
+    tf.nodes["n0"].signoff_metrics = dirty
+    for params in ({fo: 8, mg: 50}, {fo: 10, mg: 50}, {fo: 8, mg: 40}, {fo: 6, mg: 50},
+                   {fo: 8, mg: 55}, {fo: 4, mg: 30}, {fo: 4, mg: 45}, {}):
+        tf.add("n0", "PL", params, RunResult(True, 1.0, clean, {}))
+    tf.nodes["n1"].signoff_metrics = dict(lean, **{mx_s: 85, "eco__passes": 3})   # (8, 50) failed
+    check("signoff outcomes reach the stage agent through tried()",
+          "failed" in next(r for r in tf.tried("PL", limit=20)
+                           if r["params"] == {fo: 8, mg: 50}).get("signoff", ""))
+    check("a looser fanout limit at the same margin is predicted to fail",
+          "no safer" in (tf.why_not("n2") or ""))
+    check("the same fanout limit with a smaller margin is predicted to fail",
+          "no safer" in (tf.why_not("n3") or ""))
+    check("a tighter fanout limit, or a larger margin, is not predicted to fail",
+          tf.why_not("n4") is None and tf.why_not("n5") is None)
+    check("the baseline's signoff, which fixes nothing, predicts nothing",
+          tf.why_not("n6") is None and tf.why_not("n8") is None and tf.why_not("n7") is None)
+    tf.nodes["n4"].signoff_metrics = dict(lean, **{mx_s: 2})            # (6, 50), no fix run
+    tf.add("n0", "PL", {fo: 6, mg: 45}, RunResult(True, 1.0, clean, {}))  # n9
+    check("nor does any other signoff without the fix",
+          "no safer" not in (tf.why_not("n9") or ""))
+
+    from agents import policy as P
+    flat = [1.0] * (P.PATIENCE + 3)
+    check("a search that has found nothing legal is not stopped as stalled",
+          not P.should_stop(flat, {"flow_runs_left_for_search": 10,
+                                   "candidates_waiting_for_evaluation": 3})[0])
+    check("a search that found something and then went flat is",
+          P.should_stop([1.0, 1.2] + [1.2] * (P.PATIENCE + 1),
+                        {"flow_runs_left_for_search": 10,
+                         "candidates_waiting_for_evaluation": 3})[0])
 
 
 def environment() -> None:
@@ -575,8 +653,8 @@ def environment() -> None:
 
 if __name__ == "__main__":
     gate_8mhz()
-    # The framework checks below were written for the lab's picorv32, scored on
-    # timing with a baseline that misses its clock: run them with the lab's
+    # The framework checks below were written for a design scored on
+    # timing with a baseline that misses its clock: run them with that
     # setup handling (no gate) so they keep testing the plumbing.
     L.SETUP_FLOOR_NS = None
     logic()

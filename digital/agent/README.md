@@ -1,6 +1,6 @@
 # Agent-driven layout of the BLE modulator
 
-This is the agentic LibreLane flow from ENGN2912E Lab 4, pointed at `ble_tx`.
+An agentic LibreLane flow for `ble_tx`.
 Four language-model agents tune the backend flow (placement, clock tree, global
 routing) and the best result is taken through detailed routing, DRC and LVS to a
 GDS:
@@ -16,7 +16,10 @@ GDS:
 The modulator runs at a fixed 8 MHz, so a faster layout is worth nothing.
 Timing is a pass/fail gate and the score is power and standard-cell area:
 
-    score = (P0 / P)^1 x (A0 / A)^1          1.0 = LibreLane untouched
+    score = (P0 / P)^0.1 x (A0 / A)^0.9      1.0 = LibreLane untouched
+
+The die is fixed at 1400 x 300 um (`DIE_AREA` in `designs/ble_tx/config.yaml`), so
+area here means standard-cell area: how little of that die the layout uses.
 
 A result scores 0 if any of these fail at signoff: setup slack below 0 ns
 against the 125 ns clock, at tt **or** at the worst corner (ss_125C_4v50);
@@ -28,19 +31,19 @@ post-global-route estimates miss the 8 MHz gate are never candidates.
 
 | What | File | Setting |
 | --- | --- | --- |
-| Clock (8 MHz), SPS, die, fixed flow settings | `designs/ble_tx/config.yaml` | `CLOCK_PERIOD: 125`, `SYNTH_PARAMETERS`, `FP_CORE_UTIL`, ... |
-| Score weights | `pd/ledger.py` | `WEIGHTS` (timing, power, area); or `--weights 0,1,1` per run |
+| Clock (8 MHz), SPS, die, fixed flow settings | `designs/ble_tx/config.yaml` | `CLOCK_PERIOD: 125`, `SYNTH_PARAMETERS`, `DIE_AREA`, ... |
+| Score weights | `pd/ledger.py` | `WEIGHTS` (timing, power, area); currently `0,0.1,0.9`; or `--weights T,P,A` per run, e.g. `0,0,1` for area only |
 | The 8 MHz pass/fail gate | `pd/ledger.py` | `SETUP_FLOOR_NS` (ns of setup slack, tt and worst corner) |
 | Power / die-area limit at signoff | `pd/ledger.py` | `TOLERANCE` |
-| Model for each agent | `student/policy.py` | `ROLE_MODEL` (or `--model navigator=ID`) |
-| Candidate thresholds on estimates | `student/policy.py` | `HOLD_FLOOR_NS`, `POWER_CEILING` |
-| When the search stops | `student/policy.py` | `STOP_POLICY`, `PATIENCE`, `MIN_GAIN`, `SPARE_RUNS` |
+| Model for each agent | `agents/policy.py` | `ROLE_MODEL` (or `--model navigator=ID`) |
+| Candidate thresholds on estimates | `agents/policy.py` | `HOLD_FLOOR_NS`, `POWER_CEILING` |
+| When the search stops | `agents/policy.py` | `STOP_POLICY`, `PATIENCE`, `MIN_GAIN`, `SPARE_RUNS` |
 | Which knobs, and their ranges | `pd/stages.py` | `STAGES` |
-| What each agent is told | `student/prompts.py` | `NAVIGATOR`, `STAGE_AGENT`, `STOP_AGENT`, `DIAGNOSTICIAN` |
-| What each agent sees | `student/views.py` | `navigator_view`, `stage_view`, `stop_view`, `failure_view` |
+| What each agent is told | `agents/prompts.py` | `NAVIGATOR`, `STAGE_AGENT`, `STOP_AGENT`, `DIAGNOSTICIAN` |
+| What each agent sees | `agents/views.py` | `navigator_view`, `stage_view`, `stop_view`, `failure_view` |
 | Budgets | command line | `--runs` (flow runs), `--usd` (model spend) |
 
-`HOLD_FLOOR_NS` and `POWER_CEILING` were calibrated on the lab's picorv32;
+`HOLD_FLOOR_NS` and `POWER_CEILING` were calibrated on picorv32, not on ble_tx;
 retune them from `estimate_vs_signoff` in `report.json` after the first runs.
 Keep `CLOCK_PERIOD` in step with `../librelane/config.yaml`.
 
@@ -77,13 +80,17 @@ chmod 600 ~/.config/openrouter/key
 The signed-off layout of the answer is in `runs/NAME/signoff/<node>_final/gds/ble_tx.gds`.
 `designs/spm` is LibreLane's small example, for checking the plumbing in a minute.
 
-## Changes from the lab
+## How it is set up for ble_tx
 
 - `designs/ble_tx/` added; it reads the RTL from `../rtl`, and an edit there
   invalidates the remembered baseline (`pd/runner.py`, `baseline_key`).
-- Timing weight 0, power and area 1; the 8 MHz setup gate added to the signoff
+- Timing weight 0, power 0.1, area 0.9; the 8 MHz setup gate added to the signoff
   gate and to the candidate screen (`pd/ledger.py`, `pd/tree.py`).
 - The gate and the clock are shown to the agents (`pd/episode.py`) and the
-  prompts say that slack beyond 8 MHz earns nothing (`student/prompts.py`).
+  prompts say that slack beyond 8 MHz earns nothing (`agents/prompts.py`).
 - `pd/selftest.py` checks the gate; its other checks run with the gate off,
-  as written for the lab.
+  as they were written for a design that misses its clock.
+- The prompts name the design (ble_tx, fixed 8 MHz clock and die, power and cell
+  area as the score) and the max-slew caveat from `designs/ble_tx/config.yaml`.
+  The stop agent's prompt states the stopping rule, reading its numbers from
+  `agents/policy.py`.

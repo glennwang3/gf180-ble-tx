@@ -7,8 +7,8 @@
 
 In a healthy search the diagnostician rarely fires, which makes its prompt the
 hardest one to improve by running the whole loop. This runs it alone on the three
-failures recorded in harness/failure_cases.json — each one met while this lab
-was being prepared — and prints its answer beside the cause that was eventually
+failures recorded in harness/failure_cases.json — each one met while this
+flow was being prepared — and prints its answer beside the cause that was eventually
 established. None of the three is named by its own error message.
 
 Reading the two side by side is the exercise; nothing here grades the answer.
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     p.add_argument("--offline", nargs="?", type=int, const=8801, default=None, metavar="PORT")
     p.add_argument("--model", default=None, metavar="ID",
                    help="the model to diagnose with; the default is the diagnostician's "
-                        "entry in ROLE_MODEL, student/policy.py")
+                        "entry in ROLE_MODEL, agents/policy.py")
     a = p.parse_args()
     if a.model:
         from .compat import policy

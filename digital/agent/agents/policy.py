@@ -1,5 +1,4 @@
 """The rules the search works under: candidate thresholds, stopping rule, models.
-In the lab this file was read-only; here it is ours to tune.
 
   HOLD_FLOOR_NS, POWER_CEILING   which results may be chosen as the final answer
   STOP_POLICY, should_stop       when the search ends
@@ -24,7 +23,7 @@ from pd import stages as S
 # Both values come from test runs on picorv32, in which each estimate was
 # compared with the signoff result of the same layout.
 #
-# BLE TX: both were calibrated on the lab's picorv32, not on ble_tx. After the
+# BLE TX: both were calibrated on picorv32, not on ble_tx. After the
 # first few ble_tx searches, compare estimate_vs_signoff in report.json and
 # retune them. The 8 MHz setup gate lives in pd/ledger.py (SETUP_FLOOR_NS).
 
@@ -83,7 +82,9 @@ def should_stop(best_after_each_run: list[float], budget: dict) -> tuple[bool, s
         return True, (f"keeping {keep} more flow run{'s' if keep > 1 else ''} in hand: "
                       f"{waiting} candidates are waiting for an evaluation")
     h = best_after_each_run
-    if len(h) > PATIENCE:
+    # While no candidate has beaten the baseline, a flat history means nothing legal
+    # has been found yet, not that the search has run out of ideas: it goes on.
+    if len(h) > PATIENCE and max(h) > 1.0:
         before, now = h[-PATIENCE - 1], h[-1]
         if before > 0 and (now - before) / before < MIN_GAIN:
             return True, (f"best estimated score moved {before:.4f} -> {now:.4f} "

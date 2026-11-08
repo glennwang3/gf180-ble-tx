@@ -1,6 +1,6 @@
 """Names that changed, and how a run saved under the old ones is read.
 
-In October 2026 the loop's names were brought in line with the course slides:
+In October 2026 the loop's names were changed:
 
   * two agents were renamed: the judge is now the navigator, and the critic is
     now the stop agent;

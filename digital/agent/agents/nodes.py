@@ -1,8 +1,8 @@
-"""STAFF FILE — the plumbing between the four agents. Not for editing.
+"""The plumbing between the four agents.
 
 Eight plain-Python nodes and four LLM agents. The agents' instructions live in
-student/prompts.py, what each one is shown in student/views.py, the rule-based
-decisions in student/policy.py; this file only moves data between them and the
+agents/prompts.py, what each one is shown in agents/views.py, the rule-based
+decisions in agents/policy.py; this file only moves data between them and the
 episode.
 
 Three ADK behaviours shape the code here, each found by running it:
@@ -32,7 +32,7 @@ from google.adk.workflow import node
 from pd import names, stages as S
 from pd.episode import Episode
 
-from .compat import policy, prompts, views      # the student's three files, old names settled
+from .compat import policy, prompts, views      # policy, prompts and views, old names settled
 
 
 class LoopState(BaseModel):

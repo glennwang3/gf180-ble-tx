@@ -31,7 +31,7 @@ from google.adk.models.lite_llm import LiteLlm, LiteLLMClient
 from pd import apikey
 from pd.ledger import Ledger
 
-from .compat import policy      # the student's policy.py, old role names settled
+from .compat import policy      # policy.py, old role names settled
 
 API_BASE = "https://openrouter.ai/api/v1"
 

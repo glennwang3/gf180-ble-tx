@@ -1,14 +1,14 @@
-"""STAFF FILE. Old names in a student's three files, still accepted.
+"""Old names in policy.py, prompts.py and views.py, still accepted.
 
 The navigator and the stop agent were called the judge and the critic until
-October 2026. A policy.py, prompts.py or views.py written against the old
-starter keeps working: each old name stands in for the new one, with a one-line
-warning on stderr. The framework imports the student's modules from here, so
+October 2026. Files written against the old names keep working:
+each old name stands in for the new one, with a one-line
+warning on stderr. The framework imports these three modules from here, so
 the names are settled before anything reads them:
 
     from .compat import policy, prompts, views
 
-Old name in a student file        used as
+Old name in these files            used as
   views.judge_view                  views.navigator_view
   views.critic_view                 views.stop_view
   prompts.JUDGE                     prompts.NAVIGATOR
@@ -27,7 +27,7 @@ import sys
 
 from pd import names
 
-from student import policy, prompts, views
+from . import policy, prompts, views
 
 _SAID: set[str] = set()
 
@@ -53,7 +53,7 @@ def role(name: str, where: str = "--model") -> str:
     return new
 
 
-def role_model(table: dict, where: str = "ROLE_MODEL in student/policy.py") -> dict:
+def role_model(table: dict, where: str = "ROLE_MODEL in agents/policy.py") -> dict:
     """Rename old roles in a ROLE_MODEL table in place, keeping its order. Where
     a table has both names, the new one wins."""
     renamed: dict = {}
@@ -74,16 +74,16 @@ def stop_policy(value: str | None, where: str = "--stop-policy") -> str | None:
 
 
 def adopt(policy=policy, prompts=prompts, views=views) -> None:
-    """Settle the names in the three student modules. Safe to call twice."""
-    _adopt(views, "judge_view", "navigator_view", "student/views.py")
-    _adopt(views, "critic_view", "stop_view", "student/views.py")
-    _adopt(prompts, "JUDGE", "NAVIGATOR", "student/prompts.py")
-    _adopt(prompts, "CRITIC", "STOP_AGENT", "student/prompts.py")
-    _adopt(prompts, "JudgeDecision", "NavigatorDecision", "student/prompts.py")
+    """Settle the names in policy, prompts and views. Safe to call twice."""
+    _adopt(views, "judge_view", "navigator_view", "agents/views.py")
+    _adopt(views, "critic_view", "stop_view", "agents/views.py")
+    _adopt(prompts, "JUDGE", "NAVIGATOR", "agents/prompts.py")
+    _adopt(prompts, "CRITIC", "STOP_AGENT", "agents/prompts.py")
+    _adopt(prompts, "JudgeDecision", "NavigatorDecision", "agents/prompts.py")
     if isinstance(getattr(policy, "ROLE_MODEL", None), dict):
         role_model(policy.ROLE_MODEL)
     if hasattr(policy, "STOP_POLICY"):
-        policy.STOP_POLICY = stop_policy(policy.STOP_POLICY, "STOP_POLICY in student/policy.py")
+        policy.STOP_POLICY = stop_policy(policy.STOP_POLICY, "STOP_POLICY in agents/policy.py")
 
 
 adopt()

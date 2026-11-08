@@ -2,7 +2,8 @@
 
     baseline(...)   run the flow untouched, end to end (remembered per design)
     fork(...)       resume from a saved state, re-run one stage onward, stop after GR
-    signoff(...)    take one candidate from its post-GR state through DRC and LVS
+    signoff(...)    take one candidate from its post-GR state through DRC and LVS,
+                    upsizing the drivers of any slew or capacitance violation
 
 Each run leaves a full LibreLane run directory behind — 1.2 GB for picorv32. This
 module keeps only what a later branch needs and deletes the rest: for every
@@ -44,10 +45,10 @@ TOOL_DIRS = (
 
 END = "END"     # snapshot key for a run's final state: where signoff resumes
 
-# Durations here are read from the monotonic clock, not the wall clock. A course
-# VM lives on a laptop, and a laptop that dozes off suspends the VM: the wall
+# Durations here are read from the monotonic clock, not the wall clock. A VM
+# lives on a laptop, and a laptop that dozes off suspends the VM: the wall
 # clock then jumps forward on waking and a three-minute step is reported as
-# twenty. That happened repeatedly while this lab was being measured.
+# twenty. That happened repeatedly while timings were being measured.
 
 # What a node carries around. Enough to rank it, constrain it, and describe it.
 HEADLINE = (
@@ -61,6 +62,15 @@ HEADLINE = (
     f"clock__skew__worst_setup__corner:{S.FOM_CORNER}",
     "magic__drc_error__count", "design__lvs_error__count",
     "antenna__violating__nets", "route__drc_errors",
+    # Electrical rule violations, which the repair after placement works on. The plain
+    # counts are over all corners at signoff (the slow corner dominates); the ones the
+    # check reads are at the scoring corner, which is also what the estimates report.
+    "design__max_slew_violation__count", "design__max_cap_violation__count",
+    f"design__max_slew_violation__count__corner:{S.FOM_CORNER}",
+    f"design__max_cap_violation__count__corner:{S.FOM_CORNER}",
+    *(f"design__max_{kind}_violation__count__corner:{c}"
+      for c in (S.SLOW_CORNER, S.SLOW_CORNER_MAX) for kind in ("slew", "cap")),
+    "design__max_fanout_violation__count",
 )
 
 # What a stage's log is boiled down to before an agent reads it. The tools print
@@ -392,7 +402,7 @@ def cache_root() -> Path | None:
 
 def baseline_key(design_dir: str | Path, overrides: dict | None = None) -> str:
     """A fingerprint of everything the untouched flow's result depends on: the
-    design's own files, the LibreLane version, and the parts of this lab that
+    design's own files, the LibreLane version, and the parts of this code that
     decide what is read out of a run."""
     import hashlib
     from importlib import metadata
@@ -523,42 +533,127 @@ def fork(design_dir: str | Path, ancestor_state: str, stage: str, params: dict,
                      stage_seconds=spent, freed_bytes=_prune(run_dir))
 
 
+# ------------------------------------------------------------------ signoff, with driver upsizing
+# Detailed routing adds wire the estimates never saw, and at the slow corner a few
+# weak gates (size-1 oai31, aoi221 and the like) then miss the 3 ns slew limit by
+# 0.02-1.1 ns. The repair after placement cannot see this coming, so signoff fixes
+# it after the fact: it reads which pins broke the limit, swaps only their drivers
+# for a stronger size of the same cell (pd/upsize.tcl), and routes again from
+# global routing. Measured on ble_tx (fanout 4, delay cells excluded): pass 1
+# upsized 11 drivers and left 2 violations at max_ss, pass 2 one more and left none,
+# for 26 um2 of extra cell area. FIX_PASSES bounds the number of reroutes.
+FIX_PASSES = 3
+FIX_CORNERS = (S.FOM_CORNER, S.SLOW_CORNER, S.SLOW_CORNER_MAX)
+_UPSIZE_TCL = Path(__file__).with_name("upsize.tcl")
+_LIB = ("/foss/pdks/gf180mcuD/libs.ref/gf180mcu_fd_sc_mcu7t5v0/lib/"
+        "gf180mcu_fd_sc_mcu7t5v0__tt_025C_5v00.lib")
+_CHECK = re.compile(r"^(\S+)\s+([\d.]+)\s+([\d.]+)\s+-[\d.]+\s+\(VIOLATED\)")
+
+
+def _electrical(m: dict) -> int:
+    """Slew and capacitance violations at the corners the gate reads."""
+    return int(sum(m.get(f"design__max_{k}_violation__count__corner:{c}") or 0
+                   for c in FIX_CORNERS for k in ("slew", "cap")))
+
+
+def _violating_pins(run_dir: Path) -> dict:
+    """Pin -> worst value/limit over the corners, from the signoff STA checks."""
+    sta = [d for d in _step_dirs(run_dir) if d.name.endswith("openroad-stapostpnr")]
+    pins: dict[str, float] = {}
+    for c in FIX_CORNERS:
+        f = sta[-1] / c / "checks.rpt" if sta else None
+        if not f or not f.exists():
+            continue
+        section = None
+        for line in f.read_text().splitlines():
+            if line.strip() in ("max slew", "max capacitance", "max fanout"):
+                section = line.strip()
+            m = _CHECK.match(line)
+            if m and section in ("max slew", "max capacitance") and float(m[2]) > 0:
+                pins[m[1]] = max(pins.get(m[1], 0.0), float(m[3]) / float(m[2]))
+    return pins
+
+
+def _upsize(state_json: str, pins: dict, dest: Path) -> tuple[str | None, list[str]]:
+    """A copy of a post-GR state with the violating pins' drivers upsized."""
+    import subprocess
+    snap = Path(_snapshot(Path(state_json), dest))
+    st = json.loads(snap.read_text())
+    env = dict(os.environ, LIB=_LIB, IN_ODB=st["odb"], OUT_DIR=str(dest),
+               PINS=" ".join(f"{p} {r:.4f}" for p, r in pins.items()))
+    r = subprocess.run(["openroad", "-exit", "-no_init", str(_UPSIZE_TCL)], env=env,
+                       capture_output=True, text=True)
+    swaps = [l[len("UPSIZE: "):] for l in r.stdout.splitlines() if l.startswith("UPSIZE: ")]
+    (dest / "upsize.log").write_text(r.stdout + r.stderr)
+    if r.returncode != 0:
+        return None, swaps
+    st.update({"odb": str(dest / "upsized.odb"), "def": str(dest / "upsized.def"),
+               "nl": str(dest / "upsized.nl.v"), "pnl": str(dest / "upsized.pnl.v")})
+    snap.write_text(json.dumps(st))
+    return str(snap), swaps
+
+
 def signoff(design_dir: str | Path, end_state: str, params: dict,
             run_dir: str | Path, keep: str = "final") -> RunResult:
     """Detailed routing, Magic DRC and Netgen LVS, from a candidate's post-GR state.
+
+    If the result breaks the slew or capacitance limit at tt or the slow corner, the
+    drivers of the violating nets are upsized and the candidate is routed again from
+    global routing, up to FIX_PASSES times; the last pass is the result. Its metrics
+    say what that took: eco__passes and eco__upsized_cells.
 
     `keep` says what survives: "final" keeps only LibreLane's final/ directory
     (the GDS, DEF, netlists and reports — the deliverables) next to the run
     directory as <name>_final; "all" keeps the whole 1.2 GB; "none" keeps nothing.
     """
     design_dir, run_dir = Path(design_dir), Path(run_dir)
-    run_dir.mkdir(parents=True, exist_ok=True)
     _ensure_path()
     from librelane.state import State
     t0 = time.monotonic()
-    try:
-        initial = State.loads(Path(end_state).read_text())
-        with _console_to(run_dir.parent / f"{run_dir.name}.console.log"):
-            state = _flow(design_dir, params).start(
-                with_initial_state=initial, _force_run_dir=str(run_dir),
-                frm=S.SIGNOFF_START,
-            )
-    except Exception as e:
-        res = RunResult(False, time.monotonic() - t0, error=f"{type(e).__name__}: {e}"[:600],
-                        log_tail=_error_tail(run_dir))
-        res.freed_bytes = _prune(run_dir)
-        return res
+    start, frm, swaps, freed = end_state, S.SIGNOFF_START, [], 0
+    passes = 0
+    while True:
+        rd = run_dir if passes == 0 else run_dir.parent / f"{run_dir.name}_fix{passes}"
+        rd.mkdir(parents=True, exist_ok=True)
+        try:
+            initial = State.loads(Path(start).read_text())
+            with _console_to(rd.parent / f"{rd.name}.console.log"):
+                state = _flow(design_dir, params).start(
+                    with_initial_state=initial, _force_run_dir=str(rd), frm=frm)
+        except Exception as e:
+            res = RunResult(False, time.monotonic() - t0, error=f"{type(e).__name__}: {e}"[:600],
+                            log_tail=_error_tail(rd))
+            res.freed_bytes = freed + _prune(rd)
+            return res
+        sm = _pick(state.metrics)
+        if passes == FIX_PASSES or not _electrical(sm):
+            break
+        pins = _violating_pins(rd)
+        if passes == 0:
+            mid = start
+        else:
+            i = _find(_step_dirs(rd), S.IN_LOOP_STOP)
+            mid = str(_step_dirs(rd)[i] / "state_out.json") if i is not None else None
+        eco = run_dir.parent / f"{run_dir.name}_eco{passes + 1}"
+        nxt, done = _upsize(mid, pins, eco) if pins and mid else (None, [])
+        if not nxt:
+            break
+        swaps += done
+        freed += _prune(rd)
+        start, frm, passes = nxt, S.BY_NAME["GR"].first_step, passes + 1
     seconds = time.monotonic() - t0
-    sm = _pick(state.metrics)
-    spent = _stage_seconds(run_dir)
-    freed = 0
+    sm.update({"eco__passes": passes, "eco__upsized_cells": len(swaps)})
+    spent = _stage_seconds(rd)
     if keep != "all":
-        final = run_dir / "final"
+        final = rd / "final"
         if keep == "final" and final.is_dir():
             dest = run_dir.parent / f"{run_dir.name}_final"
             shutil.rmtree(dest, ignore_errors=True)
             shutil.move(str(final), str(dest))
-        freed = _prune(run_dir)
+            (dest / "upsized_drivers.txt").write_text("\n".join(swaps) + "\n")
+        freed += _prune(rd)
+        for k in range(1, passes + 1):
+            freed += _prune(run_dir.parent / f"{run_dir.name}_eco{k}")
     return RunResult(True, seconds, sm, sm, stage_seconds=spent, freed_bytes=freed)
 
 

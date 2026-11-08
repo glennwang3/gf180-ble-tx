@@ -1,7 +1,7 @@
 """Two budgets, the scoring gate, and the score.
 
 Flow runs are the expensive budget: minutes of CPU each, and the thing that
-bounds how many students can share a machine. LLM dollars are nearly free by
+bounds how many searches can share a machine. LLM dollars are nearly free by
 comparison, which is why they are attributed per agent — a bloated context shows
 up by name rather than as one anonymous total.
 
@@ -29,6 +29,11 @@ from pathlib import Path
 from . import names, stages as S
 
 SIGNOFF_RESERVE = 1       # runs held back so that something can always be signed off at the end
+# The dollar check runs between moves, and one move (stage agent plus navigator)
+# costs about one run's share of the spend. Stopping only at zero let the last move
+# overshoot the cap by 3%, which zeroes the score; stop with this many runs' worth
+# of dollars still unspent.
+USD_MARGIN = 1.5
 MAX_SIGNOFFS = 3          # candidates signed off at the end at most, however many runs are left
 TOLERANCE = 1.05          # die area and power may not exceed baseline by more than this
 
@@ -44,9 +49,10 @@ TOLERANCE = 1.05          # die area and power may not exceed baseline by more t
 #
 # The three exponents below are the priorities, and they are the only thing to
 # change to ask for a different trade. A weight of 0 takes that term out of the
-# score, so (1, 0, 0) is timing alone. With equal weights a 1 % gain in any of
-# the three is worth the same. Each term is a ratio, so the score does not
-# depend on units and the untouched flow is 1.0 whatever the weights.
+# score, so (1, 0, 0) is timing alone. A weight is the share of a 1 % gain that
+# reaches the score: with the weights below, a 1 % gain in area moves the score by
+# about 0.9 %, and a 1 % gain in power by about 0.1 %. Each term is a ratio, so the
+# score does not depend on units and the untouched flow is 1.0 whatever the weights.
 #
 # The same formula is used twice: on post-global-route estimates, corrected by
 # whatever has been signed off, to rank nodes while the search runs (pd/tree.py),
@@ -55,8 +61,9 @@ TOLERANCE = 1.05          # die area and power may not exceed baseline by more t
 # BLE TX: the modulator runs at a fixed 8 MHz (CLOCK_PERIOD 125 in the design's
 # config.yaml), one 8 MS/s DAC code per clock. A faster clock buys nothing, so
 # timing carries no weight and is a pass/fail gate instead (SETUP_FLOOR_NS
-# below). The score is power and standard-cell area, equally weighted.
-WEIGHTS = {"timing": 0.0, "power": 1.0, "area": 1.0}
+# below). The die is fixed, so the layout should use as little of it as possible:
+# the score is mostly standard-cell area (0.9), with a little weight on power (0.1).
+WEIGHTS = {"timing": 0.0, "power": 0.1, "area": 0.9}
 
 # The 8 MHz timing gate. A result passes only when its worst setup slack against
 # CLOCK_PERIOD is at least this many ns, both at the scoring corner (tt) and at
@@ -68,7 +75,7 @@ TERMS = {"timing": "effective clock period", "power": "total power", "area": "ce
 
 
 def parse_weights(text: str | None) -> dict:
-    """'1,0.5,0.5' -> weights for timing, power, area. None gives WEIGHTS."""
+    """'0,0.1,0.9' -> weights for timing, power, area. None gives WEIGHTS."""
     if not text:
         return dict(WEIGHTS)
     parts = [float(x) for x in text.split(",")]
@@ -157,6 +164,11 @@ class Ledger:
         return max(0, self.runs_left - SIGNOFF_RESERVE)
 
     @property
+    def usd_per_run(self) -> float:
+        """Language-model dollars spent per flow run so far."""
+        return self.usd / self.flow_runs if self.flow_runs else 0.0
+
+    @property
     def usd_left(self) -> float | None:
         if self.max_usd is None:
             return None
@@ -166,8 +178,8 @@ class Ledger:
         """Why the search has to end now, or None. This overrides any agent."""
         if self.search_runs_left <= 0:
             return "flow-run budget spent (one run is reserved for an evaluation at the end)"
-        if self.max_usd is not None and self.usd_left <= 0:
-            return "dollar budget spent"
+        if self.max_usd is not None and self.usd_left <= USD_MARGIN * self.usd_per_run:
+            return "dollar budget spent (what is left would not cover another move)"
         return None
 
     def overspent(self) -> str | None:
@@ -244,6 +256,33 @@ def setup_problems(metrics: dict) -> list[str]:
     return out
 
 
+_KINDS = {"slew": "max-slew", "cap": "max-capacitance"}
+CORNERS = (S.FOM_CORNER, S.SLOW_CORNER, S.SLOW_CORNER_MAX)
+ELECTRICAL = tuple((f"design__max_{kind}_violation__count__corner:{corner}", f"{label} violations at {corner}")
+                   for corner in CORNERS for kind, label in _KINDS.items())
+
+
+def electrical_problems(metrics: dict, corners: tuple = CORNERS) -> list[str]:
+    """Why `metrics` has slew or capacitance violations at one of `corners`.
+
+    The rule is absolute: none, at the typical and the slow corner. The baseline does
+    not meet it (14 slew violations at nom_ss, 30 at max_ss and one capacitance
+    violation at signoff), so nothing is compared with it. Signoff is the only place
+    the slow corner can be read: after global routing the flow reports about 1284
+    slew violations there, against 14 at signoff, so the in-loop estimates are
+    screened on the typical corner alone. Fanout violations are not counted: they are
+    all clock-tree buffers against the config's own limit. A count that is not
+    reported is not checked.
+    """
+    out = []
+    for corner in corners:
+        for kind, label in _KINDS.items():
+            v = metrics.get(f"design__max_{kind}_violation__count__corner:{corner}")
+            if v is not None and float(v) > 0:
+                out.append(f"{label} violations at {corner}: {int(float(v))}")
+    return out
+
+
 def gate(baseline: dict, candidate: dict) -> list[str]:
     """Why a signed-off candidate is not acceptable. Empty means it passes.
 
@@ -256,6 +295,7 @@ def gate(baseline: dict, candidate: dict) -> list[str]:
     if S.setup_ws(candidate) is None:
         return ["no signoff timing reported"]
     reasons += setup_problems(candidate)
+    reasons += electrical_problems(candidate)
 
     for key, label in (("magic__drc_error__count", "Magic DRC errors"),
                        ("design__lvs_error__count", "Netgen LVS errors"),

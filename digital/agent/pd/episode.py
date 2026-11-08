@@ -221,6 +221,9 @@ class Episode:
             "power_ceiling_vs_baseline": t.power_ceiling,
             "setup_slack_floor_ns": SETUP_FLOOR_NS,
             "setup_floor_applies_at": [S.FOM_CORNER, "the worst corner"],
+            "electrical_violations": "none: no max-slew or max-capacitance violation at "
+                                     f"{S.FOM_CORNER} or the slow corner {S.SLOW_CORNER}. "
+                                     "The baseline has some at the slow corner",
             "clock_period_ns": t.clock,
         }
 
@@ -274,6 +277,10 @@ class Episode:
                 "clock_skew_ns": m.get(f"clock__skew__worst_setup__corner:{S.FOM_CORNER}"),
                 "total_power_w": m.get("power__total"),
                 "utilisation": m.get("design__instance__utilization"),
+                "max_slew_violations_tt": m.get(f"design__max_slew_violation__count__corner:{S.FOM_CORNER}"),
+                "max_cap_violations_tt": m.get(f"design__max_cap_violation__count__corner:{S.FOM_CORNER}"),
+                "max_slew_violations_slow": m.get(f"design__max_slew_violation__count__corner:{S.SLOW_CORNER}"),
+                "max_cap_violations_slow": m.get(f"design__max_cap_violation__count__corner:{S.SLOW_CORNER}"),
             },
             "log_of_this_stage_on_this_path": tree.digest_for(node_id, stage),
         }
@@ -318,7 +325,7 @@ class Episode:
         }
 
     # The names these two had before the navigator and the stop agent were
-    # renamed. A views.py written against the old starter still calls them.
+    # renamed. A views.py written against the old names still calls them.
     def judge_context(self) -> dict:
         return self.navigator_context()
 
