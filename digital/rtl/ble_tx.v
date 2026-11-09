@@ -42,13 +42,20 @@ module ble_tx #(
   localparam [7:0]   PREAMBLE = ACCESS_ADDRESS[0] ? 8'h55 : 8'hAA;
 
   // ---------------------------------------------------------------- buffer
-  reg [7:0] pdu [0:PDU_MAX-1];
-  always @(posedge clk) begin
-    if (wr_en && {26'd0, wr_addr} < PDU_MAX) pdu[wr_addr] <= wr_data;
-  end
+  // Each byte has its own clock gate, so its flops are clocked only in the cycle
+  // it is written and need no mux to hold their value the rest of the time.
+  reg [8*PDU_MAX-1:0] pdu;   // byte i is pdu[8*i +: 8]
+  genvar b;
+  generate
+    for (b = 0; b < PDU_MAX; b = b + 1) begin : g_pdu
+      wire gclk;
+      ble_clk_gate u_cg (.clk(clk), .en(wr_en && wr_addr == b), .gclk(gclk));
+      always @(posedge gclk) pdu[8*b +: 8] <= wr_data;
+    end
+  endgenerate
 
   // Length is latched at start, so rewriting pdu[1] mid-packet is harmless.
-  wire [5:0] payload_len = (pdu[1][5:0] > 6'd37) ? 6'd37 : pdu[1][5:0];
+  wire [5:0] payload_len = (pdu[13:8] > 6'd37) ? 6'd37 : pdu[13:8];
   reg  [5:0] len_q;
   wire [8:0] pdu_bits    = {len_q + 6'd2, 3'b000};
 
@@ -65,7 +72,7 @@ module ble_tx #(
   reg  [1:0]  tail_cnt;
   integer k;
 
-  wire [7:0] cur_byte = pdu[bit_idx[8:3]];
+  wire [7:0] cur_byte = pdu[8*bit_idx[8:3] +: 8];
   wire       pdu_bit  = cur_byte[bit_idx[2:0]];
 
   // Next air bit and its validity, for the symbol entering the window
@@ -167,6 +174,25 @@ module ble_tx #(
     end
   end
 
+endmodule
+
+// Clock gate: gclk follows clk in the cycles where en was high before the rising
+// edge. Synthesis uses the library's integrated clock gate, whose latch holds en
+// while clk is high so gclk cannot glitch; simulation uses the same latch-and-AND.
+module ble_clk_gate (
+  input  wire clk,
+  input  wire en,
+  output wire gclk
+);
+`ifdef SYNTHESIS
+  gf180mcu_fd_sc_mcu7t5v0__icgtp_1 u_icg (.CLK(clk), .E(en), .TE(1'b0), .Q(gclk));
+`else
+  reg en_l;
+  /* verilator lint_off LATCH */
+  always @* if (!clk) en_l = en;   // transparent while clk is low
+  /* verilator lint_on LATCH */
+  assign gclk = clk & en_l;
+`endif
 endmodule
 
 `default_nettype wire

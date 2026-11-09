@@ -66,6 +66,12 @@ EXTRA_EXCLUDED_CELLS:
 CTS_CLK_MAX_WIRE_LENGTH: 80
 CTS_DISTANCE_BETWEEN_BUFFERS: 60
 
+# Each of the 39 clock-gated PDU bytes gets its own small clock tree, built from
+# the root buffer cell. With the default clkbuf_16 those trees cost 25,000 um2.
+# clkbuf_4 signs off clean; clkbuf_2 left 2 slew violations at max_ss and
+# clkbuf_1 failed hold at the worst corner (measured from the baseline placement).
+CTS_ROOT_BUFFER: gf180mcu_fd_sc_mcu7t5v0__clkbuf_4
+
 # Locked: the default 'half' clock NDR fails detailed routing on
 # this PDK (DRT-0073).
 CTS_APPLY_NDR: none
