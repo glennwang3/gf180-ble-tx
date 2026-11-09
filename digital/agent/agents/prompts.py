@@ -115,11 +115,15 @@ floor.
 In the floorplan stage (FP) the only knob is DIE_WIDTH_UM; the height is fixed. A
 narrower die means less die area and a fuller core: the program raises the placement
 density on the path to the floor for the new width, and the legal range already stops
-where that floor reaches its cap. Measured on this design with the flow's present
-core margins and clock tree, fanout 7 and density at its floor: 300 and 310 um signed
-off clean at about 80% utilisation. An earlier search with thicker margins and three
-fix passes lost 322-325 um to 3-5 slew violations at the slow corner; signoff now
-makes up to five passes, and 322 um with fanout 6 signed off clean with four. Use
+where that floor reaches its cap. The design is now clock-gated: each of the 39 packet
+bytes has its own clock gate and a small clock tree of its own, and the synthesised
+netlist is 14% smaller than before, so narrower widths are legal than in the searches
+below. Measured on the earlier, ungated netlist with the flow's present core margins
+and clock tree: 300 and 310 um signed off clean at fanout 7 and about 80% utilisation,
+and a search reached 282.5 um at fanout 6, where fanout 6 failed the slow corner at
+282 um and fanout 5 passed. On the clock-gated netlist, narrow dies once overloaded the
+main clock buffer; the present clock tree settings cleared that, and CTS can shorten
+them further if a slow-corner capacitance violation sits on a clock buffer. Use
 starting_utilisation_predicted and the hint to pick the width.
 """,
     """
