@@ -165,6 +165,8 @@ class Param:
             return isinstance(v, bool)
         if isinstance(v, bool) or not isinstance(v, (int, float)):
             return False
+        if self.kind == "int" and not float(v).is_integer():
+            return False
         return self.lo <= v <= self.hi
 
     def sample(self, rng: random.Random):

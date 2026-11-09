@@ -53,6 +53,9 @@ def logic() -> None:
     check("out-of-range value is refused", bool(S.validate({"GRT_ADJUSTMENT": 0.9}, b)))
     check("a switch refuses a number", bool(S.validate({"PL_TIMING_DRIVEN": 1}, b)))
     check("a number knob refuses true/false", bool(S.validate({"GRT_ADJUSTMENT": True}, b)))
+    check("a whole-number knob refuses a fraction",
+          bool(S.validate({"MAX_FANOUT_CONSTRAINT": 6.5}, b))
+          and not S.validate({"MAX_FANOUT_CONSTRAINT": 6}, b))
     check("type slips are repaired, values are not moved",
           S.coerce({"CTS_SINK_CLUSTERING_MAX_DIAMETER": 170.0, "PL_TIMING_DRIVEN": "true",
                     "GRT_ADJUSTMENT": 0.9}, b)
