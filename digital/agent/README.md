@@ -64,7 +64,7 @@ chmod 600 ~/.config/openrouter/key
 
 ```bash
 ./venv/bin/python -m pd.baseline                  # untouched flow, remembered afterwards
-./venv/bin/python -m pd.stages                    # the seven knobs and their ranges
+./venv/bin/python -m pd.stages                    # the nine knobs and their ranges 
 
 # free dry run: fake model, real LibreLane
 ./venv/bin/python harness/mock_openrouter.py &
