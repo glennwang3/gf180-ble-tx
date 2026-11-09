@@ -69,6 +69,8 @@ class Episode:
         ledger.charge_run(res.seconds)      # charged whether or not it was re-run
         tree.add(None, None, {}, res, store="" if res.shared else str(store),
                  note="untouched flow")
+        if runner.die_height(design_dir) is None:
+            tree.facts = None           # no DIE_AREA in config.yaml: the floorplan is not searched
         ep.baseline_from_cache = res.from_cache
         ep.freed_bytes += res.freed_bytes
         ep.save()
@@ -101,8 +103,13 @@ class Episode:
             params = dict(parent.params) if parent else {}
         else:
             params = S.blend(parent.params, proposal or {}, stage)
-            res = runner.fork(self.design_dir, parent.stage_states[stage], stage, params,
-                              self.work / "run" / new_id, store, tree.bounds())
+            width = None
+            if stage == "FP":
+                width = params.get(S.WIDTH)
+                self._raise_density(params)
+            res = runner.fork(self.design_dir, tree.state_for(node_id, stage), stage, params,
+                              self.work / "run" / new_id, store,
+                              tree.bounds(node_id, width=width))
 
         if res.seconds > 0:
             led.charge_run(res.seconds)
@@ -113,6 +120,21 @@ class Episode:
         self.freed_bytes += res.freed_bytes + tree.prune(self.keep)
         self.save()
         return node
+
+    def _raise_density(self, params: dict) -> None:
+        """A narrower die starts fuller. Raise the placement density on the path to
+        the floor for the new width when it sits below it; never lower it."""
+        facts, width = self.tree.facts, params.get(S.WIDTH)
+        if facts is None or width is None:
+            return
+        floor = S.density_floor(facts.utilisation(width))
+        now = params.get(S.DENSITY, runner.config_value(self.design_dir, S.DENSITY))
+        try:
+            now = float(now)
+        except (TypeError, ValueError):
+            now = None
+        if now is None or now < floor:
+            params[S.DENSITY] = floor
 
     def sign_off(self, node_id: str, when: str = "search") -> dict:
         """Evaluate one existing node: take it through signoff, that is detailed
@@ -171,6 +193,7 @@ class Episode:
         reached, and whether it can be the final answer."""
         t = self.tree
         e, h, p, a = t.ecp(n.id), t.hold(n.id), t.power_ratio(n.id), t.area_ratio(n.id)
+        w, d = t.width(n.id), t.die_ratio(n.id)
         est, inc = t.est_score(n.id), t.incumbent()
         what = f"{n.stage:3s} from {str(n.parent):4s}" if n.stage else f"{'baseline':13s}"
         out = f"  {n.id:4s} {'ok  ' if n.ok else 'FAIL'} {what} {n.seconds:6.1f}s  "
@@ -183,7 +206,9 @@ class Episode:
                 + f"  hold {'-' if h is None else format(h, '.3f')}"
                 f"  power {'-' if watts is None else format(watts, '.4f')} W"
                 f" ({'-' if p is None else format(p, '.3f')}x)"
-                f"  area {'-' if um2 is None else format(um2, '.0f')} um2"
+                f"  die {'-' if w is None else format(w, '.0f')} um wide"
+                f" ({'-' if d is None else format(d, '.3f')}x)"
+                f"  cells {'-' if um2 is None else format(um2, '.0f')} um2"
                 f" ({'-' if a is None else format(a, '.3f')}x)")
         if not t.checked(n.id):
             out += "   unchecked kind"
@@ -231,12 +256,18 @@ class Episode:
         """What the search is trying to raise, for showing to an agent. The
         weights are read from the run, never written into a prompt: change them
         and an agent that reads this follows."""
+        t = self.tree
         return {
             "maximise": "score = (baseline ECP / ECP)^timing * (baseline power / power)^power"
+                        " * (baseline die area / die area)^die"
                         " * (baseline cell area / cell area)^area",
-            "weights": self.tree.weights,
+            "weights": t.weights,
             "timing": "pass/fail only: the clock is fixed at 8 MHz; a result whose setup"
                       " slack is below setup_slack_floor_ns in limits can never be the answer",
+            "die": ("set only by the floorplan stage's DIE_WIDTH_UM; the height is fixed at "
+                    f"{t.facts.die_h:g} um and the baseline is {t.facts.die_w:g} um wide; the "
+                    f"narrowest legal width is {t.bounds()[S.WIDTH].lo:g} um"
+                    if t.facts else "fixed"),
             "score_est": "this formula on a node's estimates, corrected by what signoff has shown"
                          " for nodes of its kind. 1.0 is the baseline",
         }
@@ -256,9 +287,10 @@ class Episode:
         """For the agent that picks settings for one stage. Nothing about other stages."""
         tree = self.tree
         n = tree.nodes[node_id]
-        bounds = tree.bounds()
+        bounds = tree.bounds(node_id)
         keys = S.BY_NAME[stage].params
         m = n.metrics
+        w = tree.width(node_id)
         return {
             "stage": stage,
             "resuming_from_node": node_id,
@@ -277,6 +309,8 @@ class Episode:
                 "clock_skew_ns": m.get(f"clock__skew__worst_setup__corner:{S.FOM_CORNER}"),
                 "total_power_w": m.get("power__total"),
                 "utilisation": m.get("design__instance__utilization"),
+                "starting_utilisation_predicted": (None if tree.facts is None or w is None
+                                                   else round(tree.facts.utilisation(w), 3)),
                 "max_slew_violations_tt": m.get(f"design__max_slew_violation__count__corner:{S.FOM_CORNER}"),
                 "max_cap_violations_tt": m.get(f"design__max_cap_violation__count__corner:{S.FOM_CORNER}"),
                 "max_slew_violations_slow": m.get(f"design__max_slew_violation__count__corner:{S.SLOW_CORNER}"),
@@ -481,7 +515,8 @@ def results_table(report: dict) -> str:
     """Every node of a finished search, one line for its estimate and one for its
     signoff if it has one: absolute values, and each as a ratio to the baseline's."""
     head = (f"  {'node':5s}{'':9s}{'score':>7s}{'ECP ns':>10s}{'x base':>8s}{'hold ns':>9s}"
-            f"{'power W':>10s}{'x base':>8s}{'cells um2':>11s}{'x base':>8s}")
+            f"{'power W':>10s}{'x base':>8s}{'die um2':>10s}{'x base':>8s}"
+            f"{'cells um2':>11s}{'x base':>8s}")
 
     def one(nid, what, b, key):
         def f(v, spec):
@@ -489,6 +524,7 @@ def results_table(report: dict) -> str:
         return (f"  {nid:5s}{what:9s}{f(b[key], '.4f'):>7s}{f(b['ecp_ns'], '.4f'):>10s}"
                 f"{f(b['ecp_vs_baseline'], '.4f'):>8s}{f(b['hold_slack_ns'], '.3f'):>9s}"
                 f"{f(b['power_w'], '.4f'):>10s}{f(b['power_vs_baseline'], '.4f'):>8s}"
+                f"{f(b.get('die_area_um2'), '.0f'):>10s}{f(b.get('die_vs_baseline'), '.4f'):>8s}"
                 f"{f(b['cell_area_um2'], '.0f'):>11s}{f(b['area_vs_baseline'], '.4f'):>8s}")
 
     lines = [head]

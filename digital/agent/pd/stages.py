@@ -1,19 +1,32 @@
 """The backend stages an agent may revise, mapped onto LibreLane's real step ids.
 
 A branch at stage S reuses everything before S from a saved state and re-runs S
-onward. Three stages are open for branching: placement, clock tree, global
-routing. Floorplan is fixed. Re-running it reuses nothing, so it costs a whole
-flow, and it is the only place die area can change — two CTS branches with very
-different settings returned byte-identical die area. The die is therefore fixed.
-What a branch does change is how much of it the standard cells
-fill: every buffer that timing repair inserts and every cell it upsizes is cell
-area, and that is the area the score counts.
+onward. Four stages are open for branching: floorplan, placement, clock tree,
+global routing. Floorplan is the only place die area can change — two CTS
+branches with very different settings returned byte-identical die area — and
+re-running it redoes every stage after synthesis, so it costs a whole flow less
+synthesis (about two minutes for ble_tx). The block has to fit a 300 um tall slot
+of the chip, so the floorplan knob is the die's width; the height stays at what
+the design's config.yaml gives. A floorplan branch can start from any result and
+keeps that result's settings for every later stage: find good settings on a wide
+die, then squeeze it. The later stages change how much of the die the standard
+cells fill: every buffer that timing repair inserts and every cell it upsizes is
+cell area. Both areas are scored (pd/ledger.py).
 
-Nine knobs, and each one earned its place by being measured. Every knob listed
+The narrowest die is set by the placement-density limit: a target density may not
+sit below the starting utilisation plus 5 points, and that floor stops at the
+density knob's top of 80 (bounds_for). Utilisation at a width is predicted from the
+baseline's own floorplan (FloorplanFacts below), and DIE_WIDTH_UM may go down to
+the width where the floor reaches 80. A floorplan branch raises the density on its
+path to the floor for its width if it sits below it, so the density on every path
+stays legal without the agent having to know.
+
+Ten knobs, and each one earned its place by being measured. Every knob listed
 here was changed on its own and moved at least one of the numbers the search cares
-about: effective clock period, hold slack, power or cell area. Seven were measured
-on picorv32 and two on ble_tx. That is a higher bar than "LibreLane has a variable
-by that name", and several plausible knobs did not clear it:
+about: effective clock period, hold slack, power, die area or cell area. Five were
+measured on picorv32 and five on ble_tx. That is a higher bar than "LibreLane has a
+variable by that name", and several plausible knobs did not clear it, or cleared it
+on picorv32 and then had nothing to do on ble_tx:
 
   * MAX_FANOUT_CONSTRAINT and DESIGN_REPAIR_MAX_SLEW_PCT were measured on ble_tx,
     one at a time from the baseline's placement state. The repair after placement
@@ -55,6 +68,13 @@ by that name", and several plausible knobs did not clear it:
   * CTS_SINK_CLUSTERING_SIZE gave bit-identical results at 10 and at 40: on a
     design this sparse the cluster diameter is what limits a cluster, never the
     sink count.
+  * PL_RESIZER_SETUP_SLACK_MARGIN and PL_RESIZER_HOLD_SLACK_MARGIN, the margins of
+    the timing repair after clock-tree synthesis (a CTS step, despite the prefix),
+    were knobs and are not any more. On ble_tx setup slack is about 105 ns against
+    the 125 ns clock, so a setup margin has nothing to repair, and hold slack is
+    0.5-0.6 ns at tt without any margin. The one search branch that raised them
+    (hold 0.12, setup 0.05) came back with 2.5% more cell area and 8% more power.
+    Both stay at LibreLane's defaults.
 
 One knob is a switch, not a number, and it matters in a way the others do not.
 PL_TIMING_DRIVEN changes what kind of layout comes out. The numbers a search
@@ -63,13 +83,10 @@ depends on the kind: a comparison between two layouts of one kind can be
 trusted, a comparison across the switch cannot, until a layout of each kind has
 been signed off. kind_of() below names the kind of a node; pd/tree.py corrects
 the estimates of a kind from the nodes of that kind that have been signed off.
-
-Names are not a guide to where a knob acts. PL_RESIZER_SETUP_SLACK_MARGIN and
-PL_RESIZER_HOLD_SLACK_MARGIN are read by the timing repair that runs after
-clock-tree synthesis, so despite the prefix they are CTS-stage knobs.
 """
 from __future__ import annotations
 
+import math
 import random
 from dataclasses import dataclass
 
@@ -107,6 +124,7 @@ POWER_KEY = "power__total"
 # signoff the core has been packed with fill cells and it reads the same for
 # every layout. Before fill is inserted the two keys agree.
 AREA_KEY = "design__instance__area__stdcell"
+DIE_KEY = "design__die__area"
 
 
 def setup_ws(metrics: dict) -> float | None:
@@ -173,7 +191,27 @@ class Stage:
     note: str = ""
 
 
+WIDTH = "DIE_WIDTH_UM"
+DENSITY = "PL_TARGET_DENSITY_PCT"
+
 STAGES: tuple[Stage, ...] = (
+    Stage(
+        name="FP", title="floorplan",
+        first_step="OpenROAD.Floorplan",
+        log_steps=("OpenROAD.Floorplan", "OpenROAD.TapEndcapInsertion", "OpenROAD.GeneratePDN"),
+        params={
+            # Not a LibreLane variable: the runner turns it into DIE_AREA, with the
+            # height from config.yaml (to_librelane). The range is per design and
+            # follows the density limit, see bounds_for.
+            WIDTH: Param(
+                "int", 100, 1400, None,
+                "die width in um at the config's fixed height; narrower means less die "
+                "area and a fuller core, so more routing congestion and slow-corner "
+                "violations; the density on this path is raised to its floor for the width"),
+        },
+        note="Redoes the floorplan and every stage after it, keeping this result's settings "
+             "for those stages. The only stage that changes die area.",
+    ),
     Stage(
         name="PL", title="placement",
         first_step="OpenROAD.GlobalPlacement",
@@ -215,14 +253,21 @@ STAGES: tuple[Stage, ...] = (
             "CTS_SINK_CLUSTERING_MAX_DIAMETER": Param(
                 "int", 50, 400, None,
                 "largest span of a leaf cluster of flip-flops, in um"),
-            "PL_RESIZER_HOLD_SLACK_MARGIN": Param(
-                "float", 0.1, 0.5, 0.1,
-                "hold margin the timing repair after CTS aims for (a CTS knob, despite the name)"),
-            "PL_RESIZER_SETUP_SLACK_MARGIN": Param(
-                "float", 0.0, 0.5, 0.05,
-                "setup margin the timing repair after CTS aims for (a CTS knob, despite the name)"),
+            # Set to 150 and 100 in config.yaml, which cleared the clock root's
+            # capacitance violation on the 1400 um die. On a die narrowed to 300-340 um
+            # the clock-gated design's root buffer carried 0.25 pF against 0.2 at those
+            # values, and 80 and 60 cleared it; the clean 300 um run of this netlist
+            # used 80 and 60 too.
+            "CTS_CLK_MAX_WIRE_LENGTH": Param(
+                "int", 50, 300, None,
+                "longest clock wire before CTS adds a buffer, in um; shorter means more "
+                "clock buffers and less load on each, which a full core can need"),
+            "CTS_DISTANCE_BETWEEN_BUFFERS": Param(
+                "int", 40, 200, None,
+                "spacing of the buffers CTS puts on long clock wires, in um"),
         },
-        note="Keeps the placement. Shapes the clock tree and the timing repair after it.",
+        note="Keeps the placement. Shapes the clock tree: how far its wires run and how "
+             "closely its buffers sit.",
     ),
     Stage(
         name="GR", title="global routing",
@@ -270,28 +315,102 @@ def downstream(stage: str) -> tuple[str, ...]:
 
 def after(stage: str | None) -> tuple[str, ...]:
     """Stages strictly after `stage`. A node made by branching at CTS can only
-    seed a GR branch: redoing CTS from it is the same as branching its parent."""
+    seed a GR branch: redoing CTS from it is the same as branching its parent.
+    The floorplan is the exception, offered from every node (pd/tree.py)."""
     if stage is None:
         return NAMES
     return NAMES[NAMES.index(stage) + 1:]
 
 
+# ----------------------------------------------------------------- the die
+@dataclass(frozen=True)
+class FloorplanFacts:
+    """The baseline's floorplan, read just before placement: enough to predict the
+    starting utilisation of the same netlist on a die of another width.
+
+    The core sits inside fixed margins and its height does not change with the
+    width. Tap cells are placed at a fixed pitch, so they fill a fixed share of
+    the core; everything else that is placed before placement (the synthesised
+    netlist, endcaps, ties) is the same area whatever the width."""
+    die_w: float
+    die_h: float
+    core_w: float
+    core_h: float
+    cells: float            # area placed before placement, tap cells not counted
+    tap_share: float        # tap-cell area over core area
+
+    @classmethod
+    def from_metrics(cls, m: dict) -> "FloorplanFacts | None":
+        try:
+            dx0, dy0, dx1, dy1 = (float(v) for v in str(m["design__die__bbox"]).split())
+            cx0, cy0, cx1, cy1 = (float(v) for v in str(m["design__core__bbox"]).split())
+            core = (cx1 - cx0) * (cy1 - cy0)
+            taps = float(m.get("design__instance__area__class:tap_cell") or 0.0)
+            placed = float(m["design__instance__utilization"]) * core
+        except (KeyError, TypeError, ValueError):
+            return None
+        return cls(dx1 - dx0, dy1 - dy0, cx1 - cx0, cy1 - cy0, placed - taps, taps / core)
+
+    def core_area(self, width: float) -> float:
+        return (width - (self.die_w - self.core_w)) * self.core_h
+
+    def utilisation(self, width: float) -> float:
+        """Starting utilisation of the baseline netlist on a die `width` um wide."""
+        core = self.core_area(width)
+        return 1.0 if core <= 0 else self.cells / core + self.tap_share
+
+    def narrowest(self) -> int:
+        """The narrowest whole-um width whose density floor is still below its cap:
+        starting utilisation + 5 points at most 75."""
+        u = DENSITY_FLOOR_CAP / 100 - DENSITY_FLOOR_STEP / 100
+        core = self.cells / (u - self.tap_share)
+        return math.ceil(core / self.core_h + (self.die_w - self.core_w))
+
+
+# The density limit: a target may not sit below the starting utilisation plus
+# DENSITY_FLOOR_STEP points, and that floor stops at DENSITY_FLOOR_CAP. The cap is
+# the density knob's own top, 80: a die is legal as long as some density within the
+# knob's range can still honour it. (It was 75, which kept ble_tx at 319 um or wider.)
+DENSITY_FLOOR_STEP = 5
+DENSITY_FLOOR_CAP = 80
+
+
+def density_floor(utilisation: float) -> int:
+    return min(DENSITY_FLOOR_CAP, int(utilisation * 100) + DENSITY_FLOOR_STEP)
+
+
+def to_librelane(params: dict, die_height: float | None) -> dict:
+    """The settings as LibreLane reads them: DIE_WIDTH_UM becomes DIE_AREA."""
+    out = dict(params)
+    w = out.pop(WIDTH, None)
+    if w is not None and die_height:
+        out["DIE_AREA"] = f"0 0 {w:g} {die_height:g}"
+    return out
+
+
 # ----------------------------------------------------------------- bounds
-def bounds_for(utilisation: float | None = None) -> dict[str, Param]:
+def bounds_for(utilisation: float | None = None, facts: FloorplanFacts | None = None,
+               width: float | None = None) -> dict[str, Param]:
     """The legal range of every knob for one design.
 
-    Only one bound depends on the design: the placement-density floor follows
-    the utilisation. A target below the utilisation cannot be honoured. This flow
+    Two bounds depend on the design. The placement-density floor follows the
+    utilisation. A target below the utilisation cannot be honoured. This flow
     does not fail on one — a 12% target on a 30%-utilised design was checked and
     ran — so the floor is not there to prevent a crash; it keeps the search out of
-    a region where the knob has stopped meaning what its name says.
+    a region where the knob has stopped meaning what its name says. With `facts`
+    the utilisation is the predicted starting one on a die `width` um wide (the
+    baseline's width if None), and the die width runs from the narrowest width the
+    density floor allows to the baseline's.
     """
     out = {k: p for s in STAGES for k, p in s.params.items()}
+    if facts is not None:
+        utilisation = facts.utilisation(width or facts.die_w)
+        p = out[WIDTH]
+        out[WIDTH] = Param(p.kind, facts.narrowest(), round(facts.die_w), p.default, p.what)
     if utilisation:
-        floor = min(75, int(utilisation * 100) + 5)
-        p = out["PL_TARGET_DENSITY_PCT"]
-        out["PL_TARGET_DENSITY_PCT"] = Param(p.kind, max(p.lo, floor), p.hi,
-                                             p.default, p.what)
+        p = out[DENSITY]
+        out[DENSITY] = Param(p.kind, max(p.lo, density_floor(utilisation)), p.hi,
+                             p.default, p.what)
     return out
 
 

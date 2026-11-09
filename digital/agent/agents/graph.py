@@ -177,9 +177,10 @@ def cli():
                    metavar="{rule,agent,either}",
                    help="override policy.STOP_POLICY (the old value critic still means agent)")
     p.add_argument("--seed", type=int, default=0)
-    p.add_argument("--weights", default=None, metavar="T,P,A",
-                   help="score weights for timing, power and area, to try a different "
-                        "priority; the default is WEIGHTS in pd/ledger.py")
+    p.add_argument("--weights", default=None, metavar="T,P,D,A",
+                   help="score weights for timing, power, die area and cell area, to try a "
+                        "different priority (three numbers: timing, power, cell area); "
+                        "the default is WEIGHTS in pd/ledger.py")
     p.add_argument("--model", action="append", default=[], metavar="ROLE=ID",
                    help="give one agent another model for this run, for example "
                         "navigator=openrouter/anthropic/claude-opus-5.5; repeat for several. "

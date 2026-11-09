@@ -188,7 +188,7 @@ def propose_candidates(stage: str, count: int = 4) -> dict:
     """Return a few legal settings for one stage.
 
     Args:
-      stage: PL, CTS or GR.
+      stage: FP, PL, CTS or GR.
       count: how many settings to return, at most 6.
     """
     ep = episode()
@@ -200,7 +200,7 @@ def propose_candidates(stage: str, count: int = 4) -> dict:
                         + _CFG.get("seed", 0) * 7919)
     n = max(1, min(int(count or 4), 6))
     return {"stage": stage,
-            "candidates": policy.propose(stage, ep.tree.bounds(),
+            "candidates": policy.propose(stage, ep.tree.bounds(_PENDING.get("node_id")),
                                          ep.tree.tried(stage, limit=50), rng, n)}
 
 
@@ -217,7 +217,7 @@ def submit_action(stage: str, parameters: dict, rationale: str) -> dict:
     want = _PENDING.get("stage")
     if stage != want:
         return {"accepted": False, "problems": [f"you were asked to tune {want}, not {stage}"]}
-    bounds = ep.tree.bounds()
+    bounds = ep.tree.bounds(_PENDING.get("node_id"))
     params = S.coerce(parameters or {}, bounds)
     mine = S.BY_NAME[stage].params
     problems = [f"{k} is not a {stage} knob" for k in params if k not in mine]
@@ -248,7 +248,7 @@ async def apply(ctx) -> Event:
         # The agent talked instead of calling submit_action. Keep the iteration
         # useful, and count it: a high number means the prompt needs work.
         ep.fallbacks += 1
-        params = S.sample(stage, random.Random(len(ep.tree.order)), ep.tree.bounds())
+        params = S.sample(stage, random.Random(len(ep.tree.order)), ep.tree.bounds(nid))
         why = "stage agent submitted nothing; a sampled setting was used"
 
     n = ep.branch(nid, stage, params or {}, note=why)

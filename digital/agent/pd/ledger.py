@@ -41,10 +41,11 @@ TOLERANCE = 1.05          # die area and power may not exceed baseline by more t
 # The score weighs three things a backend engineer trades against each other,
 # each taken as a ratio to the untouched flow (subscript 0):
 #
-#     score = (ECP0 / ECP)^timing  x  (P0 / P)^power  x  (A0 / A)^area
+#     score = (ECP0 / ECP)^timing  x  (P0 / P)^power  x  (D0 / D)^die  x  (A0 / A)^area
 #
 #     ECP   effective clock period: the clock period minus the worst setup slack
 #     P     total power
+#     D     die area, the rectangle the block takes on the chip
 #     A     standard-cell area, fill cells not counted
 #
 # The three exponents below are the priorities, and they are the only thing to
@@ -61,9 +62,11 @@ TOLERANCE = 1.05          # die area and power may not exceed baseline by more t
 # BLE TX: the modulator runs at a fixed 8 MHz (CLOCK_PERIOD 125 in the design's
 # config.yaml), one 8 MS/s DAC code per clock. A faster clock buys nothing, so
 # timing carries no weight and is a pass/fail gate instead (SETUP_FLOOR_NS
-# below). The die is fixed, so the layout should use as little of it as possible:
-# the score is mostly standard-cell area (0.9), with a little weight on power (0.1).
-WEIGHTS = {"timing": 0.0, "power": 0.1, "area": 0.9}
+# below). The block shares a 1400 x 300 um tapeout slot with the rest of the
+# Bluetooth chip, so what counts most is the die it takes (0.6), set by the
+# floorplan's width. Cell area (0.3) is what lets a die shrink and separates
+# results on dies of one width; power keeps a little weight (0.1).
+WEIGHTS = {"timing": 0.0, "power": 0.1, "die": 0.6, "area": 0.3}
 
 # The 8 MHz timing gate. A result passes only when its worst setup slack against
 # CLOCK_PERIOD is at least this many ns, both at the scoring corner (tt) and at
@@ -71,17 +74,21 @@ WEIGHTS = {"timing": 0.0, "power": 0.1, "area": 0.9}
 # numbers in gate() and to the post-GR estimates when screening candidates
 # (pd/tree.py), so a run that misses 8 MHz can never become the answer.
 SETUP_FLOOR_NS = 0.0
-TERMS = {"timing": "effective clock period", "power": "total power", "area": "cell area"}
+TERMS = {"timing": "effective clock period", "power": "total power", "die": "die area",
+         "area": "cell area"}
 
 
 def parse_weights(text: str | None) -> dict:
-    """'0,0.1,0.9' -> weights for timing, power, area. None gives WEIGHTS."""
+    """'0,0.1,0.6,0.3' -> weights for timing, power, die, area. Three numbers are
+    timing, power and area, as before die area was scored. None gives WEIGHTS."""
     if not text:
         return dict(WEIGHTS)
     parts = [float(x) for x in text.split(",")]
-    if len(parts) != 3 or min(parts) < 0 or not any(parts):
-        raise ValueError(f"weights are three numbers, timing,power,area, none negative "
-                         f"and not all zero; got {text!r}")
+    if len(parts) == 3:
+        parts = parts[:2] + [0.0] + parts[2:]
+    if len(parts) != 4 or min(parts) < 0 or not any(parts):
+        raise ValueError(f"weights are four numbers, timing,power,die,area (or three, "
+                         f"timing,power,area), none negative and not all zero; got {text!r}")
     return dict(zip(TERMS, parts))
 
 
@@ -92,6 +99,7 @@ def versus(baseline: dict, metrics: dict, clock_ns: float) -> dict:
     return {"timing": over(S.effective_clock_period(metrics, clock_ns),
                            S.effective_clock_period(baseline, clock_ns)),
             "power": over(metrics.get(S.POWER_KEY), baseline.get(S.POWER_KEY)),
+            "die": over(metrics.get(S.DIE_KEY), baseline.get(S.DIE_KEY)),
             "area": over(metrics.get(S.AREA_KEY), baseline.get(S.AREA_KEY))}
 
 
@@ -344,9 +352,6 @@ def score(baseline: dict, final: dict, clock_ns: float, ledger: Ledger,
         reasons.append("not reported at signoff: " + ", ".join(
             TERMS[t] for t in TERMS if w.get(t) and vs[t] is None))
     ratios = {TERMS[t]: None if vs[t] is None else round(vs[t], 4) for t in TERMS}
-    b, f = baseline.get("design__die__area"), final.get("design__die__area")
-    if b and f:
-        ratios["die area"] = round(float(f) / float(b), 4)
 
     raw = None if raw is None else round(raw, 5)
     gain_pct = None if raw is None else round((raw - 1.0) * 100, 3)

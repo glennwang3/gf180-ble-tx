@@ -187,8 +187,10 @@ def logic() -> None:
         k.nodes["n1"].signoff_metrics[S.HOLD_KEY] = -0.01
         check("a node that failed at signoff is not a candidate, whatever its estimate",
               "evaluated and failed" in (k.why_not("n1") or ""))
-        check("weights are read as timing,power,area",
-              parse_weights("1,0.5,0") == {"timing": 1.0, "power": 0.5, "area": 0.0})
+        check("weights are read as timing,power,die,area",
+              parse_weights("1,0.5,0.2,0") == {"timing": 1.0, "power": 0.5, "die": 0.2, "area": 0.0})
+        check("three weights are timing,power,area, with die area unscored",
+              parse_weights("1,0.5,0") == {"timing": 1.0, "power": 0.5, "die": 0.0, "area": 0.0})
         try:
             parse_weights("0,0,0")
             check("all-zero weights are refused", False)
@@ -651,6 +653,77 @@ def environment() -> None:
     print(f"  key   {apikey.source()}  {apikey.masked() if apikey.load(required=False) else ''}")
 
 
+def floorplan() -> None:
+    """The die-width knob: its range, how it reaches LibreLane, where it may branch."""
+    print("floorplan")
+    from . import runner
+    from .episode import Episode
+    facts = S.FloorplanFacts(die_w=1400, die_h=300, core_w=1386.56, core_h=266.56,
+                             cells=54487.0, tap_share=0.0291)
+    check("the baseline's width predicts the baseline's utilisation",
+          abs(facts.utilisation(1400) - (54487 / (1386.56 * 266.56) + 0.0291)) < 1e-9)
+    lo = facts.narrowest()
+    check("the narrowest width is where the density floor reaches its cap",
+          S.density_floor(facts.utilisation(lo)) <= S.DENSITY_FLOOR_CAP
+          and facts.utilisation(lo) + S.DENSITY_FLOOR_STEP / 100 <= S.DENSITY_FLOOR_CAP / 100
+          and facts.utilisation(lo - 1) + S.DENSITY_FLOOR_STEP / 100 > S.DENSITY_FLOOR_CAP / 100)
+    b = S.bounds_for(facts=facts, width=400)
+    check("the width runs from that floor to the baseline's",
+          (b[S.WIDTH].lo, b[S.WIDTH].hi) == (lo, 1400) and bool(S.validate({S.WIDTH: lo - 1}, b)))
+    check("the density floor follows the width",
+          b[S.DENSITY].lo == S.density_floor(facts.utilisation(400))
+          > S.bounds_for(facts=facts)[S.DENSITY].lo)
+    check("the width reaches LibreLane as DIE_AREA at the config's height",
+          S.to_librelane({S.WIDTH: 330, "GRT_ADJUSTMENT": 0.2}, 300.0)
+          == {"GRT_ADJUSTMENT": 0.2, "DIE_AREA": "0 0 330 300"})
+    check("without a width the settings pass through", S.to_librelane({"A": 1}, 300.0) == {"A": 1})
+    check("the die height is read from config.yaml",
+          runner.die_height(Path(__file__).parents[1] / "designs" / "ble_tx") == 300.0)
+
+    with tempfile.TemporaryDirectory() as d:
+        tmp = Path(d)
+
+        def snaps(stages):
+            out = {}
+            for s in stages:
+                p = tmp / f"{len(list(tmp.iterdir()))}_{s}.json"
+                p.write_text("{}")
+                out[s] = str(p)
+            return out
+
+        t = Tree(125.0)
+        r0 = _res(5.0); r0.stage_states = snaps(["FP", "PL", "CTS", "GR"])
+        t.add(None, None, {}, r0)
+        t.facts = facts
+        r1 = _res(5.0); r1.stage_states = snaps(["GR", END])
+        t.add("n0", "CTS", {}, r1)
+        r2 = _res(5.0); r2.stage_states = snaps(["PL", "CTS", "GR", END])
+        t.add("n0", "FP", {S.WIDTH: 400}, r2)
+        opts = t.branchable()
+        check("the floorplan is offered from every finished node",
+              {("n0", "FP"), ("n1", "FP"), ("n2", "FP")} <= set(opts)
+              and sum(1 for o in opts if o == ("n0", "FP")) == 1)
+        check("a floorplan branch resumes from the baseline's netlist",
+              t.state_for("n1", "FP") == r0.stage_states["FP"])
+        check("a node's width is its own setting, else the baseline's",
+              (t.width("n2"), t.width("n1")) == (400.0, 1400.0))
+        check("a node's density floor follows its width",
+              t.bounds("n2")[S.DENSITY].lo == S.density_floor(facts.utilisation(400)))
+        check("a floorplan branch keeps the node's settings for later stages",
+              S.blend({"MAX_FANOUT_CONSTRAINT": 9}, {S.WIDTH: 350}, "FP")
+              == {"MAX_FANOUT_CONSTRAINT": 9, S.WIDTH: 350})
+        check("the floorplan facts survive the round trip", Tree.load(_save(t, tmp)).facts == facts)
+
+        ep = Episode(tmp, tmp, 125.0, t, Ledger())
+        p = {S.WIDTH: 330, S.DENSITY: 50}
+        ep._raise_density(p)
+        check("a floorplan branch raises a density below the new width's floor",
+              p[S.DENSITY] == S.density_floor(facts.utilisation(330)))
+        p = {S.WIDTH: 1000, S.DENSITY: 70}
+        ep._raise_density(p)
+        check("and never lowers one", p[S.DENSITY] == 70)
+
+
 if __name__ == "__main__":
     gate_8mhz()
     # The framework checks below were written for a design scored on
@@ -658,6 +731,7 @@ if __name__ == "__main__":
     # setup handling (no gate) so they keep testing the plumbing.
     L.SETUP_FLOOR_NS = None
     logic()
+    floorplan()
     signoff()
     digest()
     cache()

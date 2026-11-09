@@ -1,8 +1,9 @@
 """What each agent is told, for the ble_tx layout search.
 
 What changes from one iteration to the next is not written here: it reaches the
-agent as its context, built in views.py. The design facts (fixed 8 MHz clock and
-die, score on power and cell area, timing as a gate) come from
+agent as its context, built in views.py. The design facts (fixed 8 MHz clock, die
+height fixed and width searched, score on die area, cell area and power, timing as
+a gate) come from
 designs/ble_tx/config.yaml and pd/ledger.py; numbers from policy.py are read from
 there.
 
@@ -34,7 +35,7 @@ class NavigatorDecision(BaseModel):
     action: str = Field(description="branch or evaluate (read by the program)")
     node_id: str = Field(description="For a branch, the result to start from; to evaluate, "
                                      "the result to evaluate (read by the program)")
-    stage: str = Field(description="For a branch: PL, CTS or GR. To evaluate: empty "
+    stage: str = Field(description="For a branch: FP, PL, CTS or GR. To evaluate: empty "
                                    "(read by the program)")
     hint: str = Field(description="For a branch: advice for the stage agent (read by the program)")
     reason: str = Field(description="Why this move")
@@ -43,16 +44,20 @@ class NavigatorDecision(BaseModel):
 NAVIGATOR = _join(
     """
 You steer a search over backend layouts of ble_tx, a small Bluetooth LE modulator on
-gf180mcuD. Every move costs one flow run. The clock is fixed at 8 MHz (125 ns) and
-the die is fixed, so a branch can only change power and standard-cell area. Timing
-is a gate, not a goal: a result meets 8 MHz or it is out.
+gf180mcuD. It shares a 1400 x 300 um tapeout slot with the rest of a Bluetooth chip,
+so the goal is the smallest die. Every move costs one flow run. The clock is fixed at
+8 MHz (125 ns). The die height is fixed; its width is the floorplan stage's knob, and
+read objective for the narrowest width allowed. Timing is a gate, not a goal: a
+result meets 8 MHz or it is out.
 """,
     """
-Two moves. A branch starts from a result in the tree, reruns one stage (PL, CTS or
-GR) and the stages after it, and stops after global routing, so its timing, power
-and area are estimates. An evaluate takes an existing result through detailed
-routing and signoff to get its real figures, and corrects the estimates of every
-result with the same placement mode.
+Two moves. A branch starts from a result in the tree, reruns one stage (FP, PL, CTS
+or GR) and the stages after it, and stops after global routing, so its timing, power
+and area are estimates; die area is exact. An FP branch can start from any result: it
+redoes the floorplan at a new width and keeps that result's settings for every later
+stage. An evaluate takes an existing result through detailed routing and signoff to
+get its real figures, and corrects the estimates of every result with the same
+placement mode.
 """,
     """
 Read the score formula and weights from objective every time; higher score_est is
@@ -68,21 +73,27 @@ reason given there.
 Evaluate during the search only when the answer changes what you do next: to check a
 placement mode (timing-driven on or off) that has no evaluated result yet, since the
 estimates are off by different amounts for each, or to check a result the search is
-building on. Runs left at the end are spent on evaluations anyway. An evaluation that
-fails on slew or capacitance violations rules out every result with a fanout limit at
-least as high and a slew margin no higher, so do not evaluate again until you have a
-result that is safer on one of them.
+building on, or a die narrower than any evaluated so far, since a fuller core is
+where signoff finds new violations. Runs left at the end are spent on evaluations
+anyway. An evaluation that fails on slew or capacitance violations rules out every
+result with a fanout limit at least as high, a slew margin no higher and a die no
+wider, so do not evaluate again until you have a result that is safer on one of them.
 """,
     """
-In earlier searches of this design the placement stage moved cell area by more than
-20%, through its fanout limit, while clock tree and global routing reruns moved it by
-about 1% at most and often not at all. Spend most branches on placement, and rerun
-the clock tree or global routing only to fine-tune a placement result that is already
-a candidate.
+Die area carries the most weight, and only FP changes it; objective gives the
+baseline's width and the narrowest allowed. A narrower die is worth having only if
+it signs off clean, and a fuller core is harder to clean. A good order is to find a
+legal result on the baseline's die first, then try an FP branch from it so its
+settings come along. Tune on whatever width is legal: in earlier searches of this design the
+placement stage moved cell area by about 8%, through its fanout limit, while clock
+tree and global routing reruns moved it by about 1% at most. A smaller cell area also
+lets a later FP branch go narrower. Rerun the clock tree or global routing only to
+fine-tune a result that is already a candidate.
 """,
     """
 To branch, set action to branch and take node_id and stage from one entry of
-legal_branches, split at the colon. Give a hint saying what to aim for (whichever
+legal_branches: node_id is the part before the colon and stage the part after it.
+Give a hint saying what to aim for (for FP, the width to try; otherwise whichever
 of power and area carries weight; speed beyond 8 MHz earns nothing) and which limit
 is close. To evaluate, set
 action to evaluate, take node_id from can_evaluate, and leave stage and hint empty.
@@ -95,9 +106,21 @@ Always give a short reason.
 STAGE_AGENT = _join(
     """
 You choose settings for one stage of the backend flow for ble_tx, a small Bluetooth
-LE modulator clocked at a fixed 8 MHz. Power and standard-cell area are scored, each
-by its weight in objective: a term with weight 0 is not worth improving, though power
-still has a ceiling in limits. Setup slack only has to stay above its floor.
+LE modulator clocked at a fixed 8 MHz. Power, die area and standard-cell area are
+scored, each by its weight in objective: a term with weight 0 is not worth improving,
+though power still has a ceiling in limits. Setup slack only has to stay above its
+floor.
+""",
+    """
+In the floorplan stage (FP) the only knob is DIE_WIDTH_UM; the height is fixed. A
+narrower die means less die area and a fuller core: the program raises the placement
+density on the path to the floor for the new width, and the legal range already stops
+where that floor reaches its cap. Measured on this design with the flow's present
+core margins and clock tree, fanout 7 and density at its floor: 300 and 310 um signed
+off clean at about 80% utilisation. An earlier search with thicker margins and three
+fix passes lost 322-325 um to 3-5 slew violations at the slow corner; signoff now
+makes up to five passes, and 322 um with fanout 6 signed off clean with four. Use
+starting_utilisation_predicted and the hint to pick the width.
 """,
     """
 Your context names the stage and the result the branch starts from. Use

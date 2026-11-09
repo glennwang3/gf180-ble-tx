@@ -63,7 +63,7 @@ def load(work: Path, weights: dict | None = None) -> dict | None:
         "what_if": None if weights is None else rescore(s, weights),
         "weights": "/".join(f"{v:g}" for v in (s.get("weights") or {}).values()) or "timing only",
         "vs": " / ".join("-" if vs.get(k) is None else f"{vs[k]:.3f}" for k in TERMS.values()),
-        "branches": "/".join(str(b.get(k, 0)) for k in ("PL", "CTS", "GR")),
+        "branches": "/".join(str(b.get(k, 0)) for k in ("FP", "PL", "CTS", "GR")),
         "evaluations": f"{len(good)} of {len(made)}",
         "name": work.name,
         "method": rep.get("method", "?"),
@@ -91,7 +91,7 @@ def load(work: Path, weights: dict | None = None) -> dict | None:
 COLS = [("name", "run"), ("method", "method"), ("score", "score"), ("weights", "weights t/p/a"),
         ("vs", "ECP / power / cell area vs baseline"), ("ecp", "ECP ns (signoff)"),
         ("slack", "setup slack"), ("hold", "hold slack"), ("final", "answer"),
-        ("branches", "branches PL/CTS/GR"), ("early", "evaluations in search"),
+        ("branches", "branches FP/PL/CTS/GR"), ("early", "evaluations in search"),
         ("evaluations", "evaluations passed"),
         ("runs", "flow runs"), ("failed", "failed"), ("flow_min", "flow min"), ("usd", "$")]
 

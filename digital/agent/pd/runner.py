@@ -54,8 +54,9 @@ END = "END"     # snapshot key for a run's final state: where signoff resumes
 HEADLINE = (
     S.WS_KEY, S.WS_WORST_KEY, S.HOLD_KEY, S.HOLD_WORST_KEY,
     f"timing__setup__tns__corner:{S.FOM_CORNER}",
-    "design__die__area", "design__instance__area", S.AREA_KEY,
-    "design__instance__utilization",
+    S.DIE_KEY, "design__instance__area", S.AREA_KEY,
+    "design__instance__utilization", "design__die__bbox", "design__core__bbox",
+    "design__instance__area__class:tap_cell",
     "design__instance__count", "design__instance__count__class:timing_repair_buffer",
     "design__instance__count__class:clock_buffer",
     S.POWER_KEY, "global_route__wirelength", "route__wirelength",
@@ -155,10 +156,31 @@ def _console_to(path: Path):
             os.close(saved[0]); os.close(saved[1])
 
 
+def die_height(design_dir: Path) -> float | None:
+    """The die height config.yaml gives, which a DIE_WIDTH_UM setting keeps."""
+    cfg = Path(design_dir) / "config.yaml"
+    m = re.search(r"^DIE_AREA:\s*\[([^\]]+)\]", cfg.read_text(), re.M) if cfg.exists() else None
+    if not m:
+        return None
+    y0, y1 = (float(v) for v in m[1].split(",")[1::2])
+    return y1 - y0
+
+
+def config_value(design_dir: Path, key: str) -> str | None:
+    """One plain value from config.yaml, as written there."""
+    cfg = Path(design_dir) / "config.yaml"
+    m = re.search(rf"^{key}:\s*(\S+)", cfg.read_text(), re.M) if cfg.exists() else None
+    return m[1] if m else None
+
+
 def _flow(design_dir: Path, overrides: dict | None):
     _ensure_path()
     from librelane.flows import Flow
-    strings = [f"{k}={v}" for k, v in (overrides or {}).items()]
+    # Every launch gets the node's die, signoff included: signoff reads config.yaml
+    # again, and a die there that differs from the layout's fails the KLayout-vs-
+    # Magic XOR on the die boundary (layer 0/0).
+    overrides = S.to_librelane(overrides or {}, die_height(design_dir))
+    strings = [f"{k}={v}" for k, v in overrides.items()]
     return Flow.factory.get("Classic")(
         str(design_dir / "config.yaml"),
         design_dir=str(design_dir),
@@ -173,6 +195,14 @@ def _num(v):
         return float(v)
     except (TypeError, ValueError):
         return v
+
+
+def floorplan_facts(stage_states: dict) -> S.FloorplanFacts | None:
+    """The baseline's floorplan as it stood before placement, from its PL snapshot."""
+    p = (stage_states or {}).get("PL")
+    if not p or not os.path.exists(p):
+        return None
+    return S.FloorplanFacts.from_metrics(json.loads(Path(p).read_text()).get("metrics") or {})
 
 
 def _pick(metrics) -> dict:
@@ -542,7 +572,14 @@ def fork(design_dir: str | Path, ancestor_state: str, stage: str, params: dict,
 # global routing. Measured on ble_tx (fanout 4, delay cells excluded): pass 1
 # upsized 11 drivers and left 2 violations at max_ss, pass 2 one more and left none,
 # for 26 um2 of extra cell area. FIX_PASSES bounds the number of reroutes.
-FIX_PASSES = 3
+#
+# On a die narrowed to 322-325 um, three passes left 3 to 5 slew violations at
+# max_ss: a driver one upsize had not been enough for, or one already at its largest
+# size. So there are five passes, and from the second on a driver that was upsized
+# before and still fails, or that has no larger size, gets a buffer (FIX_BUFFER)
+# at its output instead (pd/upsize.tcl).
+FIX_PASSES = 5
+FIX_BUFFER = "gf180mcu_fd_sc_mcu7t5v0__buf_4"
 FIX_CORNERS = (S.FOM_CORNER, S.SLOW_CORNER, S.SLOW_CORNER_MAX)
 _UPSIZE_TCL = Path(__file__).with_name("upsize.tcl")
 _LIB = ("/foss/pdks/gf180mcuD/libs.ref/gf180mcu_fd_sc_mcu7t5v0/lib/"
@@ -574,16 +611,21 @@ def _violating_pins(run_dir: Path) -> dict:
     return pins
 
 
-def _upsize(state_json: str, pins: dict, dest: Path) -> tuple[str | None, list[str]]:
-    """A copy of a post-GR state with the violating pins' drivers upsized."""
+def _upsize(state_json: str, pins: dict, dest: Path,
+            done: tuple[str, ...] = ()) -> tuple[str | None, list[str]]:
+    """A copy of a post-GR state with the violating pins' drivers upsized, or
+    buffered where an earlier pass (`done`) upsized them already."""
     import subprocess
     snap = Path(_snapshot(Path(state_json), dest))
     st = json.loads(snap.read_text())
     env = dict(os.environ, LIB=_LIB, IN_ODB=st["odb"], OUT_DIR=str(dest),
-               PINS=" ".join(f"{p} {r:.4f}" for p, r in pins.items()))
+               PINS=" ".join(f"{p} {r:.4f}" for p, r in pins.items()),
+               DONE=" ".join(done), BUFFER=FIX_BUFFER)
     r = subprocess.run(["openroad", "-exit", "-no_init", str(_UPSIZE_TCL)], env=env,
                        capture_output=True, text=True)
-    swaps = [l[len("UPSIZE: "):] for l in r.stdout.splitlines() if l.startswith("UPSIZE: ")]
+    swaps = [l.split(": ", 1)[1] if l.startswith("UPSIZE: ") else "buffered " + l.split(": ", 1)[1]
+             for l in r.stdout.splitlines() if l.startswith(("UPSIZE: ", "BUFFER: "))]
+    swaps = [s for s in swaps if " has no larger size" not in s and " could not be buffered" not in s]
     (dest / "upsize.log").write_text(r.stdout + r.stderr)
     if r.returncode != 0:
         return None, swaps
@@ -635,7 +677,8 @@ def signoff(design_dir: str | Path, end_state: str, params: dict,
             i = _find(_step_dirs(rd), S.IN_LOOP_STOP)
             mid = str(_step_dirs(rd)[i] / "state_out.json") if i is not None else None
         eco = run_dir.parent / f"{run_dir.name}_eco{passes + 1}"
-        nxt, done = _upsize(mid, pins, eco) if pins and mid else (None, [])
+        upsized = tuple(s.split()[0] for s in swaps if not s.startswith("buffered "))
+        nxt, done = _upsize(mid, pins, eco, upsized) if pins and mid else (None, [])
         if not nxt:
             break
         swaps += done

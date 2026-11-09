@@ -17,14 +17,26 @@ SYNTH_PARAMETERS: ["SPS=8"]
 CLOCK_PORT: clk
 CLOCK_PERIOD: 125
 
-# The die is fixed at 1400 x 300 um by the project, not sized from the cell area.
-# The floorplan runs once, in the baseline, and every branch reuses it. What a
-# branch changes is how much of the die the cells fill (buffers and upsizing),
-# which is the area the score counts.
+# The whole Bluetooth chip has a 1400 x 300 um tapeout slot, and this block should
+# take as little of it as it can. The baseline is 330 um wide: a width sweep of this
+# netlist routed at 300, 330 and 360 um (fanout 9). The search keeps the height and
+# can narrow the width: its floorplan stage sets DIE_WIDTH_UM, which the runner turns
+# into DIE_AREA at this height (pd/stages.py), down to the width where the
+# placement-density floor reaches its cap. The density here was that floor at 330 um
+# with the default margins (starting utilisation 67%, plus 5 points); it is above the
+# floor with the thinner margins below, so the baseline did not need to change.
 FP_SIZING: absolute
-DIE_AREA: [0, 0, 1400, 300]
-PL_TARGET_DENSITY_PCT: 50
+DIE_AREA: [0, 0, 330, 300]
+PL_TARGET_DENSITY_PCT: 72
 IO_DELAY_CONSTRAINT: 10
+
+# Core margins top and bottom, in rows (3.92 um each). LibreLane's default of 4 left
+# the core 266.6 um tall in the 300 um die; 2 rows make it 282.2 um, 6% more core per
+# um of width. Measured with 2 rows, the clock tree below, fanout 7 and density at its
+# floor: 300 and 310 um wide signed off with no violation at any corner and no
+# DRC, LVS or antenna error (64,892 and 65,068 um2 of cells, 80% and 78% full).
+BOTTOM_MARGIN_MULT: 2
+TOP_MARGIN_MULT: 2
 
 # The ss_125C_4v50 corner breaks the 3 ns max-slew limit with default repair
 # (bit_idx fans out to the 39-byte PDU read mux). Repair with margin.
@@ -46,9 +58,13 @@ EXTRA_EXCLUDED_CELLS:
 
 # Clock tree: with the defaults the clock root buffer (clkbuf_0_clk) carries 0.33 pF
 # against a 0.2 pF limit at the slow corner. A shorter clock wire and buffer spacing
-# clear that violation at no cost in area (measured from the baseline's placement).
-CTS_CLK_MAX_WIRE_LENGTH: 150
-CTS_DISTANCE_BETWEEN_BUFFERS: 100
+# clear that violation at no cost in area (measured from the baseline's placement):
+# 150 and 100 on the 1400 um die. On a die narrowed to about 300 um the clock-gated
+# design still overloaded its root at those values and 80 and 60 cleared it; the
+# clean 300 and 310 um runs of this netlist used 80 and 60. The CTS stage can change
+# both (pd/stages.py).
+CTS_CLK_MAX_WIRE_LENGTH: 80
+CTS_DISTANCE_BETWEEN_BUFFERS: 60
 
 # Locked: the default 'half' clock NDR fails detailed routing on
 # this PDK (DRT-0073).

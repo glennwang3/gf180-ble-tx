@@ -72,6 +72,7 @@ class Tree:
         self.power_ceiling = power_ceiling      # estimated power / baseline's; None: not checked
         self.nodes: dict[str, Node] = {}
         self.order: list[str] = []
+        self.facts: S.FloorplanFacts | None = None     # the baseline's floorplan, see stages.py
 
     # ---------------------------------------------------------------- building
     def next_id(self) -> str:
@@ -91,15 +92,34 @@ class Tree:
         self.order.append(nid)
         if parent in self.nodes:
             self.nodes[parent].branched += 1
+        if len(self.order) == 1:
+            self.facts = runner.floorplan_facts(n.stage_states)
         return n
 
     # ---------------------------------------------------------------- reading
-    def bounds(self) -> dict:
-        """Knob ranges for this design; the density floor follows its utilisation."""
+    def width(self, nid: str) -> float | None:
+        """A node's die width in um: its own setting, else the baseline's."""
+        w = self.nodes[nid].params.get(S.WIDTH)
+        return float(w) if w is not None else (self.facts.die_w if self.facts else None)
+
+    def bounds(self, nid: str | None = None, width: float | None = None) -> dict:
+        """Knob ranges for this design. The density floor follows the starting
+        utilisation on the die of `width`, or of node `nid`, or the baseline's."""
+        if self.facts is not None:
+            return S.bounds_for(facts=self.facts,
+                                width=width or (self.width(nid) if nid in self.nodes else None))
         util = None
         if self.order:
             util = self.nodes[self.order[0]].metrics.get("design__instance__utilization")
         return S.bounds_for(util)
+
+    def state_for(self, nid: str, stage: str) -> str | None:
+        """The snapshot a branch at `stage` from `nid` resumes from. The state
+        before the floorplan is the synthesised netlist, the same for every node,
+        so a floorplan branch from any node resumes from the baseline's."""
+        if stage == "FP" and self.order:
+            return self.nodes[self.order[0]].stage_states.get("FP")
+        return self.nodes[nid].stage_states.get(stage)
 
     def ecp(self, nid: str) -> float | None:
         return S.effective_clock_period(self.nodes[nid].metrics, self.clock)
@@ -223,6 +243,10 @@ class Tree:
         """Estimated standard-cell area of a node over the baseline's."""
         return self.vs_baseline(nid)["area"]
 
+    def die_ratio(self, nid: str) -> float | None:
+        """Die area of a node over the baseline's. Exact: the floorplan sets it."""
+        return self.vs_baseline(nid)["die"]
+
     def setting(self, nid: str, key: str) -> float:
         """A repair setting a node was made with; the baseline's where it is unset."""
         return float(self.nodes[nid].params.get(key, S.BY_NAME["PL"].params[key].default))
@@ -230,25 +254,28 @@ class Tree:
     def predicted_failure(self, nid: str) -> str | None:
         """Why a node that was not signed off is expected to fail signoff, or None.
 
-        A looser fanout limit leaves more nets unrepaired and a smaller slew margin
-        repairs them less, so a node signed off with violations predicts the same for
-        any node whose fanout limit is at least as high and whose margin is no
-        larger. Only a signoff that fixed what it could counts (it reports
+        A looser fanout limit leaves more nets unrepaired, a smaller slew margin
+        repairs them less, and a narrower die packs the cells tighter, so a node
+        signed off with violations predicts the same for any node whose fanout limit
+        is at least as high, whose margin is no larger and whose die is no wider.
+        Only a signoff that fixed what it could counts (it reports
         eco__passes, see runner.signoff): the baseline's own signoff does not upsize
         drivers, so its violations say nothing about a node that will be. This is
         an assumption, not a measurement, and it saves a flow run per use; a node
         that was itself signed off is judged on what signoff found."""
-        f, m = self.setting(nid, FANOUT), self.setting(nid, MARGIN)
+        f, m, w = self.setting(nid, FANOUT), self.setting(nid, MARGIN), self.width(nid) or 0.0
         for i in self.order:
             if i == nid or not (self.nodes[i].ok and self.signed_off(i)):
                 continue
             if "eco__passes" not in (self.nodes[i].signoff_metrics or {}):
                 continue
-            if not any(w.startswith("max-") for w in self.problems(i)):
+            if not any(p.startswith("max-") for p in self.problems(i)):
                 continue
-            if self.setting(i, FANOUT) <= f and self.setting(i, MARGIN) >= m:
-                return (f"fanout limit {f:g} with slew margin {m:g} is no safer than {i}'s "
-                        f"({self.setting(i, FANOUT):g}, {self.setting(i, MARGIN):g}), "
+            wi = self.width(i) or 0.0
+            if self.setting(i, FANOUT) <= f and self.setting(i, MARGIN) >= m and wi >= w:
+                return (f"fanout limit {f:g} with slew margin {m:g} on a {w:g} um die is no "
+                        f"safer than {i}'s ({self.setting(i, FANOUT):g}, "
+                        f"{self.setting(i, MARGIN):g}, {wi:g} um), "
                         "which failed signoff on slew or capacitance violations")
         return None
 
@@ -296,6 +323,8 @@ class Tree:
                 "ecp_ns": r(self.ecp(nid), 4),
                 "hold_slack_ns": r(self.hold(nid), 3),
                 "power_vs_baseline": r(self.power_ratio(nid), 3),
+                "die_width_um": r(self.width(nid), 1),
+                "die_vs_baseline": r(self.die_ratio(nid), 3),
                 "area_vs_baseline": r(self.area_ratio(nid), 3)}
 
     def real_row(self, nid: str) -> dict | None:
@@ -312,6 +341,8 @@ class Tree:
                 "ecp_ns": r(S.effective_clock_period(m, self.clock), 4),
                 "hold_slack_ns": r(S.hold_ws(m), 3),
                 "power_vs_baseline": r(real["power"], 3),
+                "die_width_um": r(self.width(nid), 1),
+                "die_vs_baseline": r(real["die"], 3),
                 "area_vs_baseline": r(real["area"], 3)}
 
     def record(self, nid: str) -> dict:
@@ -335,6 +366,8 @@ class Tree:
                     "hold_slack_ns": r(S.hold_ws(m), 4),
                     "power_w": r(m.get(S.POWER_KEY), 5),
                     "power_vs_baseline": r(ratios["power"], 4),
+                    "die_area_um2": r(m.get(S.DIE_KEY), 1),
+                    "die_vs_baseline": r(ratios["die"], 4),
                     "cell_area_um2": r(m.get(S.AREA_KEY), 1),
                     "area_vs_baseline": r(ratios["area"], 4)}
 
@@ -361,14 +394,23 @@ class Tree:
         """(node, stage) pairs a new branch may start from.
 
         A node only offers stages after the one it was itself branched at, and
-        only while the snapshot is still on disk.
+        only while the snapshot is still on disk. The floorplan is offered from
+        every finished node, for as long as the baseline's snapshot before it is
+        stored: it resumes from the netlist, which every node shares, and keeps the
+        node's settings for the stages after it.
         """
         out = []
+        fp = self.state_for(self.order[0], "FP") if self.order and self.facts else None
+        fp = fp if fp and os.path.exists(fp) else None
         for nid in self.order:
             n = self.nodes[nid]
             if not n.ok:
                 continue
+            if fp and n.stage is not None:
+                out.append((nid, "FP"))
             for name in S.after(n.stage):
+                if name == "FP" and not fp:
+                    continue                # a die with no fixed height has no width to set
                 p = n.stage_states.get(name)
                 if p and os.path.exists(p):
                     out.append((nid, name))
@@ -521,6 +563,7 @@ class Tree:
         Path(path).write_text(json.dumps(
             {"clock": self.clock, "hold_floor": self.hold_floor,
              "power_ceiling": self.power_ceiling, "weights": self.weights,
+             "floorplan": asdict(self.facts) if self.facts else None,
              "order": self.order,
              "nodes": {k: asdict(v) for k, v in self.nodes.items()}}, indent=1))
 
@@ -531,4 +574,5 @@ class Tree:
                 d.get("weights"))
         t.order = d["order"]
         t.nodes = {k: Node(**v) for k, v in d["nodes"].items()}
+        t.facts = S.FloorplanFacts(**d["floorplan"]) if d.get("floorplan") else None
         return t

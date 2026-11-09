@@ -30,21 +30,28 @@ def navigator_view(ep: Episode) -> dict:
 
 
 def stage_view(ep: Episode, node_id: str, stage: str, hint: str) -> dict:
-    """The stage agent's context. The agent sets the knobs of one stage (PL, CTS
-    or GR) for a branch that starts from the result `node_id`; `hint` is the
+    """The stage agent's context. The agent sets the knobs of one stage (FP, PL,
+    CTS or GR) for a branch that starts from the result `node_id`; `hint` is the
     navigator's advice for this branch."""
     node = ep.tree.nodes[node_id]
+    width = ep.tree.width(node_id)
     return {
         "stage": stage,
         "resuming_from_node": node_id,
         "hint_from_navigator": hint,
         "objective": ep.objective(),
         "limits": ep.limits(),
-        "knobs": S.cheat_sheet(ep.tree.bounds(), only=stage),    # this stage's knobs and ranges
-        "values_on_this_path": {k: node.params.get(k, "flow default")
+        # this stage's knobs and ranges; the density floor follows this node's die width
+        "knobs": S.cheat_sheet(ep.tree.bounds(node_id), only=stage),
+        "values_on_this_path": {k: node.params.get(k, width if k == S.WIDTH else "flow default")
                                 for k in S.BY_NAME[stage].params},
         "already_tried_at_this_stage": ep.tree.tried(stage),
-        "numbers_at_this_node": ep.tree.row(node_id),
+        "numbers_at_this_node": {
+            **ep.tree.row(node_id),
+            # how full the core starts on this node's die; a floorplan branch changes it
+            "starting_utilisation_predicted": (None if ep.tree.facts is None or width is None
+                                               else round(ep.tree.facts.utilisation(width), 3)),
+        },
         "log_of_this_stage_on_this_path": ep.tree.digest_for(node_id, stage),
     }
 

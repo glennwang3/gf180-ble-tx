@@ -14,12 +14,17 @@ GDS:
 ## What it optimizes
 
 The modulator runs at a fixed 8 MHz, so a faster layout is worth nothing.
-Timing is a pass/fail gate and the score is power and standard-cell area:
+Timing is a pass/fail gate and the score is power, die area and standard-cell area:
 
-    score = (P0 / P)^0.1 x (A0 / A)^0.9      1.0 = LibreLane untouched
+    score = (P0 / P)^0.1 x (D0 / D)^0.6 x (A0 / A)^0.3      1.0 = LibreLane untouched
 
-The die is fixed at 1400 x 300 um (`DIE_AREA` in `designs/ble_tx/config.yaml`), so
-area here means standard-cell area: how little of that die the layout uses.
+The whole Bluetooth chip has a 1400 x 300 um tapeout slot, and this block should
+take as little of it as it can. The baseline uses the whole slot (`DIE_AREA` in
+`designs/ble_tx/config.yaml`). The search keeps the 300 um height and narrows the
+die with the floorplan stage's `DIE_WIDTH_UM`. The narrowest width allowed is
+where the placement-density floor (starting utilisation + 5 points) reaches its
+cap of 75; `pd/stages.py` predicts that width from the baseline's floorplan. An
+FP branch can start from any result and keeps its settings for the later stages.
 
 A result scores 0 if any of these fail at signoff: setup slack below 0 ns
 against the 125 ns clock, at tt **or** at the worst corner (ss_125C_4v50);
@@ -32,7 +37,8 @@ post-global-route estimates miss the 8 MHz gate are never candidates.
 | What | File | Setting |
 | --- | --- | --- |
 | Clock (8 MHz), SPS, die, fixed flow settings | `designs/ble_tx/config.yaml` | `CLOCK_PERIOD: 125`, `SYNTH_PARAMETERS`, `DIE_AREA`, ... |
-| Score weights | `pd/ledger.py` | `WEIGHTS` (timing, power, area); currently `0,0.1,0.9`; or `--weights T,P,A` per run, e.g. `0,0,1` for area only |
+| Score weights | `pd/ledger.py` | `WEIGHTS` (timing, power, die, area); currently `0,0.1,0.6,0.3`; or `--weights T,P,D,A` per run, e.g. `0,0,1,0` for die area only (three numbers are T,P,A with die area unscored) |
+| Die-width range, density floor | `pd/stages.py` | `DIE_WIDTH_UM`, `DENSITY_FLOOR_STEP`, `DENSITY_FLOOR_CAP` |
 | The 8 MHz pass/fail gate | `pd/ledger.py` | `SETUP_FLOOR_NS` (ns of setup slack, tt and worst corner) |
 | Power / die-area limit at signoff | `pd/ledger.py` | `TOLERANCE` |
 | Model for each agent | `agents/policy.py` | `ROLE_MODEL` (or `--model navigator=ID`) |
