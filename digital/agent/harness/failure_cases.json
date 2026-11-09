@@ -1,0 +1,62 @@
+[
+  {
+    "name": "clock-buffer pin with no access point",
+    "provenance": "picorv32 on gf180mcuD, reproduced on five different die / density / clock combinations while preparing this flow",
+    "stage_branched_at": "CTS",
+    "configuration": {
+      "DIE_AREA": [
+        0,
+        0,
+        1000,
+        1000
+      ],
+      "PL_TARGET_DENSITY_PCT": 40,
+      "CLOCK_PERIOD": 40,
+      "CTS_APPLY_NDR": "half"
+    },
+    "error": "FlowError: Detailed Routing: subprocess failed",
+    "end_of_log": "[INFO DRT-0199]   Number of violations = 0.\n[INFO GRT-0012] Found 7 antenna violations.\nUnable to repair all setup violations.\n[ERROR DRT-0073] No access point for clkbuf_2_1_0_clk/I (gf180mcu_fd_sc_mcu7t5v0__clkbuf_8).\n[ERROR DRT-0073] No access point for clkbuf_2_2_0_clk/I (gf180mcu_fd_sc_mcu7t5v0__clkbuf_8).\nError: drt.tcl, 122 DRT-0073",
+    "known_cause": "CTS_APPLY_NDR 'half' puts a 2x-spacing non-default routing rule on clock nets. On this PDK that leaves the larger clock buffers' input pins without a legal access point. Setting CTS_APPLY_NDR to none fixes it.",
+    "what_does_not_fix_it": "Restricting CTS to smaller buffers (clkbuf_1/2/4) was tried and fails the same way, so the cell is not the problem; the routing resource around it is. A larger die and a looser clock do not help either."
+  },
+  {
+    "name": "a constraint command the timer does not have",
+    "provenance": "first hand-written SDC for picorv32; failed nine seconds into the flow",
+    "stage_branched_at": null,
+    "configuration": {
+      "PNR_SDC_FILE": "src/impl.sdc",
+      "sdc_line_10": "set data_in [remove_from_collection [all_inputs] [get_ports clk]]"
+    },
+    "error": "FlowError: STA (Pre-PnR): subprocess failed",
+    "end_of_log": "Linking design 'picorv32' from netlist…\nReading design constraints file at 'src/impl.sdc'…\nError: impl.sdc, 10 invalid command name \"remove_from_collection\"\n[ERROR] Failed STA for the nom_ss_125C_4v50 timing corner",
+    "known_cause": "remove_from_collection is a command of commercial timers. OpenSTA does not implement it. Nothing is wrong with the flow settings; the constraint file is written in the wrong dialect. Dropping the custom SDC and using LibreLane's built-in one (driven by CLOCK_PORT, CLOCK_PERIOD and IO_DELAY_CONSTRAINT) removes the problem.",
+    "what_does_not_fix_it": "Any change to placement, clock-tree or routing settings."
+  },
+  {
+    "name": "two builds of the timer on the path",
+    "provenance": "an earlier top-level design on the container image, with /foss/tools/bin ahead of /foss/tools/openroad-librelane/bin on PATH",
+    "stage_branched_at": null,
+    "configuration": {
+      "PATH_order": "/foss/tools/bin before /foss/tools/openroad-librelane/bin",
+      "sta_found_first": "OpenSTA 3.1.0"
+    },
+    "error": "FlowError: STA (Post-PnR): subprocess (1, ['sta', '-no_splash', '-exit', '.../scripts/openroad/sta/corner.tcl']) failed",
+    "end_of_log": "report_clock_min_period\nCLK period_min = 16.54 fmax = 60.45\nWriting SDF files for all corners…\nRemoving Clock latencies before writing libs…\nWriting timing models for all corners…\nError 562: corner.tcl line 605, write_timing_model -corner is not a known keyword or flag.\n[ERROR] Failed STA for the max_ss_125C_4v50 timing corner",
+    "known_cause": "The image carries two OpenSTA builds. Version 3.1.0 renamed write_timing_model's -corner flag to -scene; LibreLane 3.0.2 still passes -corner and only the 2.7.0 build shipped beside openroad-librelane accepts it. LibreLane calls a bare 'sta', so whichever is first on PATH wins. Putting /foss/tools/openroad-librelane/bin first fixes it.",
+    "what_does_not_fix_it": "Any flow setting. The line number is also a trap: the corner.tcl that ships with LibreLane is 404 lines long and never calls write_timing_model directly."
+  },
+  {
+    "name": "placement dies inside the resizer",
+    "provenance": "designs/spm in this repository, branch at PL; reproduced twice — both failing settings had PL_TIMING_DRIVEN true, every passing one had it false",
+    "stage_branched_at": "PL",
+    "configuration": {
+      "PL_TARGET_DENSITY_PCT": 76,
+      "PL_WIRE_LENGTH_COEF": 0.0922,
+      "PL_TIMING_DRIVEN": true
+    },
+    "error": "FlowException: OpenROAD.GlobalPlacement failed with an unexpected error.",
+    "end_of_log": "3877e+03 |   +0.00% |  1.29e-13 |\n[INFO GPL-0100] Timing-driven iteration 1/2, virtual: false.\n[INFO GPL-0101]    Iter: 1, overflow: 0.249, keep resizer changes at: 1, HPWL: 7627754\nIteration |   Area    | Resized | Buffers | Nets repaired | Remaining\n---------------------------------------------------------------------\n        0 |     +0.0% |       0 |       0 |             0 |       288\n    final |    +68.8% |       0 |      79 |             2 |         0\n---------------------------------------------------------------------\n[INFO RSZ-0034] Found 2 slew violations.\n[INFO RSZ-0035] Found 2 fanout violations.\n[INFO RSZ-0038] Inserted 79 buffers in 2 nets.\n   Iter   |    Area   | Removed | Inserted |   Pins\n          |           | Buffers | Buffers  | Remaining\n-------------------------------------------------------\n        0 |     +0.0% |       0 |        0 |       255\n       25 |     +0.0% |       0 |        0 |       230\n       50 |     +0.0% |       0 |        0 |       205\n       75 |     +0.0% |       0 |        0 |       180\n      100 |     +0.0% |       0 |        0 |       155\n      125 |     +0.0% |       0 |        0 |       130\n      150 |     +0.0% |       0 |        0 |       105\n      175 |     +0.0% |       0 |        0 |        80\n      200 |     +0.0% |       0 |        0 |        55\n      225 |     +0.0% |       0 |        0 |        30\n      250 |     +0.0% |       0 |        0 |         5\n[CRITICAL RSZ-2008] buffering pin fanout50/Z: wire step options empty",
+    "known_cause": "PL_TIMING_DRIVEN true makes global placement call the resizer between iterations. On this design the resizer aborts while buffering a high-fanout net (RSZ-2008, 'wire step options empty'), which is a tool failure, not a bad number. Setting PL_TIMING_DRIVEN to false avoids it; the other placement knobs are irrelevant.",
+    "what_does_not_fix_it": "Changing the target density or the wirelength coefficient while leaving timing-driven placement on."
+  }
+]

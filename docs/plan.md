@@ -41,4 +41,5 @@ GDS due 16 Dec 2026, parts Q2 2027).
 
 - [x] P0: Python golden model (`model/`), CRC checked against scapy's implementation
 - [ ] P0: device fT / gm-Id sweeps
+- [x] P4: modulator RTL (`digital/`), bit-exact vs model in RTL and gate-level sim, 2 MHz clock
 - [ ] Verify model against a real BLE sniffer capture

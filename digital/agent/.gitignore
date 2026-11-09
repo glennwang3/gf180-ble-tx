@@ -1,0 +1,11 @@
+# Never commit credentials. Your key belongs in ~/.config/openrouter/key, mode 600,
+# outside this directory.
+*.key
+.env
+**/key
+secrets*
+# The venv and what runs leave behind.
+venv/
+__pycache__/
+runs/
+*.log
