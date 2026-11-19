@@ -18,6 +18,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("variant")
 ap.add_argument("--width", type=float, help="die width in um (height stays 300)")
 ap.add_argument("--fix-passes", type=int, help="signoff upsizing passes (default 5)")
+ap.add_argument("--set", action="append", default=[], help="KEY=VALUE LibreLane override")
 ap.add_argument("--grt-repair", action="store_true", help="RUN_POST_GRT_DESIGN_REPAIR")
 a = ap.parse_args()
 
@@ -29,6 +30,10 @@ if a.width:
 if a.grt_repair:
     over["RUN_POST_GRT_DESIGN_REPAIR"] = "true"
     tag += "g"
+for kv in a.set:
+    k, val = kv.split("=", 1)
+    over[k] = val
+    tag += "_" + k.lower().replace("_", "")[:10] + val
 if a.fix_passes is not None:
     os.environ["PD_FIX_PASSES"] = str(a.fix_passes)
     tag += f"_f{a.fix_passes}"
