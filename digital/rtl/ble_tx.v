@@ -107,53 +107,63 @@ module ble_tx #(
   wire gclk_run;
   ble_clk_gate u_cg_run (.clk(clk), .en(start | busy | busy_q), .gclk(gclk_run));
 
+  // phase counts the clocks of a symbol on the idle-gated clock.
   always @(posedge gclk_run or negedge rst_n) begin
+    if (!rst_n)
+      phase <= {PW{1'b0}};
+    else if (state == S_IDLE) begin
+      if (start) phase <= {PW{1'b0}};
+    end else
+      phase <= last_phase ? {PW{1'b0}} : phase + 1'b1;
+  end
+
+  // Symbol-rate gate (power): the rest of the sequencer changes only on the start
+  // edge in IDLE or on the last clock of a symbol, so it gets its own clock gate
+  // with that enable and no hold muxes: one edge per 1 us symbol instead of SPS.
+  wire gclk_sym;
+  ble_clk_gate u_cg_sym (.clk(clk), .en((state == S_IDLE & start) | (busy & last_phase)),
+                         .gclk(gclk_sym));
+
+  always @(posedge gclk_sym or negedge rst_n) begin
     if (!rst_n) begin
       state    <= S_IDLE;
       bit_idx  <= 9'd0;
       crc      <= 24'd0;
       wht      <= 7'd0;
-      phase    <= {PW{1'b0}};
       win      <= 10'd0;
       tail_cnt <= 2'd0;
       len_q    <= 6'd0;
-    end else if (state == S_IDLE) begin
-      if (start) begin
-        state    <= S_PRE;
-        bit_idx  <= 9'd0;
-        for (k = 0; k < 24; k = k + 1) crc[k] <= CRC_INIT[23-k];
-        wht      <= {1'b1, channel};
-        phase    <= {PW{1'b0}};
-        win      <= 10'd0;
-        tail_cnt <= 2'd0;
-        len_q    <= payload_len;
-      end
-    end else begin
-      phase <= last_phase ? {PW{1'b0}} : phase + 1'b1;
-      if (last_phase) begin
-        win <= {win[7:0], nxt_valid, nxt_bit};
-        bit_idx <= bit_idx + 1'b1;
-        if (state == S_PDU || state == S_CRC)
-          wht <= {wht[0], wht[6:4], wht[3] ^ wht[0], wht[2:1]};
-        case (state)
-          S_PRE: if (bit_idx == 9'd7) begin state <= S_AA; bit_idx <= 9'd0; end
-          S_AA:  if (bit_idx == 9'd31) begin state <= S_PDU; bit_idx <= 9'd0; end
-          S_PDU: begin
-            crc <= (pdu_bit ^ crc[0]) ? ({1'b1, crc[23:1]} ^ 24'h5A6000) : {1'b0, crc[23:1]};
-            if (bit_idx == pdu_bits - 1'b1) begin state <= S_CRC; bit_idx <= 9'd0; end
-          end
-          S_CRC: begin
-            crc <= {1'b0, crc[23:1]};
-            if (bit_idx == 9'd23) state <= S_TAIL;
-          end
-          S_TAIL: begin
-            // last bit reaches the centre after 2 shifts, then leaves the window
-            tail_cnt <= tail_cnt + 1'b1;
-            if (tail_cnt == 2'd2) state <= S_IDLE;
-          end
-          default: ;
-        endcase
-      end
+    end else if (state == S_IDLE) begin           // clocked only by start
+      state    <= S_PRE;
+      bit_idx  <= 9'd0;
+      for (k = 0; k < 24; k = k + 1) crc[k] <= CRC_INIT[23-k];
+      wht      <= {1'b1, channel};
+      win      <= 10'd0;
+      tail_cnt <= 2'd0;
+      len_q    <= payload_len;
+    end else begin                                // clocked only at last_phase
+      win <= {win[7:0], nxt_valid, nxt_bit};
+      bit_idx <= bit_idx + 1'b1;
+      if (state == S_PDU || state == S_CRC)
+        wht <= {wht[0], wht[6:4], wht[3] ^ wht[0], wht[2:1]};
+      case (state)
+        S_PRE: if (bit_idx == 9'd7) begin state <= S_AA; bit_idx <= 9'd0; end
+        S_AA:  if (bit_idx == 9'd31) begin state <= S_PDU; bit_idx <= 9'd0; end
+        S_PDU: begin
+          crc <= (pdu_bit ^ crc[0]) ? ({1'b1, crc[23:1]} ^ 24'h5A6000) : {1'b0, crc[23:1]};
+          if (bit_idx == pdu_bits - 1'b1) begin state <= S_CRC; bit_idx <= 9'd0; end
+        end
+        S_CRC: begin
+          crc <= {1'b0, crc[23:1]};
+          if (bit_idx == 9'd23) state <= S_TAIL;
+        end
+        S_TAIL: begin
+          // last bit reaches the centre after 2 shifts, then leaves the window
+          tail_cnt <= tail_cnt + 1'b1;
+          if (tail_cnt == 2'd2) state <= S_IDLE;
+        end
+        default: ;
+      endcase
     end
   end
 
