@@ -95,7 +95,19 @@ module ble_tx #(
   wire last_phase = (phase32 == SPS - 1);
   assign busy = (state != S_IDLE);
 
-  always @(posedge clk or negedge rst_n) begin
+  // Idle clock gate (power): the sequencer and the output registers hold their
+  // value whenever the block is idle and no start arrives, so they are clocked only
+  // while start | busy | busy_q. busy_q, a copy of busy one clock late on the free
+  // clock, gives the output registers the one edge after busy falls that clears
+  // them. The async reset needs no clock.
+  reg busy_q;
+  always @(posedge clk or negedge rst_n)
+    if (!rst_n) busy_q <= 1'b0;
+    else        busy_q <= busy;
+  wire gclk_run;
+  ble_clk_gate u_cg_run (.clk(clk), .en(start | busy | busy_q), .gclk(gclk_run));
+
+  always @(posedge gclk_run or negedge rst_n) begin
     if (!rst_n) begin
       state    <= S_IDLE;
       bit_idx  <= 9'd0;
@@ -163,7 +175,7 @@ module ble_tx #(
     end
   endgenerate
 
-  always @(posedge clk or negedge rst_n) begin
+  always @(posedge gclk_run or negedge rst_n) begin
     if (!rst_n) begin
       fine_code  <= {CODE_W{1'b0}};
       code_valid <= 1'b0;
