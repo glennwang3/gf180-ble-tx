@@ -668,12 +668,12 @@ def fork(design_dir: str | Path, ancestor_state: str, stage: str, params: dict,
 # size. So there are five passes, and from the second on a driver that was upsized
 # before and still fails, or that has no larger size, gets a buffer (FIX_BUFFER)
 # at its output instead (pd/upsize.tcl).
-FIX_PASSES = 5
+FIX_PASSES = int(os.environ.get("PD_FIX_PASSES", "5"))   # power-exp: env override
 FIX_BUFFER = "gf180mcu_fd_sc_mcu7t5v0__buf_4"
 FIX_CORNERS = (S.FOM_CORNER, S.SLOW_CORNER, S.SLOW_CORNER_MAX)
 _UPSIZE_TCL = Path(__file__).with_name("upsize.tcl")
 _LIB = ("/foss/pdks/gf180mcuD/libs.ref/gf180mcu_fd_sc_mcu7t5v0/lib/"
-        "gf180mcu_fd_sc_mcu7t5v0__tt_025C_5v00.lib")
+        "gf180mcu_fd_sc_mcu7t5v0__tt_025C_3v30.lib")   # power-exp: 3.3 V
 _CHECK = re.compile(r"^(\S+)\s+([\d.]+)\s+([\d.]+)\s+-[\d.]+\s+\(VIOLATED\)")
 
 
@@ -711,6 +711,11 @@ def _upsize(state_json: str, pins: dict, dest: Path,
     env = dict(os.environ, LIB=_LIB, IN_ODB=st["odb"], OUT_DIR=str(dest),
                PINS=" ".join(f"{p} {r:.4f}" for p, r in pins.items()),
                DONE=" ".join(done), BUFFER=FIX_BUFFER)
+    # power-exp: at the 3.3 V corners pass 1 meets hundreds of slow-corner slew
+    # violations and OpenROAD segfaults in insert_buffer (dbBlock::makeNewName).
+    # PD_NO_FIX_BUFFER=1 makes the passes upsize only.
+    if os.environ.get("PD_NO_FIX_BUFFER"):
+        env.pop("BUFFER")
     r = subprocess.run(["openroad", "-exit", "-no_init", str(_UPSIZE_TCL)], env=env,
                        capture_output=True, text=True)
     swaps = [l.split(": ", 1)[1] if l.startswith("UPSIZE: ") else "buffered " + l.split(": ", 1)[1]

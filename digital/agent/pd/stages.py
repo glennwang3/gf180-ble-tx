@@ -110,11 +110,11 @@ SIGNOFF_START = "OpenROAD.DetailedRouting"
 # this PDK is max_ss_125C_4v50 and sits several ns below typical. The score is
 # read at tt, the signoff corner; the worst
 # corner is reported next to it so the gap is visible rather than hidden.
-FOM_CORNER = "nom_tt_025C_5v00"
+FOM_CORNER = "nom_tt_025C_3v30"   # power-exp: 3.3 V corners
 # The slowest corner. In-loop estimates report it as nom_ss; signoff also has it with
 # maximum interconnect parasitics, which is where most of its violations are counted.
-SLOW_CORNER = "nom_ss_125C_4v50"
-SLOW_CORNER_MAX = "max_ss_125C_4v50"
+SLOW_CORNER = "nom_ss_125C_3v00"
+SLOW_CORNER_MAX = "max_ss_125C_3v00"
 WS_KEY = f"timing__setup__ws__corner:{FOM_CORNER}"
 WS_WORST_KEY = "timing__setup__ws"
 HOLD_KEY = f"timing__hold__ws__corner:{FOM_CORNER}"

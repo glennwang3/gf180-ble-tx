@@ -37,7 +37,7 @@ PDK = Path(os.environ.get("PDK_ROOT", "/foss/pdks")) / "gf180mcuD"
 SCL = "gf180mcu_fd_sc_mcu7t5v0"
 CELL_MODELS = (PDK / f"libs.ref/{SCL}/verilog/primitives.v",
                PDK / f"libs.ref/{SCL}/verilog/{SCL}.v")
-LIB_TT = PDK / f"libs.ref/{SCL}/lib/{SCL}__tt_025C_5v00.lib"
+LIB_TT = PDK / f"libs.ref/{SCL}/lib/{SCL}__tt_025C_3v30.lib"   # power-exp: 3.3 V
 DATA_WIRE_LAYER, CLOCK_WIRE_LAYER = "Metal2", "Metal4"    # the PDK's LibreLane config
 IVERILOG_DIR = "/foss/tools/iverilog/bin"
 OPENROAD = "/foss/tools/openroad-librelane/bin/openroad"
