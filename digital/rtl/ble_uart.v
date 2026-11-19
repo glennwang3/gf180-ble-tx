@@ -117,10 +117,14 @@ module ble_uart #(
 
   // Data path, no reset: nbit is cleared by every start bit before it is used,
   // and sh is only read in the byte_valid cycle after 8 data bits.
-  always @(posedge clk) begin
+  // Clock-gated (power): clocked only in the cycles that write them.
+  wire gclk_sh;
+  ble_clk_gate u_cg_sh (.clk(clk), .en((rstate == R_START) | (rstate == R_DATA & cnt_zero)),
+                        .gclk(gclk_sh));
+  always @(posedge gclk_sh) begin
     if (rstate == R_START)
       nbit <= 3'd0;
-    else if (rstate == R_DATA && cnt_zero) begin
+    else begin                                // R_DATA && cnt_zero
       sh   <= {rx, sh[7:1]};                  // LSB first
       nbit <= nbit + 1'b1;
     end
@@ -148,9 +152,12 @@ module ble_uart #(
   assign wr_data = sh;
   assign start   = is_cmd && sh[7] && sh[0];
 
-  always @(posedge clk)
-    if (is_cmd && sh[7:6] == 2'b00) addr <= sh[5:0];
-    else if (wr_en)                 addr <= addr + 1'b1;
+  wire set_addr = is_cmd && sh[7:6] == 2'b00;
+  wire gclk_addr;
+  ble_clk_gate u_cg_addr (.clk(clk), .en(set_addr | wr_en), .gclk(gclk_addr));
+  always @(posedge gclk_addr)
+    if (set_addr) addr <= sh[5:0];
+    else          addr <= addr + 1'b1;      // wr_en
 
   always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
