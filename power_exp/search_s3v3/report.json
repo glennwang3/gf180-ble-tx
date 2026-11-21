@@ -1,0 +1,1765 @@
+{
+ "work": "/foss/designs/gf180-ble-tx-power/digital/agent/runs/s3v3",
+ "score": {
+  "score": 1.0,
+  "score_before_gate": 1.0,
+  "weights": {
+   "timing": 0.0,
+   "power": 0.35,
+   "die": 0.5,
+   "area": 0.15
+  },
+  "vs_baseline": {
+   "effective clock period": 1.0,
+   "total power": 1.0,
+   "die area": 1.0,
+   "cell area": 1.0
+  },
+  "gain_percent": 0.0,
+  "baseline_ecp_ns": 17.5559,
+  "final_ecp_ns": 17.5559,
+  "scoring_corner": "nom_tt_025C_3v30",
+  "final_setup_slack_ns": 107.4441,
+  "final_hold_slack_ns": 0.7341,
+  "final_worst_corner_setup_ns": 95.2382,
+  "final_worst_corner_hold_ns": 0.2961,
+  "zeroed_because": [],
+  "usd_per_percent_gain": null
+ },
+ "final_node": "n0",
+ "fell_back_to_baseline": true,
+ "final_settings": {},
+ "estimate_vs_signoff": {
+  "estimate": {
+   "score_est": 1.0,
+   "ecp_ns": 17.175,
+   "hold_slack_ns": 0.492,
+   "power_vs_baseline": 1.0,
+   "die_width_um": 285.0,
+   "die_vs_baseline": 1.0,
+   "area_vs_baseline": 1.0
+  },
+  "signoff": {
+   "score": 1.0,
+   "ecp_ns": 17.5559,
+   "hold_slack_ns": 0.734,
+   "power_vs_baseline": 1.0,
+   "die_width_um": 285.0,
+   "die_vs_baseline": 1.0,
+   "area_vs_baseline": 1.0
+  }
+ },
+ "results": [
+  {
+   "id": "n0",
+   "made_by_branching_at": "baseline",
+   "from": null,
+   "settings": {},
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 1.0,
+    "ecp_ns": 17.175,
+    "ecp_vs_baseline": 1.0,
+    "setup_slack_ns": 107.825,
+    "hold_slack_ns": 0.4921,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0,
+    "die_area_um2": 85500.0,
+    "die_vs_baseline": 1.0,
+    "cell_area_um2": 68854.6,
+    "area_vs_baseline": 1.0,
+    "ratios_corrected_by_signoffs": false
+   },
+   "signoff": {
+    "score": 1.0,
+    "ecp_ns": 17.5559,
+    "ecp_vs_baseline": 1.0,
+    "setup_slack_ns": 107.4441,
+    "hold_slack_ns": 0.7341,
+    "power_w": 0.00016,
+    "power_vs_baseline": 1.0,
+    "die_area_um2": 85500.0,
+    "die_vs_baseline": 1.0,
+    "cell_area_um2": 69407.8,
+    "area_vs_baseline": 1.0,
+    "passes_the_limits": true
+   }
+  },
+  {
+   "id": "n1",
+   "made_by_branching_at": "CTS",
+   "from": "n0",
+   "settings": {
+    "CTS_SINK_CLUSTERING_MAX_DIAMETER": 258,
+    "CTS_CLK_MAX_WIRE_LENGTH": 138,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 85,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 37
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9788,
+    "ecp_ns": 17.172,
+    "ecp_vs_baseline": 1.0114,
+    "setup_slack_ns": 107.828,
+    "hold_slack_ns": 0.4951,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0593,
+    "die_area_um2": 85500.0,
+    "die_vs_baseline": 1.0,
+    "cell_area_um2": 68977.6,
+    "area_vs_baseline": 1.0087,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  },
+  {
+   "id": "n2",
+   "made_by_branching_at": "CTS",
+   "from": "n0",
+   "settings": {
+    "CTS_CLK_MAX_WIRE_LENGTH": 80,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 60,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 40
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9627,
+    "ecp_ns": 17.678,
+    "ecp_vs_baseline": 1.0412,
+    "setup_slack_ns": 107.322,
+    "hold_slack_ns": 0.6757,
+    "power_w": 0.00016,
+    "power_vs_baseline": 1.11,
+    "die_area_um2": 85500.0,
+    "die_vs_baseline": 1.0,
+    "cell_area_um2": 69056.6,
+    "area_vs_baseline": 1.0098,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  },
+  {
+   "id": "n3",
+   "made_by_branching_at": "CTS",
+   "from": "n0",
+   "settings": {
+    "CTS_CLK_MAX_WIRE_LENGTH": 160,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 100,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 30
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9881,
+    "ecp_ns": 16.884,
+    "ecp_vs_baseline": 0.9944,
+    "setup_slack_ns": 108.116,
+    "hold_slack_ns": 0.71,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0341,
+    "die_area_um2": 85500.0,
+    "die_vs_baseline": 1.0,
+    "cell_area_um2": 68474.9,
+    "area_vs_baseline": 1.0013,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": {
+    "score": 1.0051,
+    "ecp_ns": 17.2196,
+    "ecp_vs_baseline": 0.9808,
+    "setup_slack_ns": 107.7804,
+    "hold_slack_ns": 0.6143,
+    "power_w": 0.00016,
+    "power_vs_baseline": 0.9883,
+    "die_area_um2": 85500.0,
+    "die_vs_baseline": 1.0,
+    "cell_area_um2": 68938.1,
+    "area_vs_baseline": 0.9932,
+    "passes_the_limits": false
+   }
+  },
+  {
+   "id": "n4",
+   "made_by_branching_at": "CTS",
+   "from": "n0",
+   "settings": {
+    "CTS_CLK_MAX_WIRE_LENGTH": 160,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 100,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 8,
+    "CTS_SINK_CLUSTERING_SIZE": 35
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9808,
+    "ecp_ns": 16.91,
+    "ecp_vs_baseline": 0.996,
+    "setup_slack_ns": 108.09,
+    "hold_slack_ns": 0.7585,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0503,
+    "die_area_um2": 85500.0,
+    "die_vs_baseline": 1.0,
+    "cell_area_um2": 69385.9,
+    "area_vs_baseline": 1.0146,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  },
+  {
+   "id": "n5",
+   "made_by_branching_at": "CTS",
+   "from": "n0",
+   "settings": {
+    "CTS_CLK_MAX_WIRE_LENGTH": 180,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 110,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 30
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9881,
+    "ecp_ns": 16.884,
+    "ecp_vs_baseline": 0.9944,
+    "setup_slack_ns": 108.116,
+    "hold_slack_ns": 0.71,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0341,
+    "die_area_um2": 85500.0,
+    "die_vs_baseline": 1.0,
+    "cell_area_um2": 68474.9,
+    "area_vs_baseline": 1.0013,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  },
+  {
+   "id": "n6",
+   "made_by_branching_at": "FP",
+   "from": "n3",
+   "settings": {
+    "CTS_CLK_MAX_WIRE_LENGTH": 160,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 100,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 30,
+    "DIE_WIDTH_UM": 280
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9947,
+    "ecp_ns": 16.86,
+    "ecp_vs_baseline": 0.993,
+    "setup_slack_ns": 108.14,
+    "hold_slack_ns": 0.6821,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0388,
+    "die_area_um2": 84000.0,
+    "die_vs_baseline": 0.9825,
+    "cell_area_um2": 68793.2,
+    "area_vs_baseline": 1.006,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": {
+    "score": 1.0119,
+    "ecp_ns": 17.142,
+    "ecp_vs_baseline": 0.9764,
+    "setup_slack_ns": 107.858,
+    "hold_slack_ns": 0.5351,
+    "power_w": 0.00016,
+    "power_vs_baseline": 0.9925,
+    "die_area_um2": 84000.0,
+    "die_vs_baseline": 0.9825,
+    "cell_area_um2": 69254.2,
+    "area_vs_baseline": 0.9978,
+    "passes_the_limits": false
+   }
+  },
+  {
+   "id": "n7",
+   "made_by_branching_at": "GR",
+   "from": "n6",
+   "settings": {
+    "CTS_CLK_MAX_WIRE_LENGTH": 160,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 100,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 30,
+    "DIE_WIDTH_UM": 280,
+    "GRT_ADJUSTMENT": 0.4194
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9957,
+    "ecp_ns": 16.868,
+    "ecp_vs_baseline": 0.9935,
+    "setup_slack_ns": 108.132,
+    "hold_slack_ns": 0.6972,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0358,
+    "die_area_um2": 84000.0,
+    "die_vs_baseline": 0.9825,
+    "cell_area_um2": 68791.0,
+    "area_vs_baseline": 1.0059,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": {
+    "score": 1.0136,
+    "ecp_ns": 17.1155,
+    "ecp_vs_baseline": 0.9749,
+    "setup_slack_ns": 107.8845,
+    "hold_slack_ns": 0.5522,
+    "power_w": 0.00016,
+    "power_vs_baseline": 0.9888,
+    "die_area_um2": 84000.0,
+    "die_vs_baseline": 0.9825,
+    "cell_area_um2": 69069.8,
+    "area_vs_baseline": 0.9951,
+    "passes_the_limits": false
+   }
+  },
+  {
+   "id": "n8",
+   "made_by_branching_at": "CTS",
+   "from": "n0",
+   "settings": {
+    "CTS_SINK_CLUSTERING_MAX_DIAMETER": 258,
+    "CTS_CLK_MAX_WIRE_LENGTH": 150,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 95,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 37
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9768,
+    "ecp_ns": 17.253,
+    "ecp_vs_baseline": 1.0162,
+    "setup_slack_ns": 107.747,
+    "hold_slack_ns": 0.8053,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.066,
+    "die_area_um2": 85500.0,
+    "die_vs_baseline": 1.0,
+    "cell_area_um2": 68907.3,
+    "area_vs_baseline": 1.0076,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  },
+  {
+   "id": "n9",
+   "made_by_branching_at": "CTS",
+   "from": "n0",
+   "settings": {
+    "CTS_CLK_MAX_WIRE_LENGTH": 140,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 90,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 32
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9788,
+    "ecp_ns": 17.172,
+    "ecp_vs_baseline": 1.0114,
+    "setup_slack_ns": 107.828,
+    "hold_slack_ns": 0.4951,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0593,
+    "die_area_um2": 85500.0,
+    "die_vs_baseline": 1.0,
+    "cell_area_um2": 68977.6,
+    "area_vs_baseline": 1.0087,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  },
+  {
+   "id": "n10",
+   "made_by_branching_at": "CTS",
+   "from": "n0",
+   "settings": {
+    "CTS_CLK_MAX_WIRE_LENGTH": 138,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 85,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 20
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9788,
+    "ecp_ns": 17.172,
+    "ecp_vs_baseline": 1.0114,
+    "setup_slack_ns": 107.828,
+    "hold_slack_ns": 0.4951,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0593,
+    "die_area_um2": 85500.0,
+    "die_vs_baseline": 1.0,
+    "cell_area_um2": 68977.6,
+    "area_vs_baseline": 1.0087,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  },
+  {
+   "id": "n11",
+   "made_by_branching_at": "CTS",
+   "from": "n0",
+   "settings": {
+    "CTS_CLK_MAX_WIRE_LENGTH": 160,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 100,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 34
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9881,
+    "ecp_ns": 16.884,
+    "ecp_vs_baseline": 0.9944,
+    "setup_slack_ns": 108.116,
+    "hold_slack_ns": 0.71,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0341,
+    "die_area_um2": 85500.0,
+    "die_vs_baseline": 1.0,
+    "cell_area_um2": 68474.9,
+    "area_vs_baseline": 1.0013,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  },
+  {
+   "id": "n12",
+   "made_by_branching_at": "CTS",
+   "from": "n0",
+   "settings": {
+    "CTS_CLK_MAX_WIRE_LENGTH": 180,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 120,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 40
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9861,
+    "ecp_ns": 16.907,
+    "ecp_vs_baseline": 0.9958,
+    "setup_slack_ns": 108.093,
+    "hold_slack_ns": 0.6976,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0392,
+    "die_area_um2": 85500.0,
+    "die_vs_baseline": 1.0,
+    "cell_area_um2": 68657.1,
+    "area_vs_baseline": 1.004,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  },
+  {
+   "id": "n13",
+   "made_by_branching_at": "PL",
+   "from": "n0",
+   "settings": {
+    "PL_TIMING_DRIVEN": false,
+    "MAX_FANOUT_CONSTRAINT": 6,
+    "DESIGN_REPAIR_MAX_SLEW_PCT": 30
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9101,
+    "ecp_ns": 17.324,
+    "ecp_vs_baseline": 1.0204,
+    "setup_slack_ns": 107.676,
+    "hold_slack_ns": 0.7275,
+    "power_w": 0.00018,
+    "power_vs_baseline": 1.2742,
+    "die_area_um2": 85500.0,
+    "die_vs_baseline": 1.0,
+    "cell_area_um2": 72799.4,
+    "area_vs_baseline": 1.0646,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  },
+  {
+   "id": "n14",
+   "made_by_branching_at": "FP",
+   "from": "n7",
+   "settings": {
+    "CTS_CLK_MAX_WIRE_LENGTH": 160,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 100,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 30,
+    "DIE_WIDTH_UM": 277,
+    "GRT_ADJUSTMENT": 0.4194
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9986,
+    "ecp_ns": 16.871,
+    "ecp_vs_baseline": 0.9937,
+    "setup_slack_ns": 108.129,
+    "hold_slack_ns": 0.6923,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0403,
+    "die_area_um2": 83100.0,
+    "die_vs_baseline": 0.9719,
+    "cell_area_um2": 69223.4,
+    "area_vs_baseline": 1.0123,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  },
+  {
+   "id": "n15",
+   "made_by_branching_at": "GR",
+   "from": "n14",
+   "settings": {
+    "CTS_CLK_MAX_WIRE_LENGTH": 160,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 100,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 30,
+    "DIE_WIDTH_UM": 277,
+    "GRT_ADJUSTMENT": 0.3862
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9986,
+    "ecp_ns": 16.871,
+    "ecp_vs_baseline": 0.9937,
+    "setup_slack_ns": 108.129,
+    "hold_slack_ns": 0.6809,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0402,
+    "die_area_um2": 83100.0,
+    "die_vs_baseline": 0.9719,
+    "cell_area_um2": 69247.6,
+    "area_vs_baseline": 1.0126,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  },
+  {
+   "id": "n16",
+   "made_by_branching_at": "FP",
+   "from": "n0",
+   "settings": {
+    "DIE_WIDTH_UM": 280
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9867,
+    "ecp_ns": 17.373,
+    "ecp_vs_baseline": 1.0232,
+    "setup_slack_ns": 107.627,
+    "hold_slack_ns": 0.6654,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0591,
+    "die_area_um2": 84000.0,
+    "die_vs_baseline": 0.9825,
+    "cell_area_um2": 69388.1,
+    "area_vs_baseline": 1.0147,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  },
+  {
+   "id": "n17",
+   "made_by_branching_at": "PL",
+   "from": "n14",
+   "settings": {
+    "CTS_CLK_MAX_WIRE_LENGTH": 160,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 100,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 30,
+    "DIE_WIDTH_UM": 277,
+    "GRT_ADJUSTMENT": 0.4194,
+    "PL_TIMING_DRIVEN": false,
+    "MAX_FANOUT_CONSTRAINT": 4,
+    "DESIGN_REPAIR_MAX_SLEW_PCT": 30
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": false,
+   "estimate": null,
+   "signoff": null
+  },
+  {
+   "id": "n18",
+   "made_by_branching_at": "PL",
+   "from": "n14",
+   "settings": {
+    "CTS_CLK_MAX_WIRE_LENGTH": 160,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 100,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 30,
+    "DIE_WIDTH_UM": 277,
+    "GRT_ADJUSTMENT": 0.4194,
+    "PL_TIMING_DRIVEN": false,
+    "MAX_FANOUT_CONSTRAINT": 8,
+    "DESIGN_REPAIR_MAX_SLEW_PCT": 30
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": false,
+   "estimate": null,
+   "signoff": null
+  },
+  {
+   "id": "n19",
+   "made_by_branching_at": "CTS",
+   "from": "n14",
+   "settings": {
+    "CTS_CLK_MAX_WIRE_LENGTH": 150,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 95,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 30,
+    "DIE_WIDTH_UM": 277,
+    "GRT_ADJUSTMENT": 0.4194
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9937,
+    "ecp_ns": 16.86,
+    "ecp_vs_baseline": 0.993,
+    "setup_slack_ns": 108.14,
+    "hold_slack_ns": 0.483,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0506,
+    "die_area_um2": 83100.0,
+    "die_vs_baseline": 0.9719,
+    "cell_area_um2": 69917.1,
+    "area_vs_baseline": 1.0224,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  },
+  {
+   "id": "n20",
+   "made_by_branching_at": "GR",
+   "from": "n14",
+   "settings": {
+    "CTS_CLK_MAX_WIRE_LENGTH": 160,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 100,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 30,
+    "DIE_WIDTH_UM": 277,
+    "GRT_ADJUSTMENT": 0.3357
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9986,
+    "ecp_ns": 16.878,
+    "ecp_vs_baseline": 0.9941,
+    "setup_slack_ns": 108.122,
+    "hold_slack_ns": 0.6957,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0401,
+    "die_area_um2": 83100.0,
+    "die_vs_baseline": 0.9719,
+    "cell_area_um2": 69238.8,
+    "area_vs_baseline": 1.0125,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": {
+    "score": 0.9678,
+    "ecp_ns": 17.3872,
+    "ecp_vs_baseline": 0.9904,
+    "setup_slack_ns": 107.6128,
+    "hold_slack_ns": 0.3291,
+    "power_w": 0.00018,
+    "power_vs_baseline": 1.1308,
+    "die_area_um2": 83100.0,
+    "die_vs_baseline": 0.9719,
+    "cell_area_um2": 71236.4,
+    "area_vs_baseline": 1.0263,
+    "passes_the_limits": false
+   }
+  },
+  {
+   "id": "n21",
+   "made_by_branching_at": "PL",
+   "from": "n0",
+   "settings": {
+    "PL_TIMING_DRIVEN": false,
+    "MAX_FANOUT_CONSTRAINT": 8,
+    "DESIGN_REPAIR_MAX_SLEW_PCT": 30
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9761,
+    "ecp_ns": 17.189,
+    "ecp_vs_baseline": 1.0124,
+    "setup_slack_ns": 107.811,
+    "hold_slack_ns": 0.4447,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0531,
+    "die_area_um2": 85500.0,
+    "die_vs_baseline": 1.0,
+    "cell_area_um2": 71223.3,
+    "area_vs_baseline": 1.0415,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  },
+  {
+   "id": "n22",
+   "made_by_branching_at": "CTS",
+   "from": "n0",
+   "settings": {
+    "CTS_CLK_MAX_WIRE_LENGTH": 165,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 100,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 36
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9881,
+    "ecp_ns": 16.884,
+    "ecp_vs_baseline": 0.9944,
+    "setup_slack_ns": 108.116,
+    "hold_slack_ns": 0.71,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0341,
+    "die_area_um2": 85500.0,
+    "die_vs_baseline": 1.0,
+    "cell_area_um2": 68474.9,
+    "area_vs_baseline": 1.0013,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  },
+  {
+   "id": "n23",
+   "made_by_branching_at": "FP",
+   "from": "n14",
+   "settings": {
+    "CTS_CLK_MAX_WIRE_LENGTH": 160,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 100,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 30,
+    "DIE_WIDTH_UM": 280,
+    "GRT_ADJUSTMENT": 0.4194
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9944,
+    "ecp_ns": 16.825,
+    "ecp_vs_baseline": 0.991,
+    "setup_slack_ns": 108.175,
+    "hold_slack_ns": 0.6283,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0377,
+    "die_area_um2": 84000.0,
+    "die_vs_baseline": 0.9825,
+    "cell_area_um2": 69085.1,
+    "area_vs_baseline": 1.0102,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  },
+  {
+   "id": "n24",
+   "made_by_branching_at": "CTS",
+   "from": "n0",
+   "settings": {
+    "CTS_CLK_MAX_WIRE_LENGTH": 170,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 110,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 38
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9881,
+    "ecp_ns": 16.884,
+    "ecp_vs_baseline": 0.9944,
+    "setup_slack_ns": 108.116,
+    "hold_slack_ns": 0.71,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0341,
+    "die_area_um2": 85500.0,
+    "die_vs_baseline": 1.0,
+    "cell_area_um2": 68474.9,
+    "area_vs_baseline": 1.0013,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  },
+  {
+   "id": "n25",
+   "made_by_branching_at": "CTS",
+   "from": "n0",
+   "settings": {
+    "CTS_CLK_MAX_WIRE_LENGTH": 150,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 95,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 32
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9768,
+    "ecp_ns": 17.253,
+    "ecp_vs_baseline": 1.0162,
+    "setup_slack_ns": 107.747,
+    "hold_slack_ns": 0.8053,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.066,
+    "die_area_um2": 85500.0,
+    "die_vs_baseline": 1.0,
+    "cell_area_um2": 68907.3,
+    "area_vs_baseline": 1.0076,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  },
+  {
+   "id": "n26",
+   "made_by_branching_at": "CTS",
+   "from": "n0",
+   "settings": {
+    "CTS_CLK_MAX_WIRE_LENGTH": 138,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 85,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 36
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9788,
+    "ecp_ns": 17.172,
+    "ecp_vs_baseline": 1.0114,
+    "setup_slack_ns": 107.828,
+    "hold_slack_ns": 0.4951,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0593,
+    "die_area_um2": 85500.0,
+    "die_vs_baseline": 1.0,
+    "cell_area_um2": 68977.6,
+    "area_vs_baseline": 1.0087,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  },
+  {
+   "id": "n27",
+   "made_by_branching_at": "CTS",
+   "from": "n0",
+   "settings": {
+    "CTS_SINK_CLUSTERING_MAX_DIAMETER": 371,
+    "CTS_CLK_MAX_WIRE_LENGTH": 165,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 100,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 36
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9881,
+    "ecp_ns": 16.884,
+    "ecp_vs_baseline": 0.9944,
+    "setup_slack_ns": 108.116,
+    "hold_slack_ns": 0.71,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0341,
+    "die_area_um2": 85500.0,
+    "die_vs_baseline": 1.0,
+    "cell_area_um2": 68474.9,
+    "area_vs_baseline": 1.0013,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  },
+  {
+   "id": "n28",
+   "made_by_branching_at": "CTS",
+   "from": "n0",
+   "settings": {
+    "CTS_CLK_MAX_WIRE_LENGTH": 180,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 110,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 40
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9881,
+    "ecp_ns": 16.884,
+    "ecp_vs_baseline": 0.9944,
+    "setup_slack_ns": 108.116,
+    "hold_slack_ns": 0.71,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0341,
+    "die_area_um2": 85500.0,
+    "die_vs_baseline": 1.0,
+    "cell_area_um2": 68474.9,
+    "area_vs_baseline": 1.0013,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  },
+  {
+   "id": "n29",
+   "made_by_branching_at": "FP",
+   "from": "n20",
+   "settings": {
+    "CTS_CLK_MAX_WIRE_LENGTH": 160,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 100,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 30,
+    "DIE_WIDTH_UM": 280,
+    "GRT_ADJUSTMENT": 0.3357
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9956,
+    "ecp_ns": 16.868,
+    "ecp_vs_baseline": 0.9935,
+    "setup_slack_ns": 108.132,
+    "hold_slack_ns": 0.7005,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0358,
+    "die_area_um2": 84000.0,
+    "die_vs_baseline": 0.9825,
+    "cell_area_um2": 68804.2,
+    "area_vs_baseline": 1.0061,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  },
+  {
+   "id": "n30",
+   "made_by_branching_at": "FP",
+   "from": "n20",
+   "settings": {
+    "CTS_CLK_MAX_WIRE_LENGTH": 160,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 100,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 30,
+    "DIE_WIDTH_UM": 275,
+    "GRT_ADJUSTMENT": 0.3357
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 1.0007,
+    "ecp_ns": 16.842,
+    "ecp_vs_baseline": 0.992,
+    "setup_slack_ns": 108.158,
+    "hold_slack_ns": 0.7029,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0451,
+    "die_area_um2": 82500.0,
+    "die_vs_baseline": 0.9649,
+    "cell_area_um2": 69172.9,
+    "area_vs_baseline": 1.0115,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": {
+    "score": 0.9801,
+    "ecp_ns": 18.3672,
+    "ecp_vs_baseline": 1.0462,
+    "setup_slack_ns": 106.6328,
+    "hold_slack_ns": 0.8698,
+    "power_w": 0.00018,
+    "power_vs_baseline": 1.1027,
+    "die_area_um2": 82500.0,
+    "die_vs_baseline": 0.9649,
+    "cell_area_um2": 71159.6,
+    "area_vs_baseline": 1.0252,
+    "passes_the_limits": false
+   }
+  },
+  {
+   "id": "n31",
+   "made_by_branching_at": "CTS",
+   "from": "n30",
+   "settings": {
+    "CTS_CLK_MAX_WIRE_LENGTH": 165,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 100,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 36,
+    "DIE_WIDTH_UM": 275,
+    "GRT_ADJUSTMENT": 0.3357
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 1.0007,
+    "ecp_ns": 16.842,
+    "ecp_vs_baseline": 0.992,
+    "setup_slack_ns": 108.158,
+    "hold_slack_ns": 0.7029,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0451,
+    "die_area_um2": 82500.0,
+    "die_vs_baseline": 0.9649,
+    "cell_area_um2": 69172.9,
+    "area_vs_baseline": 1.0115,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  },
+  {
+   "id": "n32",
+   "made_by_branching_at": "CTS",
+   "from": "n0",
+   "settings": {
+    "CTS_SINK_CLUSTERING_MAX_DIAMETER": 400,
+    "CTS_CLK_MAX_WIRE_LENGTH": 190,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 120,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 40
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9861,
+    "ecp_ns": 16.907,
+    "ecp_vs_baseline": 0.9958,
+    "setup_slack_ns": 108.093,
+    "hold_slack_ns": 0.6976,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0392,
+    "die_area_um2": 85500.0,
+    "die_vs_baseline": 1.0,
+    "cell_area_um2": 68657.1,
+    "area_vs_baseline": 1.004,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  },
+  {
+   "id": "n33",
+   "made_by_branching_at": "CTS",
+   "from": "n0",
+   "settings": {
+    "CTS_SINK_CLUSTERING_MAX_DIAMETER": 371,
+    "CTS_CLK_MAX_WIRE_LENGTH": 165,
+    "CTS_DISTANCE_BETWEEN_BUFFERS": 100,
+    "CTS_CLK_BUFFER_MAX_DRIVE": 2,
+    "CTS_SINK_CLUSTERING_SIZE": 40
+   },
+   "kind": "PL_TIMING_DRIVEN off",
+   "ok": true,
+   "estimate": {
+    "score_est": 0.9881,
+    "ecp_ns": 16.884,
+    "ecp_vs_baseline": 0.9944,
+    "setup_slack_ns": 108.116,
+    "hold_slack_ns": 0.71,
+    "power_w": 0.00015,
+    "power_vs_baseline": 1.0341,
+    "die_area_um2": 85500.0,
+    "die_vs_baseline": 1.0,
+    "cell_area_um2": 68474.9,
+    "area_vs_baseline": 1.0013,
+    "ratios_corrected_by_signoffs": true
+   },
+   "signoff": null
+  }
+ ],
+ "evaluations": [
+  {
+   "node": "n6",
+   "when": "search",
+   "after_flow_runs": 8,
+   "seconds": 409.5,
+   "kind": "PL_TIMING_DRIVEN off",
+   "kind_already_checked": true,
+   "estimate": {
+    "score_est": 1.0055,
+    "ecp_ns": 16.86,
+    "hold_slack_ns": 0.682,
+    "power_vs_baseline": 1.01,
+    "die_width_um": 280.0,
+    "die_vs_baseline": 0.982,
+    "area_vs_baseline": 0.999
+   },
+   "signoff": {
+    "score": 1.0119,
+    "ecp_ns": 17.142,
+    "hold_slack_ns": 0.535,
+    "power_vs_baseline": 0.993,
+    "die_width_um": 280.0,
+    "die_vs_baseline": 0.982,
+    "area_vs_baseline": 0.998
+   },
+   "outcome": "failed the limits",
+   "problems": [
+    "max-fanout violations: 1"
+   ]
+  },
+  {
+   "node": "n3",
+   "when": "search",
+   "after_flow_runs": 10,
+   "seconds": 128.0,
+   "kind": "PL_TIMING_DRIVEN off",
+   "kind_already_checked": true,
+   "estimate": {
+    "score_est": 1.0052,
+    "ecp_ns": 16.884,
+    "hold_slack_ns": 0.71,
+    "power_vs_baseline": 0.988,
+    "die_width_um": 285.0,
+    "die_vs_baseline": 1.0,
+    "area_vs_baseline": 0.993
+   },
+   "signoff": {
+    "score": 1.0051,
+    "ecp_ns": 17.2196,
+    "hold_slack_ns": 0.614,
+    "power_vs_baseline": 0.988,
+    "die_width_um": 285.0,
+    "die_vs_baseline": 1.0,
+    "area_vs_baseline": 0.993
+   },
+   "outcome": "failed the limits",
+   "problems": [
+    "max-fanout violations: 1"
+   ]
+  },
+  {
+   "node": "n7",
+   "when": "search",
+   "after_flow_runs": 17,
+   "seconds": 247.9,
+   "kind": "PL_TIMING_DRIVEN off",
+   "kind_already_checked": true,
+   "estimate": {
+    "score_est": 1.0129,
+    "ecp_ns": 16.868,
+    "hold_slack_ns": 0.697,
+    "power_vs_baseline": 0.99,
+    "die_width_um": 280.0,
+    "die_vs_baseline": 0.982,
+    "area_vs_baseline": 0.998
+   },
+   "signoff": {
+    "score": 1.0136,
+    "ecp_ns": 17.1155,
+    "hold_slack_ns": 0.552,
+    "power_vs_baseline": 0.989,
+    "die_width_um": 280.0,
+    "die_vs_baseline": 0.982,
+    "area_vs_baseline": 0.995
+   },
+   "outcome": "failed the limits",
+   "problems": [
+    "max-fanout violations: 1"
+   ]
+  },
+  {
+   "node": "n20",
+   "when": "search",
+   "after_flow_runs": 31,
+   "seconds": 418.9,
+   "kind": "PL_TIMING_DRIVEN off",
+   "kind_already_checked": true,
+   "estimate": {
+    "score_est": 1.0161,
+    "ecp_ns": 16.878,
+    "hold_slack_ns": 0.696,
+    "power_vs_baseline": 0.994,
+    "die_width_um": 277.0,
+    "die_vs_baseline": 0.972,
+    "area_vs_baseline": 1.003
+   },
+   "signoff": {
+    "score": 0.9678,
+    "ecp_ns": 17.3872,
+    "hold_slack_ns": 0.329,
+    "power_vs_baseline": 1.131,
+    "die_width_um": 277.0,
+    "die_vs_baseline": 0.972,
+    "area_vs_baseline": 1.026
+   },
+   "outcome": "failed the limits",
+   "problems": [
+    "max-slew violations at nom_ss_125C_3v00: 54",
+    "max-slew violations at max_ss_125C_3v00: 127",
+    "max-slew violations at min_ss_125C_3v00: 23",
+    "max-fanout violations: 1",
+    "total power is 1.1308x baseline (limit 1.05)"
+   ]
+  },
+  {
+   "node": "n30",
+   "when": "search",
+   "after_flow_runs": 37,
+   "seconds": 287.6,
+   "kind": "PL_TIMING_DRIVEN off",
+   "kind_already_checked": true,
+   "estimate": {
+    "score_est": 1.0059,
+    "ecp_ns": 16.842,
+    "hold_slack_ns": 0.703,
+    "power_vs_baseline": 1.031,
+    "die_width_um": 275.0,
+    "die_vs_baseline": 0.965,
+    "area_vs_baseline": 1.008
+   },
+   "signoff": {
+    "score": 0.9801,
+    "ecp_ns": 18.3672,
+    "hold_slack_ns": 0.87,
+    "power_vs_baseline": 1.103,
+    "die_width_um": 275.0,
+    "die_vs_baseline": 0.965,
+    "area_vs_baseline": 1.025
+   },
+   "outcome": "failed the limits",
+   "problems": [
+    "max-slew violations at nom_tt_025C_3v30: 22",
+    "max-slew violations at nom_ss_125C_3v00: 271",
+    "max-slew violations at max_ss_125C_3v00: 361",
+    "max-slew violations at min_tt_025C_3v30: 14",
+    "max-slew violations at max_tt_025C_3v30: 33",
+    "max-slew violations at min_ss_125C_3v00: 197",
+    "max-slew violations at max_ff_n40C_3v60: 3",
+    "max-fanout violations: 1",
+    "total power is 1.1027x baseline (limit 1.05)"
+   ]
+  }
+ ],
+ "kinds": [
+  {
+   "kind": "PL_TIMING_DRIVEN off",
+   "nodes": 32,
+   "evaluated": 6,
+   "best": "n30",
+   "signoff_over_estimate": [
+    1.006,
+    1.006,
+    1.007,
+    0.959,
+    0.969
+   ],
+   "estimates": "corrected by what 5 evaluations of this kind showed",
+   "correction": {
+    "timing": 1.0116,
+    "power": 1.0285,
+    "die": 1.0,
+    "area": 1.0069
+   }
+  }
+ ],
+ "candidate_screen": {
+  "hold_floor_ns": 0.3,
+  "power_ceiling": 1.05
+ },
+ "search": {
+  "runs": 34,
+  "failed": 2,
+  "refused_proposals": 0,
+  "evaluations_during_search": 5,
+  "evaluations_at_the_end": 0,
+  "nodes_not_candidates": {
+   "n1": "fanout limit 6 with slew margin 30 on a 285 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations; estimated power is 1.059x baseline, above the ceiling of 1.05",
+   "n2": "fanout limit 6 with slew margin 30 on a 285 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations; estimated power is 1.110x baseline, above the ceiling of 1.05",
+   "n3": "evaluated and failed: max-fanout violations: 1",
+   "n4": "fanout limit 6 with slew margin 30 on a 285 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations; estimated max-capacitance violations at nom_tt_025C_3v30: 1; estimated power is 1.050x baseline, above the ceiling of 1.05",
+   "n5": "fanout limit 6 with slew margin 30 on a 285 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations",
+   "n6": "evaluated and failed: max-fanout violations: 1",
+   "n7": "evaluated and failed: max-fanout violations: 1",
+   "n8": "fanout limit 6 with slew margin 30 on a 285 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations; estimated power is 1.066x baseline, above the ceiling of 1.05",
+   "n9": "fanout limit 6 with slew margin 30 on a 285 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations; estimated power is 1.059x baseline, above the ceiling of 1.05",
+   "n10": "fanout limit 6 with slew margin 30 on a 285 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations; estimated power is 1.059x baseline, above the ceiling of 1.05",
+   "n11": "fanout limit 6 with slew margin 30 on a 285 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations",
+   "n12": "fanout limit 6 with slew margin 30 on a 285 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations",
+   "n13": "fanout limit 6 with slew margin 30 on a 285 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations; estimated power is 1.274x baseline, above the ceiling of 1.05",
+   "n14": "fanout limit 6 with slew margin 30 on a 277 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations",
+   "n15": "fanout limit 6 with slew margin 30 on a 277 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations",
+   "n16": "fanout limit 6 with slew margin 30 on a 280 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations; estimated power is 1.059x baseline, above the ceiling of 1.05",
+   "n19": "fanout limit 6 with slew margin 30 on a 277 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations; estimated power is 1.051x baseline, above the ceiling of 1.05",
+   "n20": "evaluated and failed: max-slew violations at nom_ss_125C_3v00: 54; max-slew violations at max_ss_125C_3v00: 127; max-slew violations at min_ss_125C_3v00: 23; max-fanout violations: 1; total power is 1.1308x baseline (limit 1.05)",
+   "n21": "fanout limit 8 with slew margin 30 on a 285 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations; estimated power is 1.053x baseline, above the ceiling of 1.05",
+   "n22": "fanout limit 6 with slew margin 30 on a 285 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations",
+   "n23": "fanout limit 6 with slew margin 30 on a 280 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations",
+   "n24": "fanout limit 6 with slew margin 30 on a 285 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations",
+   "n25": "fanout limit 6 with slew margin 30 on a 285 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations; estimated power is 1.066x baseline, above the ceiling of 1.05",
+   "n26": "fanout limit 6 with slew margin 30 on a 285 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations; estimated power is 1.059x baseline, above the ceiling of 1.05",
+   "n27": "fanout limit 6 with slew margin 30 on a 285 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations",
+   "n28": "fanout limit 6 with slew margin 30 on a 285 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations",
+   "n29": "fanout limit 6 with slew margin 30 on a 280 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations",
+   "n30": "evaluated and failed: max-slew violations at nom_tt_025C_3v30: 22; max-slew violations at nom_ss_125C_3v00: 271; max-slew violations at max_ss_125C_3v00: 361; max-slew violations at min_tt_025C_3v30: 14; max-slew violations at max_tt_025C_3v30: 33; max-slew violations at min_ss_125C_3v00: 197; max-slew violations at max_ff_n40C_3v60: 3; max-fanout violations: 1; total power is 1.1027x baseline (limit 1.05)",
+   "n31": "fanout limit 6 with slew margin 30 on a 275 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations",
+   "n32": "fanout limit 6 with slew margin 30 on a 285 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations",
+   "n33": "fanout limit 6 with slew margin 30 on a 285 um die is no safer than n3's (6, 30, 285 um), which failed signoff on slew or capacitance violations"
+  },
+  "branches_by_stage": {
+   "FP": 6,
+   "PL": 4,
+   "CTS": 20,
+   "GR": 3
+  },
+  "best_score_est_after_each_run": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ]
+ },
+ "cost": {
+  "flow_runs": 39,
+  "flow_run_budget": 40,
+  "flow_minutes": 51.4,
+  "usd": 2.305642,
+  "usd_budget": 4.0,
+  "usd_by_agent": {
+   "navigator": {
+    "usd": 0.625564,
+    "calls": 38,
+    "prompt_tokens": 171752,
+    "completion_tokens": 28206,
+    "models": [
+     "openrouter/anthropic/claude-sonnet-5.5"
+    ]
+   },
+   "stage_agent": {
+    "usd": 1.549774,
+    "calls": 99,
+    "prompt_tokens": 606557,
+    "completion_tokens": 33666,
+    "models": [
+     "openrouter/anthropic/claude-sonnet-5.5"
+    ]
+   },
+   "stop_agent": {
+    "usd": 0.114422,
+    "calls": 38,
+    "prompt_tokens": 26706,
+    "completion_tokens": 6101,
+    "models": [
+     "openrouter/anthropic/claude-sonnet-5.5"
+    ]
+   },
+   "diagnostician": {
+    "usd": 0.015882,
+    "calls": 2,
+    "prompt_tokens": 3151,
+    "completion_tokens": 958,
+    "models": [
+     "openrouter/anthropic/claude-sonnet-5.5"
+    ]
+   }
+  },
+  "usd_by_model": {
+   "openrouter/anthropic/claude-sonnet-5.5": {
+    "usd": 2.305642,
+    "calls": 177,
+    "prompt_tokens": 808166,
+    "completion_tokens": 68931
+   }
+  },
+  "model_call_retries": 0,
+  "wall_minutes": 65.9,
+  "baseline_from_cache": false,
+  "disk_freed_gb": 11.29
+ },
+ "stage_agent_fallbacks": 0,
+ "navigator_corrections": 0,
+ "stop_decisions": [
+  {
+   "after_run": 1,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": false,
+   "stop_agent_reason": "Only 2 runs have been used with 37 search runs left and plenty of budget, so there is not yet a 10-run window to judge stagnation and no stop condition in the rule is met.",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 2,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": false,
+   "stop_agent_reason": "Only 3 of ~39 runs are used with 36 left for search and plenty of USD budget, so the 10-run plateau rule is not yet triggered and unused runs earn nothing.",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 3,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": false,
+   "stop_agent_reason": "Only 4 of the runs have been used, so the 10-run plateau window has not been reached, 35 search runs and most of the budget remain, and unused runs earn nothing, so the search should continue.",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 4,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": false,
+   "stop_agent_reason": "Only 5 runs used with 34 search runs and $3.77 left, so the 10-run plateau window has not yet filled and unused runs earn nothing, so the search should continue.",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 5,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": false,
+   "stop_agent_reason": "Only 6 runs used, so the 10-run window has not filled and 33 search runs plus $3.70 remain, so more runs could still beat the baseline of 1.0.",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 6,
+   "best_score_est": 1.0055,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": false,
+   "stop_agent_reason": "Only 7 runs used with 32 search runs and $3.65 left, one candidate is waiting for evaluation, and the best estimate only just began improving (1.0055 on the latest run), so the policy's stop condition",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 6,
+   "best_score_est": 1.0052,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": false,
+   "stop_agent_reason": "Only 8 runs used with 31 left for search and ample USD budget, 2 candidates await evaluation, and the 10-run stall window isn't yet satisfied (best estimate rose 0.52% recently), so continuing is warr",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 7,
+   "best_score_est": 1.0052,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": false,
+   "stop_agent_reason": "Only 9 of 39 runs are used with 30 left for search and $3.58 remaining, two candidates are still waiting for evaluation, and fewer than 10 runs have passed since the baseline so the 0.2% stall rule is",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 7,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed at the 1.0 baseline across all logged runs (10 flow runs used, only 8 logged), so the policy's under-0.2%-over-10-runs condition is met and nothing is waiting for e",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 8,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": false,
+   "stop_agent_reason": "The history has only 9 entries, so the 10-run window of the stopping rule is not yet fully met, and with 28 runs and $3.49 left and no improvement yet, further exploration is cheap and unused runs ear",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 9,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed at 1.0 over the last 10 runs, so the rise is under 0.2% and the policy rule says to stop; I agree, since no candidates are waiting and the search has found nothing ",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 10,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed at 1.0 for the baseline plus 10 runs, which is under the 0.2% rise the policy requires, and no candidates are waiting, so more runs look unlikely to help; I agree w",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 11,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed at the 1.0 baseline for all 12 recorded runs, so the gain over the last 10 is 0%, below the 0.2% threshold, and no candidates are waiting; I agree with the rule des",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 12,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed at 1.0 for all 13 recorded runs, so the rule's stall condition (less than 0.2% gain over the last 10 runs) is met; no candidates are waiting, and I agree further ru",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 13,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed at 1.0 for the last 10 runs (a 0% rise, below the 0.2% threshold) and no candidates are waiting, so the policy rule says to stop, and I agree with it even though 23",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 13,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed at 1.0 for the last 10 runs, which is a rise of 0% and below the 0.2% threshold, and no candidates are waiting for evaluation, so the policy rule says to stop; I ag",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 14,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed at 1.0 for the last 15 runs, so the rise over the last 10 is 0%, below the 0.2% threshold. No candidates are waiting, so I agree with the policy rule and see no sig",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 15,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed flat at 1.0 for the last 10 runs (a rise of 0%, below the 0.2% threshold), and no candidates are waiting for evaluation, so the policy rule says to stop; I agree, s",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 16,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed at 1.0 for all 17 recorded runs, so it has risen by less than 0.2% over the last 10 runs and the policy rule says stop; with no candidates waiting and nothing beati",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 17,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed flat at 1.0 for all 18 recorded runs, which is under the 0.2% gain over the last 10 runs the policy requires, and no candidates are waiting, so more runs are unlike",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 18,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed at 1.0 (no improvement over baseline) across the last 10+ runs, so the policy's under-0.2% rise rule triggers, and with no candidates waiting for evaluation, furthe",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 19,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed at 1.0 for the last 10 runs (0% gain, under the 0.2% threshold) and nothing has beaten the baseline, so the policy rule says to stop even though 16 runs remain and ",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 20,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed at 1.0 for the last 10 runs (a 0% rise, below the 0.2% threshold), no candidates are waiting for evaluation, and nothing has beaten the baseline, so more runs are u",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 21,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed at 1.0 for the last 10 runs (a 0% rise, below the 0.2% threshold), no candidates are waiting for evaluation, and nothing has beaten the baseline, so the policy rule",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 22,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed at 1.0 for the last 10+ runs (rise of 0%, below the 0.2% threshold), no candidates are waiting for evaluation, and nothing has beaten the baseline, so I agree with ",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 23,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed at 1.0 for the last 10 runs (a 0% rise, below the 0.2% threshold), with no candidates waiting for evaluation and none having beaten the baseline, so the policy rule",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 24,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed at 1.0 for all 25 recorded runs, so it rose by less than 0.2% over the last 10, no candidate is waiting, and further runs are unlikely to beat the baseline, so I ag",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 25,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed flat at 1.0 for all 26 recorded runs, so it has risen by less than 0.2% over the last 10 runs; no candidates are waiting and nothing has beaten the baseline, so mor",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 26,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed at 1.0 (baseline) for the last 10+ runs, so improvement is below the 0.2% threshold, and no candidates are waiting, so the policy rule to stop applies and I agree w",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 26,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed at the 1.0 baseline for the last 10 runs (a 0% rise, below the 0.2% threshold) and no candidates are waiting for evaluation, so I agree with the rule that further r",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 27,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed at 1.0 (baseline) for the last 10+ runs, below the 0.2% improvement threshold, and no candidates are waiting, so I agree with the rule and further runs are unlikely",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 28,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed flat at 1.0 for all 29 recorded runs, well beyond the 10-run window and under the 0.2% improvement threshold, no candidates are waiting, and nothing has beaten the ",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 29,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed at 1.0 for the last 10 runs (and all 30 recorded), so it rose by less than 0.2%, and no candidates are waiting for evaluation, so the policy rule says stop and I ag",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 30,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed at 1.0 for the last 10+ runs (0% gain, below the 0.2% threshold), no candidates are waiting, and no run has beaten the baseline, so the rule's stop is sensible and ",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 31,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed at 1.0 across all recorded runs, so it has risen by 0% over the last 10 runs, below the 0.2% threshold, and no candidates are waiting for evaluation; I agree with t",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 31,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed at 1.0 for all 32 recorded runs, well under the 0.2% gain over the last 10 runs the rule requires, and no candidates are waiting; the 2 remaining runs are the ones ",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 32,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "The best estimated score has stayed flat at 1.0 for over 10 runs (rise under 0.2%), no candidates are waiting for evaluation, and only 1 search run remains, so the policy rule to stop applies and I ag",
+   "hard_limit": null,
+   "stopped": false
+  },
+  {
+   "after_run": 33,
+   "best_score_est": 1.0,
+   "rule_says_stop": false,
+   "stop_agent_says_stop": true,
+   "stop_agent_reason": "No flow runs are left for search (0 remaining) and no candidates are waiting, and the best score has stayed at 1.0 across all runs, so the policy's stop rule applies and I agree with it.",
+   "hard_limit": "flow-run budget spent (one run is reserved for an evaluation at the end)",
+   "stopped": true
+  }
+ ],
+ "method": "agent",
+ "models": {
+  "navigator": "openrouter/anthropic/claude-sonnet-5.5",
+  "stage_agent": "openrouter/anthropic/claude-sonnet-5.5",
+  "stop_agent": "openrouter/anthropic/claude-sonnet-5.5",
+  "diagnostician": "openrouter/anthropic/claude-sonnet-5.5"
+ },
+ "stop_policy": "rule"
+}

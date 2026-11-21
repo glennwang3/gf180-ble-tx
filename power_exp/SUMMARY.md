@@ -145,3 +145,117 @@ corners), a bigger die with a repair loop that converges, or treating ss at
 - `equiv/run_eq.sh <rtl dir> [SPS]` runs the port-equivalence bench against f67a39c.
 - `collect.py` writes `results.json` (every corner, every number above).
 - `logs/` has the harden, test, GL and power logs.
+
+---
+
+# 3.3 V signoff of V3 with zero violations (2026-11-21)
+
+Glenn's decision: the chip is designed at 3.3 V. Goal: V3 at the 3.3 V corners,
+area close to the original, power gain kept, **no violation of any kind**.
+
+## Result: V3 at 285 x 300 um, clean with the strict 3 ns slew limit
+
+Layout: `layout_v3_285/` (GDS, DEF, LEF, libs, netlists, SDC, nominal SPEF, SPICE,
+metrics, power reports). Run: `v3/final_w285` (not committed). Commit 120b48c.
+
+| check | result |
+|---|---|
+| setup slack, worst of 9 corners | +95.2 ns (tt +107.4, ss max-RC +95.2, ff +109.5) |
+| hold slack, worst of 9 corners | +0.296 ns (ff max-RC) |
+| max slew / max cap / max fanout | 0 / 0 / 0 at all 9 corners (3 ns slew limit everywhere) |
+| Magic DRC / routing DRC / LVS / antenna / XOR | 0 / 0 / 0 / 0 / 0 |
+| KLayout foundry DRC (gf180mcuD deck, variant D) | 0 in 63 tables. `mslot` crashes on the known deck bug, as on the tapeout (`layout_v3_285/klayout_drc.txt`) |
+| LibreLane checkers | all clear, with SETUP/HOLD_VIOLATION_CORNERS = * for this run |
+| tests on the post-layout netlist | 9 UART tests + 2 clock-stop/restart tests pass (unit delay) |
+| cell area / utilisation | 69,408 um2 / 90.7% (original 5 V tapeout: 62,980 um2 in 270 x 300 um) |
+| IR drop | 0.05 mV worst |
+
+Power at tt_025C_3v30, from a gate-level VCD of this netlist with the nominal SPEF:
+
+| | V0 at 300 um (no gating) | V3 at 285 um |
+|---|---|---|
+| TX (389 us) | 0.674 mW | **0.305 mW** |
+| idle | 0.551 mW | **0.126 mW** |
+| UART load (458 us) | 0.574 mW | 0.155 mW |
+| default activity | 0.813 mW | 0.545 mW |
+| average, 1 packet / 100 ms | 552 uW | **127 uW** |
+| average, 1 packet / 20 ms | 554 uW | **131 uW** |
+| clock stopped between beacons (100 / 20 ms) | about 5.4 / 26 uW | **2.1 / 9.7 uW** |
+
+## What made it close
+
+Flow settings only. RTL = V3, unchanged:
+- `EXTRA_EXCLUDED_CELLS` += buf_1, nor3_1, nor4_1. At ss_125C_3v00 these weak
+  1x cells (the repair's fanout buffers above all) were behind most of the slew
+  violations, up to 19 ns.
+- `RUN_POST_GRT_DESIGN_REPAIR: true`. It also runs in every signoff fix pass.
+- `PL_MAX_DISPLACEMENT_Y: 300`. The default of 100 um made detailed placement fail
+  after the post-GRT repair on 2 cells, which looked like a full die.
+- `PL_RESIZER_HOLD_SLACK_MARGIN: 0.25`.
+- Signoff fix passes upsize only (`PD_NO_FIX_BUFFER=1`). Here they upsized 12 drivers in 3 passes.
+
+The recipe is in `digital/agent/designs/ble_tx_uart_3v3/config.yaml`, at 285 um.
+
+## Width sweep (V3, the recipe above)
+
+| width | cell area | util | slew viol. tt / ss / ff | cap | hold WS | setup WS | |
+|---|---|---|---|---|---|---|---|
+| 300 | 69,897 | 86.5% | 0 / 0 / 0 | 0 | +0.286 | 96.0 | clean (without the displacement setting) |
+| 290 | 69,684 | 89.4% | 0 / 0 / 0 | 0 | +0.253 | 95.8 | clean |
+| **285** | **69,408** | **90.7%** | **0 / 0 / 0** | **0** | **+0.296** | **95.2** | **clean, chosen** |
+| 280 | 70,124 | 93.2% | 0 / 9 / 0 | 0 | +0.316 | 94.6 | 9 ss slew |
+| 280, density 90 | 71,267 | 94.7% | 48 / 381 / 2 | 0 | -0.057 | 78.9 | worse |
+| 270 | 69,957 | 96.6% | 7 / 253 / 0 | 0 | +0.313 | 91.8 | too full |
+
+270 um is out of reach with this RTL: the cells alone fill 97% of the core.
+
+## Also tried
+
+- **V4** (`v4/rtl`): V3, plus the 6 channel flops on their own clock gate, plus no
+  reset on bit_idx/crc/wht/tail_cnt/len_q. Those registers are always loaded at
+  start and never reach a port before that. It is port-equivalent (the bench at
+  SPS 2/8/16 and make test pass) and saves about 700 um2 in synthesis. In layout it
+  came out worse (280/290 um: 400-530 ss slew violations, fix passes out of room),
+  so V3 was kept.
+- Flow levers on V3 at 300 um:
+  - `SYNTH_STRATEGY AREA 2`: no gain, 792 slew violations.
+  - `DESIGN_REPAIR_MAX_SLEW_PCT 40`: crashed the post-GPL repair.
+- Clock-stop test (`tune/test_clock_stop.py`): stops clk low and high, from 3 us to
+  2 ms, between packets and between load and start. It checks the PDU and channel
+  survive and that new loads after a restart go out right. It passes on RTL and on
+  the 285 um netlist.
+
+## Agent search: nothing better than 285 um
+
+The search spent 39 of its 40 flow runs and $2.31 (Sonnet 5.5 for all four roles),
+in 66 min. Runs by stage: 20 CTS, 6 FP, 4 PL, 3 GR. Its answer is the baseline
+(score 1.0). The baseline was re-run by the search itself, and it passed the
+9-corner gate again. Report: `search_s3v3/report.json`, `tree.json`, console log.
+
+Five results went through signoff, and all five failed:
+
+| node | die | estimate | signoff score | why it failed |
+|---|---|---|---|---|
+| n7 (CTS wire 160/100, cluster 30, GRT adj. 0.42) | 280 um | 1.013 | 1.0136 | **1 max-fanout violation** (no slew/cap) |
+| n6 (same CTS, FP 280) | 280 um | 1.006 | 1.0119 | 1 max-fanout violation |
+| n3 (same CTS) | 285 um | 1.005 | 1.0051 | 1 max-fanout violation |
+| n20 | 277 um | 1.016 | 0.968 | 54-127 ss slew violations, fanout 1, power 1.13x |
+| n30 | 275 um | 1.006 | 0.980 | 361 ss slew violations, power 1.10x |
+
+n7 was the near miss: 280 um, power 0.989x, cells 0.995x, zero slew and cap. Its
+only problem was one net over the fanout limit of 8, most likely a clock-tree leaf
+buffer, since `CTS_SINK_CLUSTERING_SIZE` 30 changed the tree. Its layout was not
+kept, because the search keeps only the answer's. The whole gain on offer is 1.8%
+of die width and about 1% of power. Below 280 um the slow-corner slew comes back
+by the hundreds.
+
+Setup:
+- `digital/agent`, design `ble_tx_uart_3v3`, baseline = the 285 um layout.
+- Budget: 40 runs, $4. Score weights: die 0.5, power 0.35, cell area 0.15.
+- Power is measured from a packet plus 1 ms of idle on each result's netlist.
+- The gate (`pd/ledger.py`) rejects any setup, hold, slew, cap, fanout, DRC, LVS,
+  antenna or XOR problem at any of the 9 corners.
+- `pd.selftest` now fails 14 of its synthetic-metric checks: they lack the
+  per-corner keys this gate requires. Real signoff metrics carry them. The gate
+  passes the 285 layout and rejects 280/270.
+- Start script: `tune/start_search.sh`. Log: `digital/agent/runs/s3v3.console.log`.
