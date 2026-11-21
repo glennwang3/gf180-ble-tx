@@ -115,6 +115,9 @@ FOM_CORNER = "nom_tt_025C_3v30"   # power-exp: 3.3 V corners
 # maximum interconnect parasitics, which is where most of its violations are counted.
 SLOW_CORNER = "nom_ss_125C_3v00"
 SLOW_CORNER_MAX = "max_ss_125C_3v00"
+# power-exp: every signoff corner, for the zero-violation gate (pd/ledger.py).
+ALL_CORNERS = tuple(f"{rc}_{pvt}" for pvt in ("tt_025C_3v30", "ss_125C_3v00", "ff_n40C_3v60")
+                    for rc in ("nom", "min", "max"))
 WS_KEY = f"timing__setup__ws__corner:{FOM_CORNER}"
 WS_WORST_KEY = "timing__setup__ws"
 HOLD_KEY = f"timing__hold__ws__corner:{FOM_CORNER}"

@@ -1,5 +1,5 @@
 # FINAL=<final dir> [VCD=<vcd>] sta -exit power.tcl   (tt_025C_3v30, nom SPEF)
-set lib /foss/pdks/gf180mcuD/libs.ref/gf180mcu_fd_sc_mcu7t5v0/lib/gf180mcu_fd_sc_mcu7t5v0__tt_025C_3v30.lib
+set lib /foss/pdks/gf180mcuD/libs.ref/gf180mcu_fd_sc_mcu7t5v0/lib/gf180mcu_fd_sc_mcu7t5v0__[expr {[info exists ::env(PVT)] ? $::env(PVT) : "tt_025C_3v30"}].lib
 set blk $::env(FINAL)
 read_liberty $lib
 read_verilog $blk/nl/ble_tx_uart.nl.v

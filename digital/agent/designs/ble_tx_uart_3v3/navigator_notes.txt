@@ -1,0 +1,29 @@
+This is ble_tx_uart (BLE modulator + UART receiver, one flattened netlist, seven
+ports) hardened for a 3.3 V supply: the corners are tt_025C_3v30, ss_125C_3v00
+and ff_n40C_3v60, each with nominal, minimum and maximum parasitics. Its RTL is
+clock-gated (44 integrated clock gates: an idle gate, a symbol-rate gate, one gate
+in front of the 39 per-byte PDU gates, and UART register gates), which cut its
+power about 4x. About 50,000 um2 of cells after synthesis.
+
+At 3.0 V the slow corner is where layouts fail: cells are much weaker and the
+3 ns max-slew limit is hard to meet. The fixed settings in config.yaml are what
+made it close (weak 1x cells excluded, repair after global routing, detailed
+placement allowed to move cells 300 um vertically, 0.25 ns hold margin). The
+baseline n0 is 285 um wide and signed off with no violation of any kind at any
+of the 9 corners: about 69,400 um2 of cells at 91% utilisation. A manual sweep
+with the same settings found: 290 um clean, 285 um clean, 280 um left 9 slew
+violations at ss, 270 um left 253 (97% full), and placement density 90 at
+280 um made it worse (381 slew violations and a hold miss). Widths below 280 um
+are very unlikely to close; 280 um is the realistic target for die area.
+
+Nothing may be violated at signoff, at any of the 9 corners: setup, hold, max
+slew, max capacitance, max fanout, DRC, LVS, antenna, XOR. The gate rejects a
+result with any of them. In-loop estimates miss most slow-corner slew problems,
+so evaluate promising results rather than trusting their estimates. Keep
+MAX_FANOUT_CONSTRAINT at 8 or above (clock buffers drive up to 8 sinks).
+
+Power carries real weight here. It is measured on each result's own netlist from
+a simulated packet loaded over the UART pin plus 1 ms of idle after it, because a
+beacon spends almost all its time idle. Most of the idle power is the clock tree
+(root and main buffers, CTS delay buffers and dummy loads) and the free-running
+UART flops, so the clock-tree settings are the main power lever.

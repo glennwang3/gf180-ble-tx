@@ -19,6 +19,7 @@ ap.add_argument("variant")
 ap.add_argument("--width", type=float, help="die width in um (height stays 300)")
 ap.add_argument("--fix-passes", type=int, help="signoff upsizing passes (default 5)")
 ap.add_argument("--set", action="append", default=[], help="KEY=VALUE LibreLane override")
+ap.add_argument("--tag", help="run dir name (default: from the options)")
 ap.add_argument("--grt-repair", action="store_true", help="RUN_POST_GRT_DESIGN_REPAIR")
 a = ap.parse_args()
 
@@ -37,7 +38,7 @@ for kv in a.set:
 if a.fix_passes is not None:
     os.environ["PD_FIX_PASSES"] = str(a.fix_passes)
     tag += f"_f{a.fix_passes}"
-run = v / tag
+run = v / (a.tag or tag)
 run.mkdir(exist_ok=True)
 from pd import runner  # noqa: E402  (after PD_FIX_PASSES is set)
 t0 = time.time()

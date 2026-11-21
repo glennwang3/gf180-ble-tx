@@ -303,6 +303,18 @@ def gate(baseline: dict, candidate: dict) -> list[str]:
         return ["no signoff timing reported"]
     reasons += setup_problems(candidate)
     reasons += electrical_problems(candidate)
+    # power-exp: zero violations of any kind at every one of the 9 corners.
+    reasons += [r for r in electrical_problems(candidate, S.ALL_CORNERS) if r not in reasons]
+    for c in S.ALL_CORNERS:
+        for k in ("setup", "hold"):
+            v = candidate.get(f"timing__{k}__ws__corner:{c}")
+            if v is None:
+                reasons.append(f"{k} slack at {c}: not reported")
+            elif float(v) < 0:
+                reasons.append(f"{k} violation at {c}: {float(v):.4f} ns")
+    v = candidate.get("design__xor_difference__count")
+    if v is not None and float(v) > 0:
+        reasons.append(f"XOR differences: {int(float(v))}")
     # Fanout: none either, at signoff. The limit is the config's own
     # MAX_FANOUT_CONSTRAINT, not the library's, and the fix passes do not repair
     # it, so a result over it is out rather than fixed.

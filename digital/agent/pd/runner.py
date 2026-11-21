@@ -72,6 +72,11 @@ HEADLINE = (
     *(f"design__max_{kind}_violation__count__corner:{c}"
       for c in (S.SLOW_CORNER, S.SLOW_CORNER_MAX) for kind in ("slew", "cap")),
     "design__max_fanout_violation__count",
+    # power-exp: the full 9-corner picture, for the zero-violation gate.
+    "design__xor_difference__count", "timing__hold__ws",
+    *(f"timing__{k}__ws__corner:{c}" for c in S.ALL_CORNERS for k in ("setup", "hold")),
+    *(f"design__max_{kind}_violation__count__corner:{c}"
+      for c in S.ALL_CORNERS for kind in ("slew", "cap")),
 )
 
 # What a stage's log is boiled down to before an agent reads it. The tools print
