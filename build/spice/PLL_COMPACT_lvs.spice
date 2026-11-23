@@ -1,0 +1,14 @@
+* PLL_COMPACT top-level LVS reference. The macro subckts are in macros/*.spice;
+* lvs_config.json lists every file in LVS_SPICE_FILES.
+.subckt PLL_COMPACT AIR_BIT CFG[0] CFG[1] CFG[2] CFG[3] CFG[4] CFG[5] CLK_8M CODE_VALID CORE_CLK CP_IBIAS DN FB_1M FINE_CODE[0] FINE_CODE[1] FINE_CODE[2] FINE_CODE[3] FINE_CODE[4] FINE_CODE[5] FINE_CODE[6] FINE_CODE[7] MC PA_DRAIN PRESCALED REF_1M RF_OUT RST_N SYM_STROBE TAIL_BIAS UART_RX UPB VCTRL VDD VDD_VCO VSS VTUNE XN XP
+Xprescaler CORE_CLK prescaler_Q2 prescaler_X1_N1 prescaler_X2_N1 prescaler_Q3 prescaler_X3_N1 prescaler_X5_N1 prescaler_X4_N1 MC prescaler_NOR_OUT prescaler_Q4b prescaler_Q3n prescaler_Q5b PRESCALED prescaler_X1_N2 prescaler_X2_N2 prescaler_X3_N2 prescaler_Q1 prescaler_X6_DYN prescaler_NOR_PSTACK prescaler_X5_N2 prescaler_X4_N2 VDD VSS 32_33_Complete_Prescaler
+Xdivider VDD VSS CFG[0] CFG[3] CFG[4] CFG[5] FB_1M PRESCALED MC CFG[1] CFG[2] RST_N ble_feedback_divider
+Xpfd VDD VSS REF_1M pfd_UP DN FB_1M UPB pfd_DNb pfd_N_DN pfd_N_UP Phase_Detector_FE
+Xpump VDD VSS UPB DN CP_IBIAS VCTRL pump_P_BIAS Charge_Pump_FE
+Xtx VDD VSS AIR_BIT CLK_8M CODE_VALID RST_N SYM_STROBE FINE_CODE[0] FINE_CODE[1] FINE_CODE[2] FINE_CODE[3] FINE_CODE[4] FINE_CODE[5] FINE_CODE[6] FINE_CODE[7] UART_RX ble_tx_uart
+Xvco vco_DOUBLER_K vco_MIM_TOP VDD VDD vco_RF_DRV1 vco_RF_DRV2 RF_OUT TAIL_BIAS CORE_CLK VTUNE vco_O1N vco_O1P vco_O2N vco_O2P vco_O3N vco_O3P vco_O4N vco_O4P VDD XP XN VDD_VCO VSS Differential_VCO_XOR
+Xreg VDD VCTRL VDD_VCO VSS VCO_REG_L
+Xlf VCTRL VSS lf_LF_RZ PLL_LF_L
+Xconv XP XN VDD VSS PA_DRAIN conv_D1 RF_CONV_PA
+Xbias VDD VSS CP_IBIAS TAIL_BIAS PLL_BIAS
+.ends PLL_COMPACT

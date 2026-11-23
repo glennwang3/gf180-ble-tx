@@ -1,9 +1,0 @@
-* Behavioral model of the external VCO supply regulator.
-* VCTRL is high impedance. VDD_VCO is a driven supply referenced to VSS.
-* The offset keeps VCTRL near midrail at the Bluetooth band center.
-.subckt PLL_VCO_SUPPLY_MODEL VCTRL VDD_VCO VSS params: F_POLE=75k
-BSET CMD VSS V=min(max(2.80+0.20*(V(VCTRL,VSS)-1.65),2.65),3.15)
-RPOLE CMD FOLLOW 1k
-CPOLE FOLLOW VSS {1/(6.283185307179586*1k*F_POLE)}
-EREG VDD_VCO VSS FOLLOW VSS 1
-.ends PLL_VCO_SUPPLY_MODEL

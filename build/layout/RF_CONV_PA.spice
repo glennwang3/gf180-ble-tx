@@ -1,0 +1,42 @@
+.subckt RF_CONV_PA XP XN VDD VSS PA_DRAIN D1
+XXI0N_0 N0 G0 VSS VSS nfet_03v3 w=1u l=0.28u
+XXIDN_0 ND GD VSS VSS nfet_03v3 w=1u l=0.28u
+XXI1N_0 N1 G1 VSS VSS nfet_03v3 w=2u l=0.28u
+XXID0N_0 D0 N1 VSS VSS nfet_03v3 w=4u l=0.28u
+XXID1N_0 D1 D0 VSS VSS nfet_03v3 w=5u l=0.28u
+XXID1N_1 D1 D0 VSS VSS nfet_03v3 w=5u l=0.28u
+XXI0P_0 N0 G0 VDD VDD pfet_03v3 w=2u l=0.28u
+XXIDP_0 ND GD VDD VDD pfet_03v3 w=2u l=0.28u
+XXI1P_0 N1 G1 VDD VDD pfet_03v3 w=4u l=0.28u
+XXID0P_0 D0 N1 VDD VDD pfet_03v3 w=8u l=0.28u
+XXID1P_0 D1 D0 VDD VDD pfet_03v3 w=10u l=0.28u
+XXID1P_1 D1 D0 VDD VDD pfet_03v3 w=10u l=0.28u
+XXMPA_0 PA_DRAIN D1 VSS VSS nfet_03v3 w=5u l=0.28u
+XXMPA_1 PA_DRAIN D1 VSS VSS nfet_03v3 w=5u l=0.28u
+XXMPA_2 PA_DRAIN D1 VSS VSS nfet_03v3 w=5u l=0.28u
+XXMPA_3 PA_DRAIN D1 VSS VSS nfet_03v3 w=5u l=0.28u
+XXMPA_4 PA_DRAIN D1 VSS VSS nfet_03v3 w=5u l=0.28u
+XXMPA_5 PA_DRAIN D1 VSS VSS nfet_03v3 w=5u l=0.28u
+XXMPA_6 PA_DRAIN D1 VSS VSS nfet_03v3 w=5u l=0.28u
+XXMPA_7 PA_DRAIN D1 VSS VSS nfet_03v3 w=5u l=0.28u
+XXMPA_8 PA_DRAIN D1 VSS VSS nfet_03v3 w=5u l=0.28u
+XXMPA_9 PA_DRAIN D1 VSS VSS nfet_03v3 w=5u l=0.28u
+XXRF0_0 G0 XRF0_n1 VSS ppolyf_u_1k r_width=1u r_length=9.86u
+XXRF0_1 XRF0_n1 XRF0_n2 VSS ppolyf_u_1k r_width=1u r_length=9.86u
+XXRF0_2 XRF0_n2 XRF0_n3 VSS ppolyf_u_1k r_width=1u r_length=9.86u
+XXRF0_3 XRF0_n3 XRF0_n4 VSS ppolyf_u_1k r_width=1u r_length=9.86u
+XXRF0_4 XRF0_n4 N0 VSS ppolyf_u_1k r_width=1u r_length=9.86u
+XXRFD_0 GD XRFD_n1 VSS ppolyf_u_1k r_width=1u r_length=9.86u
+XXRFD_1 XRFD_n1 XRFD_n2 VSS ppolyf_u_1k r_width=1u r_length=9.86u
+XXRFD_2 XRFD_n2 XRFD_n3 VSS ppolyf_u_1k r_width=1u r_length=9.86u
+XXRFD_3 XRFD_n3 XRFD_n4 VSS ppolyf_u_1k r_width=1u r_length=9.86u
+XXRFD_4 XRFD_n4 ND VSS ppolyf_u_1k r_width=1u r_length=9.86u
+XXRF1_0 G1 XRF1_n1 VSS ppolyf_u_1k r_width=1u r_length=9.86u
+XXRF1_1 XRF1_n1 XRF1_n2 VSS ppolyf_u_1k r_width=1u r_length=9.86u
+XXRF1_2 XRF1_n2 XRF1_n3 VSS ppolyf_u_1k r_width=1u r_length=9.86u
+XXRF1_3 XRF1_n3 XRF1_n4 VSS ppolyf_u_1k r_width=1u r_length=9.86u
+XXRF1_4 XRF1_n4 N1 VSS ppolyf_u_1k r_width=1u r_length=9.86u
+XCCX G0 XP cap_mim_2f0_m5m6_noshield c_width=7u c_length=7u
+XCCD GD XN cap_mim_2f0_m5m6_noshield c_width=7u c_length=7u
+XCC1 G1 N0 cap_mim_2f0_m5m6_noshield c_width=7u c_length=7u
+.ends RF_CONV_PA

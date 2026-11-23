@@ -1,6 +1,0 @@
-{
-  "pass": true,
-  "test": "Complete assembled block SPICE operating point with forced VCTRL",
-  "vdd_vco_v": 2.8,
-  "vco_supply_current_a": 0.001103949
-}

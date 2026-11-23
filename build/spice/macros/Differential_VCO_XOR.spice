@@ -1,0 +1,78 @@
+* Differential_VCO_XOR: LVS reference (from VCO_XOR_LVS_lvs.spice, subckt VCO_XOR_LVS renamed)
+* NGSPICE file created from VCO_XOR_LVS.ext - technology: gf180mcuE
+
+.subckt Differential_VCO_XOR DOUBLER_K MIM_TOP VBUF_DOUBLER VBUF_DIFF RF_DRV1 RF_DRV2 RF_OUT
++ TAIL_BIAS CORE_CLK VTUNE O1N O1P O2N O2P O3N O3P O4N O4P VDD_RF XP XN VDD VSS
+X0 a_n4939_1760# MIM_TOP VSS ppolyf_u r_width=0.8u r_length=6.705u
+X1 a_460_646# TAIL_BIAS VSS VSS nfet_03v3 ad=0.61p pd=3.22u as=0.61p ps=3.22u w=1u l=0.28u
+X2 O3N O2N VSS VSS nfet_03v3 ad=1.7812p pd=7.06u as=1.7812p ps=7.06u w=2.92u l=0.28u
+X3 RF_DRV1 MIM_TOP VSS VSS nfet_03v3 ad=0.61p pd=3.22u as=0.61p ps=3.22u w=1u l=0.28u
+X4 a_n4939_n460# a_n3466_n200# VSS ppolyf_u r_width=0.8u r_length=6.705u
+X5 VSS a_n3706_n5344# a_n3706_n5344# VSS nfet_03v3 ad=1.22p pd=5.22u as=1.22p ps=5.22u w=2u l=0.5u
+X6 VBUF_DOUBLER RF_DRV1 RF_DRV2 VBUF_DOUBLER pfet_03v3 ad=1.3p pd=5.3u as=1.3p ps=5.3u w=2u l=0.28u
+D0 O1P DOUBLER_K sc_diode pj=3.24u area=0.62p
+X7 a_n4939_2280# RF_DRV1 VSS ppolyf_u r_width=0.8u r_length=6.705u
+X8 VDD_RF XN VSS ppolyf_u_1k r_width=1u r_length=3.8u
+X9 VSS a_n3706_n5344# a_n3706_n5344# VSS nfet_03v3 ad=1.22p pd=5.22u as=1.22p ps=5.22u w=2u l=0.5u
+X10 XP VDD_RF VSS ppolyf_u_1k r_width=1u r_length=3.8u
+X11 VDD_RF XP VSS ppolyf_u_1k r_width=1u r_length=3.8u
+X12 O1P O3P VDD VDD pfet_03v3 ad=3.796p pd=12.98u as=3.796p ps=12.98u w=5.84u l=0.28u
+X13 O2P O2N VSS VSS nfet_03v3 ad=0.915p pd=4.22u as=0.915p ps=4.22u w=1.5u l=0.28u
+X14 O4P O4N VSS VSS nfet_03v3 ad=0.915p pd=4.22u as=0.915p ps=4.22u w=1.5u l=0.28u
+X15 VSS a_n3706_n5344# a_n3200_n5664# VSS nfet_03v3 ad=2.44p pd=9.22u as=2.44p ps=9.22u w=4u l=0.5u
+X16 a_n3706_n5344# VDD_RF VSS ppolyf_u_1k r_width=1u r_length=11u
+X17 a_n4939_1760# a_n3466_2020# VSS ppolyf_u r_width=0.8u r_length=6.705u
+X18 VTUNE O4P cap_nmos_03v3 c_width=1u c_length=1u
+X19 O4N O4P VSS VSS nfet_03v3 ad=0.915p pd=4.22u as=0.915p ps=4.22u w=1.5u l=0.28u
+X20 a_n4056_n6084# O3P XP VSS nfet_03v3 ad=2.44p pd=9.22u as=2.44p ps=9.22u w=4u l=0.28u
+X21 VBUF_DIFF a_192_1274# a_192_1274# VBUF_DIFF pfet_03v3 ad=1.3p pd=5.3u as=1.3p ps=5.3u w=2u l=0.28u
+X22 O2N O2P VSS VSS nfet_03v3 ad=0.915p pd=4.22u as=0.915p ps=4.22u w=1.5u l=0.28u
+X23 a_n1788_n6084# O3N XP VSS nfet_03v3 ad=2.44p pd=9.22u as=2.44p ps=9.22u w=4u l=0.28u
+X24 VTUNE O1P cap_nmos_03v3 c_width=1u c_length=1u
+X25 VTUNE O4N cap_nmos_03v3 c_width=1u c_length=1u
+X26 O4P O3P VSS VSS nfet_03v3 ad=1.7812p pd=7.06u as=1.7812p ps=7.06u w=2.92u l=0.28u
+X27 a_n3200_n5664# O1N a_n1788_n6084# VSS nfet_03v3 ad=2.44p pd=9.22u as=2.44p ps=9.22u w=4u l=0.28u
+X28 a_n4056_n6084# O3N XN VSS nfet_03v3 ad=2.44p pd=9.22u as=2.44p ps=9.22u w=4u l=0.28u
+X29 MIM_TOP DOUBLER_K cap_mim_2f0_m5m6_noshield c_width=5u c_length=5u
+X30 a_n4939_n460# VSS VSS ppolyf_u r_width=0.8u r_length=6.705u
+X31 VTUNE O2P cap_nmos_03v3 c_width=1u c_length=1u
+X32 O2P O1P VSS VSS nfet_03v3 ad=1.7812p pd=7.06u as=1.7812p ps=7.06u w=2.92u l=0.28u
+X33 O4N O2P VDD VDD pfet_03v3 ad=3.796p pd=12.98u as=3.796p ps=12.98u w=5.84u l=0.28u
+X34 a_n1788_n6084# O3P XN VSS nfet_03v3 ad=2.44p pd=9.22u as=2.44p ps=9.22u w=4u l=0.28u
+X35 XN VDD_RF VSS ppolyf_u_1k r_width=1u r_length=3.8u
+X36 VTUNE O1N cap_nmos_03v3 c_width=1u c_length=1u
+X37 O2N O4N VDD VDD pfet_03v3 ad=3.796p pd=12.98u as=3.796p ps=12.98u w=5.84u l=0.28u
+X38 O3P O1N VDD VDD pfet_03v3 ad=3.796p pd=12.98u as=3.796p ps=12.98u w=5.84u l=0.28u
+X39 RF_DRV2 RF_DRV1 VSS VSS nfet_03v3 ad=0.61p pd=3.22u as=0.61p ps=3.22u w=1u l=0.28u
+X40 VBUF_DIFF a_192_1274# a_n892_1284# VBUF_DIFF pfet_03v3 ad=1.3p pd=5.3u as=1.3p ps=5.3u w=2u l=0.28u
+X41 VTUNE O2N cap_nmos_03v3 c_width=1u c_length=1u
+X42 O4N O3N VSS VSS nfet_03v3 ad=1.7812p pd=7.06u as=1.7812p ps=7.06u w=2.92u l=0.28u
+X43 VBUF_DOUBLER RF_DRV2 RF_OUT VBUF_DOUBLER pfet_03v3 ad=1.3p pd=5.3u as=1.3p ps=5.3u w=2u l=0.28u
+X44 O2N O1N VSS VSS nfet_03v3 ad=1.7812p pd=7.06u as=1.7812p ps=7.06u w=2.92u l=0.28u
+X45 a_n4939_60# a_n3466_n200# VSS ppolyf_u r_width=0.8u r_length=6.705u
+X46 O1P O1N VSS VSS nfet_03v3 ad=0.915p pd=4.22u as=0.915p ps=4.22u w=1.5u l=0.28u
+D1 O1N DOUBLER_K sc_diode pj=3.24u area=0.62p
+X47 VBUF_DIFF a_n892_1284# CORE_CLK VBUF_DIFF pfet_03v3 ad=2.6p pd=9.3u as=2.6p ps=9.3u w=4u l=0.28u
+X48 O1N O1P VSS VSS nfet_03v3 ad=0.915p pd=4.22u as=0.915p ps=4.22u w=1.5u l=0.28u
+X49 VSS a_n3706_n5344# a_n3200_n5664# VSS nfet_03v3 ad=2.44p pd=9.22u as=2.44p ps=9.22u w=4u l=0.5u
+X50 O1P O4N VSS VSS nfet_03v3 ad=1.7812p pd=7.06u as=1.7812p ps=7.06u w=2.92u l=0.28u
+X51 VBUF_DOUBLER MIM_TOP RF_DRV1 VBUF_DOUBLER pfet_03v3 ad=1.3p pd=5.3u as=1.3p ps=5.3u w=2u l=0.28u
+X52 O1N O3N VDD VDD pfet_03v3 ad=3.796p pd=12.98u as=3.796p ps=12.98u w=5.84u l=0.28u
+X53 O3P O3N VSS VSS nfet_03v3 ad=0.915p pd=4.22u as=0.915p ps=4.22u w=1.5u l=0.28u
+X54 RF_OUT RF_DRV2 VSS VSS nfet_03v3 ad=0.61p pd=3.22u as=0.61p ps=3.22u w=1u l=0.28u
+X55 CORE_CLK a_n892_1284# VSS VSS nfet_03v3 ad=1.22p pd=5.22u as=1.22p ps=5.22u w=2u l=0.28u
+X56 a_n892_1284# O1P a_460_646# VSS nfet_03v3 ad=0.61p pd=3.22u as=0.61p ps=3.22u w=1u l=0.28u
+X57 a_n4939_2280# a_n3466_2020# VSS ppolyf_u r_width=0.8u r_length=6.705u
+X58 O1N O4P VSS VSS nfet_03v3 ad=1.7812p pd=7.06u as=1.7812p ps=7.06u w=2.92u l=0.28u
+X59 O3N O3P VSS VSS nfet_03v3 ad=0.915p pd=4.22u as=0.915p ps=4.22u w=1.5u l=0.28u
+X60 a_n4939_60# DOUBLER_K VSS ppolyf_u r_width=0.8u r_length=6.705u
+X61 VTUNE O3P cap_nmos_03v3 c_width=1u c_length=1u
+X62 O3P O2P VSS VSS nfet_03v3 ad=1.7812p pd=7.06u as=1.7812p ps=7.06u w=2.92u l=0.28u
+X63 a_n3200_n5664# O1P a_n4056_n6084# VSS nfet_03v3 ad=2.44p pd=9.22u as=2.44p ps=9.22u w=4u l=0.28u
+X64 a_192_1274# O1N a_460_646# VSS nfet_03v3 ad=0.61p pd=3.22u as=0.61p ps=3.22u w=1u l=0.28u
+X65 O2P O4P VDD VDD pfet_03v3 ad=3.796p pd=12.98u as=3.796p ps=12.98u w=5.84u l=0.28u
+X66 VTUNE O3N cap_nmos_03v3 c_width=1u c_length=1u
+X67 O3N O1P VDD VDD pfet_03v3 ad=3.796p pd=12.98u as=3.796p ps=12.98u w=5.84u l=0.28u
+X68 O4P O2N VDD VDD pfet_03v3 ad=3.796p pd=12.98u as=3.796p ps=12.98u w=5.84u l=0.28u
+.ends
+
