@@ -17,7 +17,20 @@
 //   00aa_aaaa  d0 d1 ...  write PDU bytes from address a (0 = header0,
 //                          1 = length, 2.. = payload), address auto-increments
 //   01cc_cccc             channel = c (latched by ble_tx at start)
-//   1xxx_xxxs             s = 1 pulses start
+//   1xxx_xxx1             start
+//   11xx_xxe0  [k]        debug UART: e = 1 on, 0 off; an optional next byte in
+//                          the same burst sets the sample offset k (0..79)
+//   10xx_xxx0             no operation
+//
+// Debug UART (pin dbg_tx, 8N1 at the same baud rate as uart_rx, idle high): while
+// it is on, each packet sends a marker byte 0x80 when the start byte is taken, then
+// fine_code (signed, two's complement) at the packet's code indices k, k+80,
+// k+160, ..., counted from its first valid code (index 0). One byte takes 10 bit
+// times = 80 clocks, so the bytes follow back to back. Codes stay within +-125, so
+// 0x80 (-128) only ever marks a packet. Sending the same packet with k = 0..79
+// gives every code of the 8 MS/s waveform. k above 79 sends the marker only.
+// Off after reset (k = 0); off, dbg_tx stays high and its logic is clock-gated. A
+// byte already being sent when it is turned off still finishes.
 //
 // There is no read path and no busy pin: uart_rx is the only connection to the
 // controller. A packet's air time is fixed by its length, (10 + len) x 8 us for
@@ -43,7 +56,9 @@ module ble_uart #(
   output wire [5:0] wr_addr,
   output wire [7:0] wr_data,
   output reg  [5:0] channel,
-  output wire       start
+  output wire       start,
+  output reg        dbg_en,       // debug UART on
+  output reg  [6:0] dbg_k         // its sample offset
 );
 
   // Area notes: wr_en, wr_addr, wr_data and start are not registered again here.
@@ -159,18 +174,26 @@ module ble_uart #(
     if (set_addr) addr <= sh[5:0];
     else          addr <= addr + 1'b1;      // wr_en
 
+  // debug UART settings: 11xx_xxe0 sets e; the next data byte of that burst sets k.
+  reg  dbg_arg;                // the next data byte is k
+  wire set_dbg = is_cmd && sh[7:6] == 2'b11 && !sh[0];
+  wire set_k   = is_dat && dbg_arg;
+
   always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       cmd_byte  <= 1'b1;
       pdu_burst <= 1'b0;
       channel   <= 6'd37;
+      dbg_arg   <= 1'b0;
     end else begin
       if (gap_done) begin
         cmd_byte  <= 1'b1;
         pdu_burst <= 1'b0;
+        dbg_arg   <= 1'b0;
       end
       if (byte_valid) begin
         cmd_byte <= 1'b0;
+        dbg_arg  <= set_dbg;
         if (cmd_byte) begin
           pdu_burst <= (sh[7:6] == 2'b00);
           if (sh[7:6] == 2'b01) channel <= sh[5:0];
@@ -179,6 +202,94 @@ module ble_uart #(
     end
   end
 
+  wire gclk_dbg;
+  ble_clk_gate u_cg_dbg (.clk(clk), .en(set_dbg | set_k), .gclk(gclk_dbg));
+  always @(posedge gclk_dbg or negedge rst_n)
+    if (!rst_n) begin
+      dbg_en <= 1'b0;
+      dbg_k  <= 7'd0;
+    end else begin
+      if (set_dbg) dbg_en <= sh[1];
+      if (set_k)   dbg_k  <= sh[6:0];
+    end
+
+endmodule
+
+// Debug UART transmitter: a marker, then one fine_code every byte time (see the
+// header above). Clocked only while on and a packet or a byte is in progress.
+module ble_dbg_tx #(
+  parameter integer CLKS_PER_BIT = 8,
+  parameter integer CODE_W       = 8
+) (
+  input  wire              clk,
+  input  wire              rst_n,
+  input  wire              en,         // from 11xx_xxe0
+  input  wire [6:0]        k,          // sample offset
+  input  wire              start,      // start byte taken ...
+  input  wire              busy,       // ... by an idle ble_tx: a packet begins
+  input  wire [CODE_W-1:0] code,       // fine_code
+  input  wire              valid,      // code_valid
+  output wire              tx
+);
+  localparam integer CW = (CLKS_PER_BIT > 1) ? $clog2(CLKS_PER_BIT) : 1;
+  localparam integer BYTE_CLKS = 10 * CLKS_PER_BIT;          // one 8N1 byte
+  localparam integer DIV_LAST_I = CLKS_PER_BIT - 1;
+  localparam integer IDX_LAST_I = BYTE_CLKS - 1;
+  localparam [CW-1:0] DIV_LAST = DIV_LAST_I[CW-1:0];
+  localparam [6:0]    IDX_LAST = IDX_LAST_I[6:0];
+
+  wire mark = en & start & ~busy;    // ble_tx takes this start: packet begins
+
+  reg  [6:0] idx;        // code index modulo BYTE_CLKS
+  reg  [7:0] hold;       // next byte to send
+  reg        pend;       // hold is waiting
+  reg  [9:0] tsh;        // {stop, data LSB..MSB, start}, bit 0 on the pin
+  reg  [CW-1:0] tdiv;    // clock within the bit
+  reg  [3:0] tbits;      // bits left in this byte, 0 = idle
+
+  wire sample  = en & valid & (idx == k);
+  wire active  = (tbits != 4'd0);
+  wire last    = active & (tdiv == DIV_LAST) & (tbits == 4'd1);
+  wire can_ld  = ~active | last;
+  wire load    = can_ld & pend & en;
+
+  wire gclk;
+  ble_clk_gate u_cg (.clk(clk), .en((en & (mark | busy | valid | pend)) | active),
+                     .gclk(gclk));
+
+  // Control state is reset; the data registers (hold, tsh) are always written
+  // before they are used (hold by mark or sample before pend, tsh by load before
+  // active), so they have no reset.
+  always @(posedge gclk or negedge rst_n) begin
+    if (!rst_n) begin
+      idx <= 7'd0; pend <= 1'b0; tdiv <= {CW{1'b0}}; tbits <= 4'd0;
+    end else begin
+      // code index, from the first valid code of the packet
+      if (mark)       idx <= 7'd0;
+      else if (valid) idx <= (idx == IDX_LAST) ? 7'd0 : idx + 1'b1;
+
+      // queue: the marker, then the samples
+      if (mark | sample) pend <= 1'b1;
+      else if (load)     pend <= 1'b0;
+
+      // transmitter
+      if (load) begin
+        tdiv <= {CW{1'b0}}; tbits <= 4'd10;
+      end else if (active) begin
+        tdiv <= tdiv + 1'b1;
+        if (tdiv == DIV_LAST) tbits <= tbits - 1'b1;
+      end
+    end
+  end
+
+  always @(posedge gclk) begin
+    if (mark)        hold <= 8'h80;
+    else if (sample) hold <= code[CODE_W-1 -: 8];
+    if (load)                             tsh <= {1'b1, hold, 1'b0};
+    else if (active && tdiv == DIV_LAST)  tsh <= {1'b1, tsh[9:1]};
+  end
+
+  assign tx = active ? tsh[0] : 1'b1;
 endmodule
 
 // ble_tx with the UART front end: the chip-level digital block.
@@ -195,28 +306,36 @@ module ble_tx_uart #(
   output wire signed [CODE_W-1:0] fine_code,
   output wire              code_valid,
   output wire              air_bit,
-  output wire              sym_strobe
+  output wire              sym_strobe,
+
+  output wire              dbg_tx       // debug UART: fine_code samples, 8N1, idle high
 );
 
-  wire       wr_en, start;
+  wire       wr_en, start, busy, dbg_en;
   wire [5:0] wr_addr, channel;
   wire [7:0] wr_data;
+  wire [6:0] dbg_k;
 
   ble_uart #(.CLKS_PER_BIT(CLKS_PER_BIT), .GAP_BITS(GAP_BITS)) u_uart (
     .clk(clk), .rst_n(rst_n), .uart_rx(uart_rx),
     .wr_en(wr_en), .wr_addr(wr_addr), .wr_data(wr_data),
-    .channel(channel), .start(start)
+    .channel(channel), .start(start),
+    .dbg_en(dbg_en), .dbg_k(dbg_k)
   );
 
   ble_tx #(.SPS(SPS), .CODE_W(CODE_W)) u_tx (
     .clk(clk), .rst_n(rst_n),
     .wr_en(wr_en), .wr_addr(wr_addr), .wr_data(wr_data),
     .channel(channel), .start(start),
-    /* verilator lint_off PINCONNECTEMPTY */
-    .busy(),                     // not a pin: the controller times packets
-    /* verilator lint_on PINCONNECTEMPTY */
+    .busy(busy),                 // not a pin: the controller times packets
     .fine_code(fine_code), .code_valid(code_valid),
     .air_bit(air_bit), .sym_strobe(sym_strobe)
+  );
+
+  ble_dbg_tx #(.CLKS_PER_BIT(CLKS_PER_BIT), .CODE_W(CODE_W)) u_dbg (
+    .clk(clk), .rst_n(rst_n), .en(dbg_en), .k(dbg_k),
+    .start(start), .busy(busy), .code(fine_code), .valid(code_valid),
+    .tx(dbg_tx)
   );
 
 endmodule

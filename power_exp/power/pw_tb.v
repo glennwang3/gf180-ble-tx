@@ -54,6 +54,10 @@ module pw_tb;
     rst_n = 1'b1;
     #(37.123);                                         // bit edges off the clock grid
     gap;
+`ifdef DBG_ON
+    send_byte(8'hC2); send_byte(8'd0);                 // debug UART on, k = 0
+    gap;
+`endif
 `ifdef WIN_LOAD
     dump_on;
 `endif

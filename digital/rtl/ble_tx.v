@@ -49,7 +49,7 @@ module ble_tx #(
   // it is written and need no mux to hold their value the rest of the time.
   // One gate in front of them all (power): the byte gates' own clock pins see
   // the clock only in write cycles.
-  reg [8*PDU_MAX-1:0] pdu;   // byte i is pdu[8*i +: 8]
+  wire [8*PDU_MAX-1:0] pdu;  // byte i is pdu[8*i +: 8]
   wire gclk_wr;
   ble_clk_gate u_cg_wr (.clk(clk), .en(wr_en), .gclk(gclk_wr));
   genvar b;
@@ -57,7 +57,9 @@ module ble_tx #(
     for (b = 0; b < PDU_MAX; b = b + 1) begin : g_pdu
       wire gclk;
       ble_clk_gate u_cg (.clk(gclk_wr), .en(wr_en && wr_addr == b), .gclk(gclk));
-      always @(posedge gclk) pdu[8*b +: 8] <= wr_data;
+      reg [7:0] q;
+      always @(posedge gclk) q <= wr_data;
+      assign pdu[8*b +: 8] = q;
     end
   endgenerate
 
