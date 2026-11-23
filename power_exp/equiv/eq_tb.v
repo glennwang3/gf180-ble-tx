@@ -48,6 +48,14 @@ module eq_tb;
     integer r;
     seed = SEED0;
     repeat (3) @(negedge clk); rst_n = 1;
+`ifdef INIT_PDU
+    // write every PDU byte once: unwritten bytes are undefined in silicon, and the
+    // RTL clock-gate models give them different X-vs-0 values in simulation
+    for (i = 0; i < 39; i = i + 1) begin
+      @(negedge clk); wr_en = 1; wr_addr = i; wr_data = $urandom;
+    end
+    @(negedge clk); wr_en = 0;
+`endif
     repeat (60) begin
       // write a PDU (sometimes partial, sometimes long length field)
       n = $urandom(seed) % 41;
@@ -81,6 +89,9 @@ module eq_tb;
   initial begin : drv_uart
     integer p, m, j;
     repeat (3) @(negedge clk); urst_n = 1; gap;
+`ifdef INIT_PDU
+    ubyte(8'h00); for (j = 0; j < 39; j = j + 1) ubyte($urandom); gap;
+`endif
     for (p = 0; p < 40; p = p + 1) begin
       m = $urandom % 40;
       ubyte({2'b00, 6'($urandom % 3 == 0 ? $urandom % 40 : 0)});
