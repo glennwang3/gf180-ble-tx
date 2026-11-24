@@ -16,7 +16,9 @@ import build_top as BT
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "lvs_top")
-VCO_REF = "/foss/designs/Diff_VCO_Second_Layout/vco_xor_layout/lvs_vco/VCO_XOR_LVS_lvs.spice"
+VCO_REF = os.path.join(HERE, "vco_lc", "ref_lc.spice")      # vco_lc/make_ref.py
+from route_top import chain_label  # noqa: E402
+PA_PIN = chain_label("PA_DRAIN")
 CODES = {f"fine_code[{i}]": f"FINE_CODE[{i}]" for i in range(8)}
 MAP = {
     "prescaler": {"VDD": "VDD", "VSS": "VSS", "CLK_IN": "CORE_CLK", "MC": "MC", "CLK_OUT": "PRESCALED"},
@@ -27,20 +29,20 @@ MAP = {
     "tx": {"VDD": "VDD", "VSS": "VSS", "clk": "CLK_8M", "rst_n": "RST_N", "uart_rx": "UART_RX", "code_valid": "CODE_VALID",
            "air_bit": "AIR_BIT", "sym_strobe": "SYM_STROBE", **CODES},
     "vco": {"VDD": "VDD_VCO", "VSS": "VSS", "VTUNE": "VTUNE", "TAIL_BIAS": "TAIL_BIAS", "CORE_CLK": "CORE_CLK",
-            "RF_OUT": "RF_OUT", "VBUF_DOUBLER": "VDD", "VBUF_DIFF": "VDD", "VDD_RF": "VDD", "XP": "XP", "XN": "XN"},
+            "RF_DRV1": "RF_DRV1", "VBUF_DOUBLER": "VDD", "VBUF_DIFF": "VDD"},
     "reg": {"VIN": "VDD", "VCTRL": "VCTRL", "VOUT": "VDD_VCO", "VSS": "VSS"},
     "lf": {"VCTRL": "VCTRL", "VSS": "VSS"},
-    "conv": {"XP": "XP", "XN": "XN", "VDD": "VDD", "VSS": "VSS", "PA_DRAIN": "PA_DRAIN"},
+    "chain": {"RF_DRV1": "RF_DRV1", "VDD": "VDD", "VSS": "VSS", "PA_DRAIN": "PA_DRAIN"},
     "bias": {"VDD": "VDD", "VSS": "VSS", "IBIAS": "CP_IBIAS", "TAIL_BIAS": "TAIL_BIAS"},
 }
 OWN_REF = {"reg": ("VCO_REG_L.spice", "VCO_REG_L"), "lf": ("PLL_LF_L.spice", "PLL_LF_L"),
-           "conv": ("RF_CONV_PA.spice", "RF_CONV_PA"), "bias": ("PLL_BIAS.spice", "PLL_BIAS")}
-TX0 = (-330.0, -95.0)
+           "chain": ("RF_CHAIN_PA.spice", "RF_CHAIN_PA"), "bias": ("PLL_BIAS.spice", "PLL_BIAS")}
+TX0 = (-340.0, -95.0)
 TOP_LABELS = [  # net, layer(l, d), x, y  -- one per net
-    ("CORE_CLK", (53, 10), -7.31, 20.0), ("MC", (46, 10), 10.0, 24.26), ("FB_1M", (42, 10), 75.5, 32.10),
-    ("XP", (42, 10), -19.02, -44.03), ("XN", (42, 10), -12.72, -43.0), ("VDD_VCO", (81, 10), 5.0, -1.75),
-    ("VTUNE", (34, 10), -12.20, 14.18), ("RF_OUT", (34, 10), -24.83, 4.79), ("REF_1M", (36, 10), 89.11, 32.10),
-    ("PA_DRAIN", (46, 10), -52.80, -74.30),
+    ("CORE_CLK", (53, 10), -8.0, 20.0), ("MC", (46, 10), 10.0, 24.26), ("FB_1M", (42, 10), 75.5, 32.10),
+    ("VDD_VCO", (53, 10), 5.0, -1.75),
+    ("VTUNE", (34, 10), -11.70, 14.18), ("RF_DRV1", (42, 10), -25.0, 5.5), ("REF_1M", (36, 10), 89.11, 32.10),
+    ("PA_DRAIN", (46, 10), *PA_PIN),
     ("CFG[0]", (42, 10), 22.28, 39.94), ("CFG[3]", (42, 10), 22.28, 46.66), ("CFG[4]", (42, 10), 22.28, 38.82),
     ("CFG[5]", (42, 10), 73.56, 41.06), ("CFG[1]", (36, 10), 38.84, 68.82), ("CFG[2]", (36, 10), 37.72, 68.82),
     ("CLK_8M", (42, 10), TX0[0] + 0.28, TX0[1] + 283.64), ("UART_RX", (36, 10), TX0[0] + 20.44, TX0[1] + 299.72),
@@ -89,7 +91,7 @@ def macro_refs():
         n = sh(f"bash {HERE}/ext.sh {d}/{name}.gds {name} {d}")
         print(f"ref {key}: {n.strip()} devices")
         refs[key] = (os.path.join(d, name + ".spice"), name)
-    refs["vco"] = (VCO_REF, "VCO_XOR_LVS")
+    refs["vco"] = (VCO_REF, "Differential_VCO_LC")
     for k, (f, n) in OWN_REF.items():
         refs[k] = (os.path.join(HERE, f), n)
     return refs

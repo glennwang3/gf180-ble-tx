@@ -1,0 +1,227 @@
+* E03_PLL_LF_L: LVS reference of GDS cell E03_PLL_LF_L (from PLL_LF_L.spice, subckt PLL_LF_L)
+.subckt E03_PLL_LF_L VCTRL VSS LF_RZ
+XRZ_0 VCTRL RZ_n1 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_1 RZ_n1 RZ_n2 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_2 RZ_n2 RZ_n3 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_3 RZ_n3 RZ_n4 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_4 RZ_n4 RZ_n5 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_5 RZ_n5 RZ_n6 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_6 RZ_n6 RZ_n7 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_7 RZ_n7 RZ_n8 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_8 RZ_n8 RZ_n9 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_9 RZ_n9 RZ_n10 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_10 RZ_n10 RZ_n11 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_11 RZ_n11 RZ_n12 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_12 RZ_n12 RZ_n13 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_13 RZ_n13 RZ_n14 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_14 RZ_n14 RZ_n15 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_15 RZ_n15 RZ_n16 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_16 RZ_n16 RZ_n17 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_17 RZ_n17 RZ_n18 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_18 RZ_n18 RZ_n19 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_19 RZ_n19 RZ_n20 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_20 RZ_n20 RZ_n21 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_21 RZ_n21 RZ_n22 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_22 RZ_n22 RZ_n23 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_23 RZ_n23 RZ_n24 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_24 RZ_n24 RZ_n25 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_25 RZ_n25 RZ_n26 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_26 RZ_n26 RZ_n27 VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XRZ_27 RZ_n27 LF_RZ VSS ppolyf_u_1k r_width=1u r_length=15.08u
+XC2M0 VSS LF_RZ cap_mim_2f0_m5m6_noshield c_width=28.16u c_length=80.64u
+XC2M1 VSS LF_RZ cap_mim_2f0_m5m6_noshield c_width=28.16u c_length=80.64u
+XC2M2 VSS LF_RZ cap_mim_2f0_m5m6_noshield c_width=28.16u c_length=80.64u
+XC2M3 VSS LF_RZ cap_mim_2f0_m5m6_noshield c_width=28.16u c_length=80.64u
+XC2M4 VSS LF_RZ cap_mim_2f0_m5m6_noshield c_width=28.16u c_length=80.64u
+XC2M5 VSS LF_RZ cap_mim_2f0_m5m6_noshield c_width=28.16u c_length=80.64u
+XC2M6 VSS LF_RZ cap_mim_2f0_m5m6_noshield c_width=28.16u c_length=80.64u
+XC2M7 VSS LF_RZ cap_mim_2f0_m5m6_noshield c_width=28.16u c_length=80.64u
+XC2M8 VSS LF_RZ cap_mim_2f0_m5m6_noshield c_width=28.16u c_length=80.64u
+XC2M9 VSS LF_RZ cap_mim_2f0_m5m6_noshield c_width=28.16u c_length=80.64u
+XC2M10 VSS LF_RZ cap_mim_2f0_m5m6_noshield c_width=28.16u c_length=80.64u
+XC2M11 VSS LF_RZ cap_mim_2f0_m5m6_noshield c_width=28.16u c_length=80.64u
+XC2N0 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N1 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N2 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N3 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N4 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N5 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N6 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N7 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N8 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N9 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N10 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N11 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N12 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N13 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N14 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N15 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N16 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N17 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N18 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N19 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N20 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N21 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N22 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N23 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N24 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N25 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N26 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N27 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N28 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N29 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N30 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N31 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N32 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N33 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N34 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N35 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N36 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N37 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N38 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N39 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N40 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N41 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N42 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N43 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N44 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N45 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N46 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N47 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N48 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N49 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N50 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N51 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N52 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N53 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N54 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N55 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N56 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N57 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N58 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N59 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N60 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N61 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N62 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N63 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N64 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N65 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N66 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N67 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N68 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N69 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N70 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N71 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N72 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N73 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N74 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N75 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N76 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N77 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N78 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N79 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N80 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N81 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N82 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N83 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N84 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N85 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N86 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N87 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N88 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N89 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N90 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N91 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N92 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N93 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N94 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N95 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N96 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N97 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N98 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N99 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N100 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N101 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N102 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N103 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N104 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N105 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N106 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N107 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N108 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N109 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N110 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N111 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N112 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N113 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N114 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N115 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N116 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N117 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N118 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N119 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N120 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N121 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N122 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N123 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N124 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N125 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N126 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N127 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N128 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N129 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N130 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N131 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N132 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N133 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N134 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N135 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N136 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N137 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N138 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N139 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N140 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N141 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N142 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N143 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N144 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N145 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N146 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N147 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N148 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N149 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N150 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N151 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N152 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N153 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N154 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N155 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N156 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N157 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N158 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N159 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N160 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N161 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N162 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N163 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N164 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N165 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N166 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N167 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N168 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N169 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N170 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N171 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N172 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N173 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N174 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N175 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N176 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N177 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N178 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N179 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N180 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC2N181 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
+XC1N0 VCTRL VSS cap_nmos_03v3 c_width=27u c_length=6u
+XC1N1 VCTRL VSS cap_nmos_03v3 c_width=27u c_length=6u
+.ends E03_PLL_LF_L

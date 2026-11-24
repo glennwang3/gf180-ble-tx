@@ -2,7 +2,7 @@
 """
 Route PLL_COMPACT (stage 2).
 
- 1. hand routes for the short / critical links (CORE_CLK, MC, FB_1M, XP/XN, VDD_VCO, VCTRL jumper)
+ 1. hand routes for the short / critical links (CORE_CLK, MC, FB_1M, RF_DRV1, VDD_VCO, VCTRL jumper)
  2. pin escapes to MetalTop with the A01 integration router's A* (assemble_layout.Router.access)
  3. a raster M5/MT router joins the escape landings (wide MT for VDD/VSS)
  4. port labels; writes PLL_COMPACT.gds + pins.json
@@ -25,6 +25,27 @@ LAY = {"m1": (34, 0), "v1": (35, 0), "m2": (36, 0), "v2": (38, 0), "m3": (42, 0)
 MET = ["m1", "m2", "m3", "m4", "m5", "mt"]
 VIA = ["v1", "v2", "v3", "v4", "v5"]
 LBL = {"m1": (34, 10), "m2": (36, 10), "m3": (42, 10), "m4": (46, 10), "m5": (81, 10), "mt": (53, 10)}
+
+
+def chain_pt(xl, yl):
+    """RF_CHAIN_PA local um -> top um (placement from build_top)"""
+    _g, _c, rot, mir, dx, dy = BT.PLACE["chain"]
+    p = db.DCplxTrans(1.0, rot * 90.0, mir, dx, dy) * db.DPoint(xl, yl)
+    return round(p.x, 3), round(p.y, 3)
+
+
+def chain_label(name):
+    ly = db.Layout(); ly.read(BT.PLACE["chain"][0])
+    c = ly.cell(BT.PLACE["chain"][1])
+    for li in ly.layer_indexes():
+        for s_ in c.shapes(li).each():
+            if s_.is_text() and s_.text.string == name:
+                return chain_pt(s_.text.x * ly.dbu, s_.text.y * ly.dbu)
+    raise KeyError(name)
+
+
+RF_PIN = chain_label("RF_DRV1")                         # S1 gate, M3
+PA_PIN = chain_label("PA_DRAIN")                        # M4 strap end
 
 
 class Draw:
@@ -56,11 +77,11 @@ class Draw:
 
 # ------------------------------------------------------------------------------------------------- 1
 def hand_routes(d):
-    # CORE_CLK: VCO CORE_CLK M5 (via4 at -7.31,14.99) -> via5 -> MT north -> prescaler CLK_IN (M2) through
-    # the M5 opening at x -7.0
-    d.stack(-7.31, 14.99, "m5", "mt", "CORE_CLK")
-    d.wire("mt", (-7.31, 14.99), (-7.31, 26.91), 0.8, "CORE_CLK")
-    d.wire("mt", (-7.31, 26.91), (-7.0, 26.91), 0.8, "CORE_CLK")
+    # CORE_CLK: VCO CORE_CLK M1 (a Pi shape; its bottom bar x -8.49..-7.09, y 14.80..15.18 is the A01 landing)
+    # -> stack to MT -> north -> prescaler CLK_IN (M2) through the M5 opening at x -7.0
+    d.stack(-8.1, 14.99, "m1", "mt", "CORE_CLK", pad=0.38)      # pad = bar height, clear of the 0.23 um stub
+    d.wire("mt", (-8.1, 14.99), (-8.1, 26.91), 0.8, "CORE_CLK")
+    d.wire("mt", (-8.1, 26.91), (-7.0, 26.91), 0.8, "CORE_CLK")
     d.stack(-7.0, 26.91, "m2", "mt", "CORE_CLK")
     # MC: prescaler MC pad (M2, -4.71 24.26) -> M4 east -> divider modulus_33 (M3, 22.28 24.26)
     d.stack(-4.71, 24.26, "m2", "m4", "MC")
@@ -68,24 +89,22 @@ def hand_routes(d):
     d.stack(22.28, 24.26, "m3", "m4", "MC")
     # FB_1M: divider clk_feedback (M3, 73.56 32.10) -> PFD F_VCO (M3, 77.79 32.10)
     d.wire("m3", (73.56, 32.10), (77.79, 32.10), 0.40, "FB_1M")
-    # XP / XN: VCO stubs (M3, bottom edge) -> converter pins (M3)
-    d.wire("m3", (-12.72, -41.33), (-12.72, -44.03), 0.40, "XN")
-    # XP crosses XN on M4 (the converter is mirrored: its XP pin sits west of XN)
-    d.wire("m3", (-7.22, -41.33), (-7.22, -42.60), 0.40, "XP")
-    d.stack(-7.22, -42.60, "m3", "m4", "XP")
-    d.wire("m4", (-7.22, -42.60), (-19.02, -42.60), 0.40, "XP")
-    d.stack(-19.02, -42.60, "m3", "m4", "XP")
-    d.wire("m3", (-19.02, -42.60), (-19.02, -44.03), 0.40, "XP")
-    # VDD_VCO: regulator VOUT M5 strip (west edge x 12.82, y -2.85..-0.65) -> VCO VDD landing (M4 -2.6 -1.85)
-    d.rect("m5", -3.0, -2.85, 13.2, -0.65, "VDD_VCO")
-    d.stack(-2.60, -1.85, "m4", "m5", "VDD_VCO")
-    d.stack(-1.60, -1.85, "m4", "m5", "VDD_VCO")
-    # VSS for the VCO prescaler-buffer tail source: its M4 island (x -0.90..4.51, y 0.95..3.66) is grounded only
-    # through a substrate tap inside the VCO (the old A01 top metal bridged it) -> M4 link to the VSS landing
-    d.wire("m4", (-0.70, 2.00), (-0.70, 0.30), 0.40, "VSS")
-    d.wire("m4", (-0.70, 0.30), (-4.50, 0.30), 0.40, "VSS")
-    d.wire("m4", (-4.50, 0.30), (-4.50, -6.34), 0.40, "VSS")
-    d.wire("m4", (-4.50, -6.34), (-3.74, -6.34), 0.40, "VSS")
+    # RF_DRV1: VCO doubler (self-biased 1st inverter output, M1 x -20.04..-16.64 y 4.06..7.02) -> straight M3
+    # west to the chain's S1 gate pin; ~14 um
+    d.stack(-19.6, RF_PIN[1], "m1", "m3", "RF_DRV1")
+    d.wire("m3", (-19.6, RF_PIN[1]), RF_PIN, 0.28, "RF_DRV1")
+    # VDD_VCO: regulator VOUT M5 strip (west edge x 12.82, y -2.85..-0.65) -> via5 -> MetalTop over the VCO (its
+    # VTUNE M5 ring riser at x 8.18..8.58 blocks M5) -> VCO VDD landing (M4 -2.6 -1.85)
+    d.rect("m5", 9.2, -2.85, 13.2, -0.65, "VDD_VCO")
+    d.stack(10.4, -1.75, "m5", "mt", "VDD_VCO")
+    for dx_, dy_ in ((-0.5, -0.5), (0.5, -0.5), (-0.5, 0.5), (0.5, 0.5)):
+        d.rect("v5", 10.4 + dx_ - 0.13, -1.75 + dy_ - 0.13, 10.4 + dx_ + 0.13, -1.75 + dy_ + 0.13, "VDD_VCO")
+    d.rect("m5", 9.4, -2.75, 11.4, -0.75, "VDD_VCO")
+    d.rect("mt", -3.0, -2.85, 11.6, -0.65, "VDD_VCO")
+    d.stack(-2.60, -1.85, "m4", "mt", "VDD_VCO")
+    # VSS for the VCO prescaler-buffer tail source: its M4 island (x -7.53..-2.12, y 11.42..14.13) is grounded only
+    # through a substrate tap inside the VCO (the A01 top metal bridged it) -> M4 link down to VSS M4 (y <= 7.59)
+    d.wire("m4", (-3.0, 7.30), (-3.0, 11.70), 0.40, "VSS")
     # VCTRL: regulator pin (M4, 149.12 -89.47) -> loop-filter riser tap (M4, 152.70 -89.47)
     d.wire("m4", (149.12, -89.47), (152.70, -89.47), 0.40, "VCTRL")
 
@@ -97,18 +116,20 @@ PINS = [
     ("UPB", "pfd", 0, 80.80, 30.47), ("UPB", "pump", 1, 101.55, 32.57),
     ("DN", "pfd", 1, 83.45, 29.52), ("DN", "pump", 1, 101.83, 26.72),
     ("VCTRL", "pump", 0, 102.60, 30.27), ("VCTRL", "lf", 3, 152.70, 29.33),
-    ("CP_IBIAS", "pump", 0, 99.55, 28.86), ("CP_IBIAS", "bias", 3, 108.20, 32.60),
-    ("TAIL_BIAS", "bias", 3, 108.20, 19.80), ("TAIL_BIAS", "vco", 4, 5.27, 1.71),
-    ("RST_N", "divider", 1, 55.64, 6.34), ("RST_N", "tx", 2, -60.28, -81.28),
-    ("VDD", "vco", 4, -5.19, 18.90), ("VDD", "vco", 3, -22.40, 7.39), ("VDD", "vco", 1, 1.20, -37.93),
-    ("VDD", "conv", 3, 1.68, -63.51), ("VDD", "prescaler", 3, -0.38, 31.91),
+    ("CP_IBIAS", "pump", 0, 99.55, 28.86), ("CP_IBIAS", "bias", 3, 108.20, 31.80),
+    ("TAIL_BIAS", "bias", 3, 108.20, 19.80), ("TAIL_BIAS", "vco", 0, -1.36, 12.18),
+    ("RST_N", "divider", 1, 55.64, 6.34), ("RST_N", "tx", 2, -70.28, -81.28),
+    ("VDD", "vco", 3, -4.41, 18.90), ("VDD", "vco", 3, -22.40, 7.39),
+    ("VDD", "chain", 3, *chain_pt(8.0, 13.2)), ("VDD", "chain", 3, *chain_pt(40.0, 13.2)),
+    ("VDD", "prescaler", 3, -0.38, 31.91),
     ("VDD", "divider", 4, 48.0, 18.90), ("VDD", "divider", 4, 48.0, 43.90),
     ("VDD", "pfd", 3, 85.0, 33.50), ("VDD", "pump", 3, 96.0, 34.40), ("VDD", "bias", 3, 108.20, 35.00),
-    ("VDD", "reg", 5, 146.12, -75.07), ("VDD", "tx", 4, -195.04, 82.67),
-    ("VSS", "vco", 3, -3.74, -6.34), ("VSS", "conv", 3, 1.68, -79.51), ("VSS", "prescaler", 4, 15.0, 33.01),
+    ("VDD", "reg", 5, 146.12, -75.07), ("VDD", "tx", 4, -205.04, 82.67),
+    ("VSS", "vco", 3, -3.74, -6.34), ("VSS", "chain", 3, *chain_pt(10.0, 0.1)), ("VSS", "chain", 3, *chain_pt(60.0, 0.1)),
+    ("VSS", "prescaler", 4, 15.0, 33.01),
     ("VSS", "divider", 4, 48.0, 22.20), ("VSS", "divider", 4, 48.0, 47.20),
     ("VSS", "pfd", 4, 85.0, 27.40), ("VSS", "pump", 4, 97.35, 30.0), ("VSS", "bias", 3, 108.20, 15.00),
-    ("VSS", "reg", 3, 149.12, -87.07), ("VSS", "tx", 4, -230.0, 85.97),
+    ("VSS", "reg", 3, 149.12, -87.07), ("VSS", "tx", 4, -240.0, 85.97),
 ]
 
 
@@ -258,7 +279,7 @@ class RouteFail(RuntimeError):
 
 
 def grid_route(ly, top, d, land, order=None):
-    g = Grid(-340.0, -110.0, 375.0, 212.0)
+    g = Grid(-350.0, -110.0, 375.0, 212.0)
     # obstacles: every existing M5 / MT shape (flattened); MIM keep-outs
     for l in ("m5", "mt"):
         reg = db.Region(top.begin_shapes_rec(ly.layer(*LAY[l])))
@@ -357,6 +378,8 @@ def grid_route(ly, top, d, land, order=None):
             for ll, box, nn in d.shapes:
                 if ll == l and nn == net:
                     own.insert(db.Box(*[round(v * U) for v in box]))
+            if net == "VSS" and l == "mt":          # the loop filter's VSS MetalTop strap is a VSS shape too
+                own.insert(db.Box(*[round(v * U) for v in lf_vss]))
             own.merge()
             fill = own.sized(sp // 2 + 5).sized(-(sp // 2 + 5)) - own
             for p in fill.each():
@@ -367,9 +390,9 @@ def grid_route(ly, top, d, land, order=None):
 
 # ------------------------------------------------------------------------------------------------- 4
 PORTS = [  # (name, layer, x, y)  labels at the pin metal
-    ("VTUNE", "m1", -12.20, 14.18), ("RF_OUT", "m1", -24.83, 4.79), ("REF_1M", "m2", 89.11, 32.10),
-    ("PA_DRAIN", "m4", -52.80, -74.30), ("XP", "m3", -19.02, -44.03), ("XN", "m3", -12.72, -44.03),
-    ("CORE_CLK", "mt", -7.31, 20.0), ("VDD_VCO", "m5", 5.0, -1.75), ("MC", "m4", 10.0, 24.26),
+    ("VTUNE", "m1", -11.70, 14.18), ("RF_DRV1", "m3", -25.0, RF_PIN[1]), ("REF_1M", "m2", 89.11, 32.10),
+    ("PA_DRAIN", "m4", *PA_PIN),
+    ("CORE_CLK", "mt", -8.0, 20.0), ("VDD_VCO", "mt", 5.0, -1.75), ("MC", "m4", 10.0, 24.26),
     ("FB_1M", "m3", 75.5, 32.10),
     ("CFG[0]", "m3", 22.28, 39.94), ("CFG[3]", "m3", 22.28, 46.66), ("CFG[4]", "m3", 22.28, 38.82),
     ("CFG[5]", "m3", 73.56, 41.06), ("CFG[1]", "m2", 38.84, 68.82), ("CFG[2]", "m2", 37.72, 68.82),

@@ -1,7 +1,8 @@
 .subckt PLL_BIAS VDD VSS IBIAS TAIL_BIAS
 XMTD_0 TAIL_BIAS TAIL_BIAS VSS VSS nfet_03v3 w=1u l=5.6u
 XMPD_0 PG PG VDD VDD pfet_03v3 w=4u l=2u
-XMCP0_0 IBIAS PG VDD VDD pfet_03v3 w=1.04u l=2u
+XMCP0_0 CPM PG VDD VDD pfet_03v3 w=1.04u l=5u
+XMCP1_0 IBIAS PG CPM VDD pfet_03v3 w=1.04u l=5u
 XMT_0 TAIL_BIAS PG VDD VDD pfet_03v3 w=4u l=2u
 XRREF_0 PG RREF_n1 VSS ppolyf_u_1k r_width=1u r_length=18.6u
 XRREF_1 RREF_n1 RREF_n2 VSS ppolyf_u_1k r_width=1u r_length=18.6u

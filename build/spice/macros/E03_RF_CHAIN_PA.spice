@@ -1,0 +1,81 @@
+* E03_RF_CHAIN_PA: LVS reference of GDS cell E03_RF_CHAIN_PA (from RF_CHAIN_PA.spice, subckt RF_CHAIN_PA)
+.subckt E03_RF_CHAIN_PA RF_DRV1 VDD VSS PA_DRAIN D1
+XS1N_0 N1 RF_DRV1 VSS VSS nfet_03v3 w=1u l=0.28u
+XS1P_0 N1 RF_DRV1 VDD VDD pfet_03v3 w=2u l=0.28u
+XS2N_0 N2 N1 VSS VSS nfet_03v3 w=1.6u l=0.28u
+XS2P_0 N2 N1 VDD VDD pfet_03v3 w=3.2u l=0.28u
+XS3N_0 N3 N2 VSS VSS nfet_03v3 w=2.5u l=0.28u
+XS3P_0 N3 N2 VDD VDD pfet_03v3 w=5u l=0.28u
+XS4N_0 N4 N3 VSS VSS nfet_03v3 w=2u l=0.28u
+XS4N_1 N4 N3 VSS VSS nfet_03v3 w=2u l=0.28u
+XS4P_0 N4 N3 VDD VDD pfet_03v3 w=4u l=0.28u
+XS4P_1 N4 N3 VDD VDD pfet_03v3 w=4u l=0.28u
+XS5N_0 N5 N4 VSS VSS nfet_03v3 w=2.33333u l=0.28u
+XS5N_1 N5 N4 VSS VSS nfet_03v3 w=2.33333u l=0.28u
+XS5N_2 N5 N4 VSS VSS nfet_03v3 w=2.33333u l=0.28u
+XS5P_0 N5 N4 VDD VDD pfet_03v3 w=4.66667u l=0.28u
+XS5P_1 N5 N4 VDD VDD pfet_03v3 w=4.66667u l=0.28u
+XS5P_2 N5 N4 VDD VDD pfet_03v3 w=4.66667u l=0.28u
+XS6N_0 N6 N5 VSS VSS nfet_03v3 w=3u l=0.28u
+XS6N_1 N6 N5 VSS VSS nfet_03v3 w=3u l=0.28u
+XS6N_2 N6 N5 VSS VSS nfet_03v3 w=3u l=0.28u
+XS6N_3 N6 N5 VSS VSS nfet_03v3 w=3u l=0.28u
+XS6P_0 N6 N5 VDD VDD pfet_03v3 w=4.8u l=0.28u
+XS6P_1 N6 N5 VDD VDD pfet_03v3 w=4.8u l=0.28u
+XS6P_2 N6 N5 VDD VDD pfet_03v3 w=4.8u l=0.28u
+XS6P_3 N6 N5 VDD VDD pfet_03v3 w=4.8u l=0.28u
+XS6P_4 N6 N5 VDD VDD pfet_03v3 w=4.8u l=0.28u
+XS7N_0 D1 N6 VSS VSS nfet_03v3 w=2.85714u l=0.28u
+XS7N_1 D1 N6 VSS VSS nfet_03v3 w=2.85714u l=0.28u
+XS7N_2 D1 N6 VSS VSS nfet_03v3 w=2.85714u l=0.28u
+XS7N_3 D1 N6 VSS VSS nfet_03v3 w=2.85714u l=0.28u
+XS7N_4 D1 N6 VSS VSS nfet_03v3 w=2.85714u l=0.28u
+XS7N_5 D1 N6 VSS VSS nfet_03v3 w=2.85714u l=0.28u
+XS7N_6 D1 N6 VSS VSS nfet_03v3 w=2.85714u l=0.28u
+XS7P_0 D1 N6 VDD VDD pfet_03v3 w=5u l=0.28u
+XS7P_1 D1 N6 VDD VDD pfet_03v3 w=5u l=0.28u
+XS7P_2 D1 N6 VDD VDD pfet_03v3 w=5u l=0.28u
+XS7P_3 D1 N6 VDD VDD pfet_03v3 w=5u l=0.28u
+XS7P_4 D1 N6 VDD VDD pfet_03v3 w=5u l=0.28u
+XS7P_5 D1 N6 VDD VDD pfet_03v3 w=5u l=0.28u
+XS7P_6 D1 N6 VDD VDD pfet_03v3 w=5u l=0.28u
+XS7P_7 D1 N6 VDD VDD pfet_03v3 w=5u l=0.28u
+XMPA_0 PA_DRAIN D1 VSS VSS nfet_03v3 w=3.125u l=0.28u
+XMPA_1 PA_DRAIN D1 VSS VSS nfet_03v3 w=3.125u l=0.28u
+XMPA_2 PA_DRAIN D1 VSS VSS nfet_03v3 w=3.125u l=0.28u
+XMPA_3 PA_DRAIN D1 VSS VSS nfet_03v3 w=3.125u l=0.28u
+XMPA_4 PA_DRAIN D1 VSS VSS nfet_03v3 w=3.125u l=0.28u
+XMPA_5 PA_DRAIN D1 VSS VSS nfet_03v3 w=3.125u l=0.28u
+XMPA_6 PA_DRAIN D1 VSS VSS nfet_03v3 w=3.125u l=0.28u
+XMPA_7 PA_DRAIN D1 VSS VSS nfet_03v3 w=3.125u l=0.28u
+XMPA_8 PA_DRAIN D1 VSS VSS nfet_03v3 w=3.125u l=0.28u
+XMPA_9 PA_DRAIN D1 VSS VSS nfet_03v3 w=3.125u l=0.28u
+XMPA_10 PA_DRAIN D1 VSS VSS nfet_03v3 w=3.125u l=0.28u
+XMPA_11 PA_DRAIN D1 VSS VSS nfet_03v3 w=3.125u l=0.28u
+XMPA_12 PA_DRAIN D1 VSS VSS nfet_03v3 w=3.125u l=0.28u
+XMPA_13 PA_DRAIN D1 VSS VSS nfet_03v3 w=3.125u l=0.28u
+XMPA_14 PA_DRAIN D1 VSS VSS nfet_03v3 w=3.125u l=0.28u
+XMPA_15 PA_DRAIN D1 VSS VSS nfet_03v3 w=3.125u l=0.28u
+XXRS1_0 N1 XRS1_n1 VSS ppolyf_u_1k r_width=1u r_length=5.37u
+XXRS1_1 XRS1_n1 XRS1_n2 VSS ppolyf_u_1k r_width=1u r_length=5.37u
+XXRS1_2 XRS1_n2 XRS1_n3 VSS ppolyf_u_1k r_width=1u r_length=5.37u
+XXRS1_3 XRS1_n3 XRS1_n4 VSS ppolyf_u_1k r_width=1u r_length=5.37u
+XXRS1_4 XRS1_n4 XRS1_n5 VSS ppolyf_u_1k r_width=1u r_length=5.37u
+XXRS1_5 XRS1_n5 XRS1_n6 VSS ppolyf_u_1k r_width=1u r_length=5.37u
+XXRS1_6 XRS1_n6 RF_DRV1 VSS ppolyf_u_1k r_width=1u r_length=5.37u
+XXRS2_0 N2 XRS2_n1 VSS ppolyf_u_1k r_width=1u r_length=5.65u
+XXRS2_1 XRS2_n1 XRS2_n2 VSS ppolyf_u_1k r_width=1u r_length=5.65u
+XXRS2_2 XRS2_n2 XRS2_n3 VSS ppolyf_u_1k r_width=1u r_length=5.65u
+XXRS2_3 XRS2_n3 XRS2_n4 VSS ppolyf_u_1k r_width=1u r_length=5.65u
+XXRS2_4 XRS2_n4 N1 VSS ppolyf_u_1k r_width=1u r_length=5.65u
+XXRS3_0 N3 XRS3_n1 VSS ppolyf_u_1k r_width=1u r_length=6.3u
+XXRS3_1 XRS3_n1 XRS3_n2 VSS ppolyf_u_1k r_width=1u r_length=6.3u
+XXRS3_2 XRS3_n2 N2 VSS ppolyf_u_1k r_width=1u r_length=6.3u
+XXRS4_0 N4 XRS4_n1 VSS ppolyf_u_1k r_width=1u r_length=3.71u
+XXRS4_1 XRS4_n1 XRS4_n2 VSS ppolyf_u_1k r_width=1u r_length=3.71u
+XXRS4_2 XRS4_n2 N3 VSS ppolyf_u_1k r_width=1u r_length=3.71u
+XXRS5_0 N5 XRS5_n1 VSS ppolyf_u_1k r_width=1u r_length=2.42u
+XXRS5_1 XRS5_n1 XRS5_n2 VSS ppolyf_u_1k r_width=1u r_length=2.42u
+XXRS5_2 XRS5_n2 N4 VSS ppolyf_u_1k r_width=1u r_length=2.42u
+XXRS6_0 N6 N5 VSS ppolyf_u_1k r_width=1u r_length=4.68u
+.ends E03_RF_CHAIN_PA

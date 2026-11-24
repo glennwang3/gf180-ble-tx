@@ -3,7 +3,7 @@
 	"INCLUDE_CONFIGS": [
 		"$LVS_ROOT/tech/$PDK/lvs_config.base.json"
 	],
-	"TOP_SOURCE": "PLL_COMPACT",
+	"TOP_SOURCE": "E03",
 	"TOP_LAYOUT": "$TOP_SOURCE",
 	"EXTRACT_FLATGLOB": [
 		""
@@ -21,17 +21,17 @@
 		""
 	],
 	"LVS_SPICE_FILES": [
-		"$UPRJ_ROOT/build/spice/macros/32_33_Complete_Prescaler.spice",
-		"$UPRJ_ROOT/build/spice/macros/Charge_Pump_FE.spice",
-		"$UPRJ_ROOT/build/spice/macros/Differential_VCO_XOR.spice",
-		"$UPRJ_ROOT/build/spice/macros/PLL_BIAS.spice",
-		"$UPRJ_ROOT/build/spice/macros/PLL_LF_L.spice",
-		"$UPRJ_ROOT/build/spice/macros/Phase_Detector_FE.spice",
-		"$UPRJ_ROOT/build/spice/macros/RF_CONV_PA.spice",
-		"$UPRJ_ROOT/build/spice/macros/VCO_REG_L.spice",
-		"$UPRJ_ROOT/build/spice/macros/ble_feedback_divider.spice",
-		"$UPRJ_ROOT/build/spice/macros/ble_tx_uart.spice",
-		"$UPRJ_ROOT/build/spice/PLL_COMPACT_lvs.spice"
+		"$UPRJ_ROOT/build/spice/macros/E03_32_33_Complete_Prescaler.spice",
+		"$UPRJ_ROOT/build/spice/macros/E03_Charge_Pump_FE.spice",
+		"$UPRJ_ROOT/build/spice/macros/E03_Differential_VCO_LC.spice",
+		"$UPRJ_ROOT/build/spice/macros/E03_PLL_BIAS.spice",
+		"$UPRJ_ROOT/build/spice/macros/E03_PLL_LF_L.spice",
+		"$UPRJ_ROOT/build/spice/macros/E03_Phase_Detector_FE.spice",
+		"$UPRJ_ROOT/build/spice/macros/E03_RF_CHAIN_PA.spice",
+		"$UPRJ_ROOT/build/spice/macros/E03_VCO_REG_L.spice",
+		"$UPRJ_ROOT/build/spice/macros/E03_ble_feedback_divider.spice",
+		"$UPRJ_ROOT/build/spice/macros/E03_ble_tx_uart.spice",
+		"$UPRJ_ROOT/build/spice/E03_lvs.spice"
 	],
 	"LVS_VERILOG_FILES": [
 		""

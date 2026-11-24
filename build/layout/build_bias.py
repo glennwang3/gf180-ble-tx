@@ -3,8 +3,9 @@
 PLL_BIAS: on-chip bias for the charge pump and the VCO buffer tail (see ../bias_study/bias2.py).
 
   VDD - MPD (4/2 PMOS diode, node PG) - RREF (ppolyf_u_1k 10 x 18.6 um, ~186 kOhm) - VSS   I_ref ~10 uA
-  MCP0 (1.04/2, x1/4)   -> IBIAS      : 2.5 uA sourced into the charge pump's IBIAS diode
-                          (was 2 x 4/2 = 20 uA; retuned for loop phase margin, see ../sim/retune/size.py)
+  MCP0 + MCP1 (2 x 1.04/5 in series, W/L 0.104 vs 2 for MPD) -> IBIAS : ~0.5 uA into the charge pump's IBIAS diode
+                          (was 1.04/2 = 2.5 uA, and 2 x 4/2 = 20 uA before that; cut 5x with the widened
+                          regulator gain 0.2 -> 0.6 V/V, see ../sim/regwide/loopsize.py)
   MT (4/2, x1) -> MTD (1.0/5.6 NMOS diode) -> TAIL_BIAS : 1.70 V at TT/27 C/3.3 V (+ ~1 pF cap_nmos)
 Writes PLL_BIAS.gds and PLL_BIAS.spice.
 """
@@ -19,7 +20,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 NAME = "PLL_BIAS"
 DEBUG = os.environ.get("DEBUG")
 W = 40.0
-PROW = [("MPD", "p", 4, 2, 1, "PG", "PG", "VDD"), ("MCP0", "p", 1.04, 2, 1, "IBIAS", "PG", "VDD"),
+PROW = [("MPD", "p", 4, 2, 1, "PG", "PG", "VDD"), ("MCP0", "p", 1.04, 5, 1, "CPM", "PG", "VDD"),
+        ("MCP1", "p", 1.04, 5, 1, "IBIAS", "PG", "CPM"),
         ("MT", "p", 4, 2, 1, "TAIL_BIAS", "PG", "VDD")]
 NROW = [("MTD", "n", 1.0, 5.6, 1, "TAIL_BIAS", "TAIL_BIAS", "VSS")]
 

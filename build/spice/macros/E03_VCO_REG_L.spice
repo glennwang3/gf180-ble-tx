@@ -1,0 +1,129 @@
+* E03_VCO_REG_L: LVS reference of GDS cell E03_VCO_REG_L (from VCO_REG_L.spice, subckt VCO_REG_L)
+.subckt E03_VCO_REG_L VIN VCTRL VOUT VSS
+XMBIAS_0 BIAS BIAS VSS VSS nfet_03v3 w=4u l=1u
+XMPSINK_0 PBIAS BIAS VSS VSS nfet_03v3 w=3u l=1u
+XMBTAIL_0 BTAIL BIAS VSS VSS nfet_03v3 w=3u l=1u
+XMBSINK_0 BUF BIAS VSS VSS nfet_03v3 w=7u l=1u
+XMBMINUS_0 BMIR BUF BTAIL VSS nfet_03v3 w=8u l=1u
+XMBPLUS_0 BGATE VCTRL BTAIL VSS nfet_03v3 w=8u l=1u
+XMNGATE_0 GATE DRIVE VSS VSS nfet_03v3 w=8u l=0.6u
+XMNGATE_1 GATE DRIVE VSS VSS nfet_03v3 w=8u l=0.6u
+XMNGATE_2 GATE DRIVE VSS VSS nfet_03v3 w=8u l=0.6u
+XMMIR_0 MIR MIR VSS VSS nfet_03v3 w=6u l=1.5u
+XMMIR_1 MIR MIR VSS VSS nfet_03v3 w=6u l=1.5u
+XMPULL_0 DRIVE MIR VSS VSS nfet_03v3 w=6u l=1.5u
+XMPULL_1 DRIVE MIR VSS VSS nfet_03v3 w=6u l=1.5u
+XMPDIODE_0 PBIAS PBIAS VIN VIN pfet_03v3 w=8u l=1u
+XMPGATE_0 GATE PBIAS VIN VIN pfet_03v3 w=8u l=1u
+XMTAIL_0 TAIL PBIAS VIN VIN pfet_03v3 w=8u l=1u
+XMTAIL_1 TAIL PBIAS VIN VIN pfet_03v3 w=8u l=1u
+XMPLUS_0 MIR REF TAIL VIN pfet_03v3 w=6u l=1.5u
+XMPLUS_1 MIR REF TAIL VIN pfet_03v3 w=6u l=1.5u
+XMMINUS_0 DRIVE FB TAIL VIN pfet_03v3 w=6u l=1.5u
+XMMINUS_1 DRIVE FB TAIL VIN pfet_03v3 w=6u l=1.5u
+XMBMIR_0 BMIR BMIR VIN VIN pfet_03v3 w=8u l=1u
+XMBPULL_0 BGATE BMIR VIN VIN pfet_03v3 w=8u l=1u
+XMBOUT_0 BUF BGATE VIN VIN pfet_03v3 w=6u l=1u
+XMBOUT_1 BUF BGATE VIN VIN pfet_03v3 w=6u l=1u
+XMPASS_0 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_1 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_2 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_3 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_4 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_5 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_6 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_7 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_8 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_9 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_10 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_11 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_12 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_13 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_14 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_15 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_16 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_17 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_18 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_19 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_20 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_21 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_22 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_23 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_24 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_25 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_26 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_27 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_28 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_29 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_30 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_31 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_32 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_33 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_34 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_35 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_36 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_37 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_38 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_39 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_40 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_41 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_42 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_43 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_44 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_45 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_46 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XMPASS_47 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
+XRSETIN_0 BUF RSETIN_n1 VSS ppolyf_u_1k r_width=1u r_length=6.32u
+XRSETIN_1 RSETIN_n1 RSETIN_n2 VSS ppolyf_u_1k r_width=1u r_length=6.32u
+XRSETIN_2 RSETIN_n2 RSETIN_n3 VSS ppolyf_u_1k r_width=1u r_length=6.32u
+XRSETIN_3 RSETIN_n3 RSETIN_n4 VSS ppolyf_u_1k r_width=1u r_length=6.32u
+XRSETIN_4 RSETIN_n4 RSETIN_n5 VSS ppolyf_u_1k r_width=1u r_length=6.32u
+XRSETIN_5 RSETIN_n5 RSETIN_n6 VSS ppolyf_u_1k r_width=1u r_length=6.32u
+XRSETIN_6 RSETIN_n6 RSETIN_n7 VSS ppolyf_u_1k r_width=1u r_length=6.32u
+XRSETIN_7 RSETIN_n7 RSETIN_n8 VSS ppolyf_u_1k r_width=1u r_length=6.32u
+XRSETIN_8 RSETIN_n8 RSETIN_n9 VSS ppolyf_u_1k r_width=1u r_length=6.32u
+XRSETIN_9 RSETIN_n9 REF VSS ppolyf_u_1k r_width=1u r_length=6.32u
+XRBIAS_0 VIN RBIAS_n1 VSS ppolyf_u_1k r_width=1u r_length=19.24u
+XRBIAS_1 RBIAS_n1 RBIAS_n2 VSS ppolyf_u_1k r_width=1u r_length=19.24u
+XRBIAS_2 RBIAS_n2 RBIAS_n3 VSS ppolyf_u_1k r_width=1u r_length=19.24u
+XRBIAS_3 RBIAS_n3 RBIAS_n4 VSS ppolyf_u_1k r_width=1u r_length=19.24u
+XRBIAS_4 RBIAS_n4 BIAS VSS ppolyf_u_1k r_width=1u r_length=19.24u
+XRBUF_0 BGATE BCOMP VSS ppolyf_u_1k r_width=1u r_length=4.39u
+XRZERO_0 DRIVE COMP VSS ppolyf_u_1k r_width=1u r_length=6.43u
+XRSETHI_0 VIN RSETHI_n1 VSS ppolyf_u_1k r_width=1u r_length=19.74u
+XRSETHI_1 RSETHI_n1 RSETHI_n2 VSS ppolyf_u_1k r_width=1u r_length=19.74u
+XRSETHI_2 RSETHI_n2 RSETHI_n3 VSS ppolyf_u_1k r_width=1u r_length=19.74u
+XRSETHI_3 RSETHI_n3 RSETHI_n4 VSS ppolyf_u_1k r_width=1u r_length=19.74u
+XRSETHI_4 RSETHI_n4 REF VSS ppolyf_u_1k r_width=1u r_length=19.74u
+XRSETLO_0 REF RSETLO_n1 VSS ppolyf_u_1k r_width=1u r_length=15.03u
+XRSETLO_1 RSETLO_n1 RSETLO_n2 VSS ppolyf_u_1k r_width=1u r_length=15.03u
+XRSETLO_2 RSETLO_n2 VSS VSS ppolyf_u_1k r_width=1u r_length=15.03u
+XRFBHI_0 VOUT RFBHI_n1 VSS ppolyf_u_1k r_width=1u r_length=16u
+XRFBHI_1 RFBHI_n1 RFBHI_n2 VSS ppolyf_u_1k r_width=1u r_length=16u
+XRFBHI_2 RFBHI_n2 FB VSS ppolyf_u_1k r_width=1u r_length=16u
+XRFBLO_0 FB RFBLO_n1 VSS ppolyf_u_1k r_width=1u r_length=16u
+XRFBLO_1 RFBLO_n1 RFBLO_n2 VSS ppolyf_u_1k r_width=1u r_length=16u
+XRFBLO_2 RFBLO_n2 VSS VSS ppolyf_u_1k r_width=1u r_length=16u
+XCCOMP_0 GATE COMP cap_mim_2f0_m5m6_noshield c_width=28.7u c_length=87u
+XCCOMP_1 GATE COMP cap_mim_2f0_m5m6_noshield c_width=28.7u c_length=87u
+XCCOMP_2 GATE COMP cap_mim_2f0_m5m6_noshield c_width=28.7u c_length=87u
+XCBUF_0 BUF BCOMP cap_mim_2f0_m5m6_noshield c_width=28.7u c_length=38.5u
+XCD0 VOUT VSS cap_nmos_03v3 c_width=10u c_length=6u
+XCD1 VOUT VSS cap_nmos_03v3 c_width=10u c_length=6u
+XCD2 VOUT VSS cap_nmos_03v3 c_width=10u c_length=6u
+XCD3 VOUT VSS cap_nmos_03v3 c_width=10u c_length=6u
+XCD4 VOUT VSS cap_nmos_03v3 c_width=10u c_length=6u
+XCD5 VOUT VSS cap_nmos_03v3 c_width=10u c_length=6u
+XCD6 VOUT VSS cap_nmos_03v3 c_width=10u c_length=6u
+XCD7 VOUT VSS cap_nmos_03v3 c_width=10u c_length=6u
+XCD8 VOUT VSS cap_nmos_03v3 c_width=10u c_length=6u
+XCD9 VOUT VSS cap_nmos_03v3 c_width=10u c_length=6u
+XCD10 VOUT VSS cap_nmos_03v3 c_width=10u c_length=6u
+XCD11 VOUT VSS cap_nmos_03v3 c_width=10u c_length=6u
+XCD12 VOUT VSS cap_nmos_03v3 c_width=10u c_length=6u
+XCD13 VOUT VSS cap_nmos_03v3 c_width=10u c_length=6u
+XCD14 VOUT VSS cap_nmos_03v3 c_width=10u c_length=6u
+XCD15 VOUT VSS cap_nmos_03v3 c_width=10u c_length=6u
+XCD16 VOUT VSS cap_nmos_03v3 c_width=10u c_length=6u
+XCD17 VOUT VSS cap_nmos_03v3 c_width=10u c_length=6u
+.ends E03_VCO_REG_L

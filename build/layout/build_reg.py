@@ -31,9 +31,14 @@ PROW = [("MPDIODE", "p", 8, 1, 1, "PBIAS", "PBIAS", "VIN"), ("MPGATE", "p", 8, 1
         ("MTAIL", "p", 16, 1, 2, "TAIL", "PBIAS", "VIN"), ("MPLUS", "p", 12, 1.5, 2, "MIR", "REF", "TAIL"),
         ("MMINUS", "p", 12, 1.5, 2, "DRIVE", "FB", "TAIL"), ("MBMIR", "p", 8, 1, 1, "BMIR", "BMIR", "VIN"),
         ("MBPULL", "p", 8, 1, 1, "BGATE", "BMIR", "VIN"), ("MBOUT", "p", 12, 1, 2, "BUF", "BGATE", "VIN")]
-RES = [("RBIAS", "VIN", "BIAS", 100e3, 5), ("RSETIN", "BUF", "REF", 220e3, 10), ("RSETHI", "VIN", "REF", 51.1e3, 3),
+# REF summing node: VOUT = 2 REF = 2 (G_in VCTRL + G_hi VIN) / (G_in + G_hi + G_lo).
+# Widened 2026-11-23 for the low-cap VCO: VOUT ~ 1.40 V + 0.65 VCTRL (was 2.85 V + 0.2 VCTRL with 220k / 51.1k),
+# so VDD_VCO covers channel 0 from ~1.83 V (FF/-40, VCTRL ~0.65: the NMOS-input VCTRL buffer needs >= ~0.55 V)
+# to ~3.19 V (SS/125, VCTRL ~2.75) and the ~3.26 V pass-device ceiling.  RZERO 2.2k -> 6.8k: below ~2.8 V the pass
+# device is saturated and the loop crosses over in the MHz range (11 dB peaking at TT with 2.2k); see sim/regwide.
+RES = [("RBIAS", "VIN", "BIAS", 100e3, 5), ("RSETIN", "BUF", "REF", 66.9e3, 10), ("RSETHI", "VIN", "REF", 102.6e3, 5),
        ("RSETLO", "REF", "VSS", 47e3, 3), ("RFBHI", "VOUT", "FB", 50e3, 3), ("RFBLO", "FB", "VSS", 50e3, 3),
-       ("RBUF", "BGATE", "BCOMP", 4.7e3, 1), ("RZERO", "DRIVE", "COMP", 2.2e3, 1)]
+       ("RBUF", "BGATE", "BCOMP", 4.7e3, 1), ("RZERO", "DRIVE", "COMP", 6.8e3, 1)]
 GAP = 0.60
 DEBUG = os.environ.get("DEBUG")
 

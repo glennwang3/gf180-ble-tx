@@ -72,26 +72,28 @@ XMPASS_44 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
 XMPASS_45 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
 XMPASS_46 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
 XMPASS_47 VOUT GATE VIN VIN pfet_03v3 w=4u l=0.28u
-XRSETIN_0 BUF RSETIN_n1 VSS ppolyf_u_1k r_width=1u r_length=21.18u
-XRSETIN_1 RSETIN_n1 RSETIN_n2 VSS ppolyf_u_1k r_width=1u r_length=21.18u
-XRSETIN_2 RSETIN_n2 RSETIN_n3 VSS ppolyf_u_1k r_width=1u r_length=21.18u
-XRSETIN_3 RSETIN_n3 RSETIN_n4 VSS ppolyf_u_1k r_width=1u r_length=21.18u
-XRSETIN_4 RSETIN_n4 RSETIN_n5 VSS ppolyf_u_1k r_width=1u r_length=21.18u
-XRSETIN_5 RSETIN_n5 RSETIN_n6 VSS ppolyf_u_1k r_width=1u r_length=21.18u
-XRSETIN_6 RSETIN_n6 RSETIN_n7 VSS ppolyf_u_1k r_width=1u r_length=21.18u
-XRSETIN_7 RSETIN_n7 RSETIN_n8 VSS ppolyf_u_1k r_width=1u r_length=21.18u
-XRSETIN_8 RSETIN_n8 RSETIN_n9 VSS ppolyf_u_1k r_width=1u r_length=21.18u
-XRSETIN_9 RSETIN_n9 REF VSS ppolyf_u_1k r_width=1u r_length=21.18u
+XRSETIN_0 BUF RSETIN_n1 VSS ppolyf_u_1k r_width=1u r_length=6.32u
+XRSETIN_1 RSETIN_n1 RSETIN_n2 VSS ppolyf_u_1k r_width=1u r_length=6.32u
+XRSETIN_2 RSETIN_n2 RSETIN_n3 VSS ppolyf_u_1k r_width=1u r_length=6.32u
+XRSETIN_3 RSETIN_n3 RSETIN_n4 VSS ppolyf_u_1k r_width=1u r_length=6.32u
+XRSETIN_4 RSETIN_n4 RSETIN_n5 VSS ppolyf_u_1k r_width=1u r_length=6.32u
+XRSETIN_5 RSETIN_n5 RSETIN_n6 VSS ppolyf_u_1k r_width=1u r_length=6.32u
+XRSETIN_6 RSETIN_n6 RSETIN_n7 VSS ppolyf_u_1k r_width=1u r_length=6.32u
+XRSETIN_7 RSETIN_n7 RSETIN_n8 VSS ppolyf_u_1k r_width=1u r_length=6.32u
+XRSETIN_8 RSETIN_n8 RSETIN_n9 VSS ppolyf_u_1k r_width=1u r_length=6.32u
+XRSETIN_9 RSETIN_n9 REF VSS ppolyf_u_1k r_width=1u r_length=6.32u
 XRBIAS_0 VIN RBIAS_n1 VSS ppolyf_u_1k r_width=1u r_length=19.24u
 XRBIAS_1 RBIAS_n1 RBIAS_n2 VSS ppolyf_u_1k r_width=1u r_length=19.24u
 XRBIAS_2 RBIAS_n2 RBIAS_n3 VSS ppolyf_u_1k r_width=1u r_length=19.24u
 XRBIAS_3 RBIAS_n3 RBIAS_n4 VSS ppolyf_u_1k r_width=1u r_length=19.24u
 XRBIAS_4 RBIAS_n4 BIAS VSS ppolyf_u_1k r_width=1u r_length=19.24u
 XRBUF_0 BGATE BCOMP VSS ppolyf_u_1k r_width=1u r_length=4.39u
-XRZERO_0 DRIVE COMP VSS ppolyf_u_1k r_width=1u r_length=1.96u
-XRSETHI_0 VIN RSETHI_n1 VSS ppolyf_u_1k r_width=1u r_length=16.36u
-XRSETHI_1 RSETHI_n1 RSETHI_n2 VSS ppolyf_u_1k r_width=1u r_length=16.36u
-XRSETHI_2 RSETHI_n2 REF VSS ppolyf_u_1k r_width=1u r_length=16.36u
+XRZERO_0 DRIVE COMP VSS ppolyf_u_1k r_width=1u r_length=6.43u
+XRSETHI_0 VIN RSETHI_n1 VSS ppolyf_u_1k r_width=1u r_length=19.74u
+XRSETHI_1 RSETHI_n1 RSETHI_n2 VSS ppolyf_u_1k r_width=1u r_length=19.74u
+XRSETHI_2 RSETHI_n2 RSETHI_n3 VSS ppolyf_u_1k r_width=1u r_length=19.74u
+XRSETHI_3 RSETHI_n3 RSETHI_n4 VSS ppolyf_u_1k r_width=1u r_length=19.74u
+XRSETHI_4 RSETHI_n4 REF VSS ppolyf_u_1k r_width=1u r_length=19.74u
 XRSETLO_0 REF RSETLO_n1 VSS ppolyf_u_1k r_width=1u r_length=15.03u
 XRSETLO_1 RSETLO_n1 RSETLO_n2 VSS ppolyf_u_1k r_width=1u r_length=15.03u
 XRSETLO_2 RSETLO_n2 VSS VSS ppolyf_u_1k r_width=1u r_length=15.03u

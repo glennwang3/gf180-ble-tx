@@ -11,9 +11,10 @@ prescaler and an integer-N divider close the feedback loop. A 6-bit `CFG` word
 selects the BLE channel. The digital block receives packets over a 1 Mbaud
 UART and produces a signed GFSK modulation word for the DAC.
 
-The integrated top cell, `PLL_COMPACT`, is in [build/](build/README.md). It
-holds the PLL, the VCO supply regulator, on-chip bias, loop filter, RF converter
-and PA device, and the UART/modulator. The PLL block layouts are in
+The tapeout top cell, `E03` (Chipathon 2026 team E03), is in [build/](build/README.md)
+as `build/gds/E03.gds`. It holds the PLL with the low-cap Schottky-doubler VCO, the
+VCO supply regulator, on-chip bias, loop filter, an RF buffer chain and the PA
+device, and the UART/modulator. The PLL block layouts are in
 [PLL/analog/](PLL/analog/README.md). The DAC, pad ring and metal fill are not
 integrated yet. See [docs/plan.md](docs/plan.md) for the original project plan.
 
@@ -26,7 +27,7 @@ integrated yet. See [docs/plan.md](docs/plan.md) for the original project plan.
 | `analog/`  | xschem schematics, ngspice/Xyce testbenches, layouts for DCO, PA, dividers |
 | `digital/` | Verilog modulator, FLL calibration, SPI; cocotb tests; LibreLane config |
 | `PLL/analog/` | Current PLL block layouts, extracted netlists and Xschem sheets |
-| `build/`   | `PLL_COMPACT` integration: layout, LVS reference, build scripts, verification, post-PEX lock sims |
+| `build/`   | `E03` tapeout integration: GDS, LVS reference, build and export scripts, verification, post-PEX sims |
 | `tapeout/` | Chip top-level in the shuttle template, DRC/LVS runs |
 | `board/`   | KiCad bring-up board: crystal, RF match, antenna |
 
@@ -51,17 +52,21 @@ block has a GDS and an extracted SPICE netlist. Details are in
 
 ## Top-level integration (`build/`)
 
-`build/` holds `PLL_COMPACT`, a compact integration of the PLL blocks, the
-3.3 V VCO supply regulator, a bias block (2.5 µA charge-pump current, 1.7 V
-TAIL_BIAS), a stacked loop filter (440 kΩ, 143.6 pF, 1.29 pF), the RF converter
-and PA device, and the BLE UART/modulator, on the six-metal GF180MCU E stack.
-It replaces the first integration, `A01_topcell` (commit f8b50d8). Details,
-checks and rebuild commands are in [build/README.md](build/README.md).
+`build/gds/E03.gds` (top cell `E03`) integrates the low-cap Schottky-doubler VCO,
+a graded self-biased buffer chain and the 50 µm class-C PA device, the A01
+prescaler, divider, PFD and charge pump, the 3.3 V VCO supply regulator
+(VDD_VCO = 1.40 V + 0.65·VCTRL), a bias block (~0.47 µA charge pump, 1.7 V
+TAIL_BIAS), a stacked loop filter (440 kΩ, 143.6 pF, 1.29 pF) and the BLE
+UART/modulator, on the six-metal GF180MCU E stack. All other cells carry the
+`E03_` prefix; the top-level pins are the `info.yaml` pins (`vdd`, `vss`,
+`reset_n`, `clk`, `Tx`, `ANT`). Details, checks and rebuild commands are in
+[build/README.md](build/README.md). Earlier integrations: `A01_topcell`
+(commit f8b50d8) and the XOR-doubler `PLL_COMPACT` (commit b418248).
 
-- **Checks:** DRC 78, all inherited from the VCO (OFFGRID, DF.9). Full-chip LVS matches uniquely (22,912 devices). The connectivity check finds no problems.
-- **Post-PEX lock (SS, 125 °C):** channel 0 locks within ±50 kHz at 498 µs; a hop to channel 15 locks 478 µs after the hop.
-- **LVS config:** the root [`lvs_config.json`](lvs_config.json) points at `build/gds/PLL_COMPACT.gds` and the reference netlists in `build/spice/`.
-- **Open:** the PA converter fails after extraction (needs a CML pre-amp), channels 34–39 are out of tuning range at SS/125 °C, and the A01 PFD has no frequency detection (slow acquisition).
+- **Checks:** DRC 0 on `E03.gds`. LVS against `build/spice/` matches uniquely (22,902 devices, 12,522 nets). The connectivity check finds no problems.
+- **RF after PEX (TT):** channel 0 at +0.09 dBm into 100 Ω (20 % drain efficiency); TT lock to channel 0 without cycle slips.
+- **LVS config:** the root [`lvs_config.json`](lvs_config.json) points at `build/gds/E03.gds` and the reference netlists in `build/spice/`.
+- **Open:** ±1 MHz reference spurs at TT/FF (CP ripple through the regulator), no RF output at SS/125 °C, the A01 PFD has no frequency detection, and REF_1M, VTUNE (DAC) and CFG are not yet on pads.
 
 ## Golden model
 

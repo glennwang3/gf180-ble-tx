@@ -2,8 +2,8 @@
 """
 PLL_COMPACT: compact BLE PLL / TX integration (GF180MCU, 6-metal E stack).
 
-  v3 VCO (symmetric core + Gilbert XOR doubler, Schottky path kept)   origin
-  RF_CONV_PA (CML->CMOS converter, drivers, 50u PA device)            under the VCO, XP/XN straight down
+  low-cap Schottky VCO (Differential_VCO_LC: delivered cell minus the doubler's 2nd / 3rd inverters)  origin
+  RF_CHAIN_PA (graded self-biased chain + 50u class-C PA), rotated     west of the VCO, RF_DRV1 link ~14 um
   32/33 prescaler (mirrored)                                          on top of the VCO, CORE_CLK ~12 um
   integer-N divider (mirrored in x)                                   right of the prescaler, MC ~2.5 um
   PFD (mirrored) + charge pump                                        right of the divider, FB_1M ~4 um
@@ -24,16 +24,16 @@ U = 1000
 
 # name: (gds, cell, rot, mirror, dx, dy)   (klayout Trans: mirror at x axis first, then rotate)
 PLACE = {
-    "vco": ("/foss/designs/Diff_VCO_Second_Layout/vco_xor_layout/Diff_VCO_XOR_Layout.gds", "Differential_VCO_XOR", 0, False, 0.0, 0.0),
+    "vco": (f"{HERE}/vco_lc/Differential_VCO_LC.gds", "Differential_VCO_LC", 0, False, 0.0, 0.0),
     "prescaler": (f"{REPO}/PLL/analog/prescaler/32_33_Prescaler_fixed.gds", "32_33_Complete_Prescaler", 0, True, -27.28, 41.76),
     "divider": (f"{REPO}/PLL/analog/integer_n_divider/ble_feedback_divider.gds", "ble_feedback_divider", 2, True, 73.84, 6.06),
     "pfd": (f"{REPO}/PLL/analog/phase_detector/Phase_Detector_FE_fixed.gds", "Phase_Detector_FE", 2, True, 85.0, 30.27),
     "pump": (f"{REPO}/PLL/analog/charge_pump/Charge_Pump_FE_fixed.gds", "Charge_Pump_FE", 0, False, 99.3, 30.27),
     "reg": (f"{HERE}/VCO_REG_L.gds", "VCO_REG_L", 0, False, 13.32, -101.27),
     "lf": (f"{HERE}/PLL_LF_L.gds", "PLL_LF_L", 0, False, 176.7, -100.67),
-    "conv": (f"{HERE}/RF_CONV_PA.gds", "RF_CONV_PA", 2, True, 1.28, -81.71),
+    "chain": (f"{HERE}/RF_CHAIN_PA.gds", "RF_CHAIN_PA", 3, True, -28.6, 6.43),     # (x, y) -> (-y - 28.6, -x + 6.43)
     "bias": (f"{HERE}/PLL_BIAS.gds", "PLL_BIAS", 0, False, 108.0, 3.2),
-    "tx": (f"{REPO}/tapeout/ble_tx_uart/gds/ble_tx_uart.gds", "ble_tx_uart", 0, False, -330.0, -95.0),
+    "tx": (f"{REPO}/tapeout/ble_tx_uart/gds/ble_tx_uart.gds", "ble_tx_uart", 0, False, -340.0, -95.0),
 }
 
 

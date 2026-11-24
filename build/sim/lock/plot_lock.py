@@ -57,7 +57,8 @@ for j, case in enumerate(cases):
         print(case, msg)
         title.append(f"{tgt[s0] / 1e9:.3f} GHz " + (f"locked at {tset:.0f} us" if settled else "not locked"))
     a[0].set_title(f"{case}: " + ", ".join(title), fontsize=10)
-fig.suptitle("PLL lock after PEX (PFD, CP, bias, regulator, loop filter + routing RC-extracted; SS / 125 C)\n"
-             "Icp 2.5 uA, Rz 440 kOhm, C2 143.6 pF, C1 1.29 pF; behavioral v3 VCO + /N", fontsize=11)
+import os  # noqa: E402
+fig.suptitle(os.environ.get("TITLE", "PLL lock after PEX (PFD, CP, bias, regulator, loop filter + routing RC-extracted; SS / 125 C)\n"
+             "Icp 2.5 uA, Rz 440 kOhm, C2 143.6 pF, C1 1.29 pF; behavioral v3 VCO + /N").replace("|", "\n"), fontsize=11)
 fig.tight_layout()
 fig.savefig(out, dpi=105)
