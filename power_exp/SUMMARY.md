@@ -259,3 +259,73 @@ Setup:
   per-corner keys this gate requires. Real signoff metrics carry them. The gate
   passes the 285 layout and rejects 280/270.
 - Start script: `tune/start_search.sh`. Log: `digital/agent/runs/s3v3.console.log`.
+
+## V7: V3 + debug UART dbg_tx, clean at 330 x 300 um (branch dbg-ser, 2026-11-24)
+
+V6 (764c940) added the debug UART pin `dbg_tx`. V7 is the same function, smaller:
+- The code index modulo 80 is no longer a 7-bit counter: its low 3 bits are ble_tx's
+  sample phase (new internal port `sym_phase`), so only a symbol counter modulo 10 is
+  kept. k > 79 has symbol >= 10 and never matches, as before.
+- The shift register shifts in zeros and is idle when empty, so the 4-bit bit
+  counter is gone; tdiv has no reset; hold, shift register, symbol counter and
+  control each have their own clock gate instead of hold muxes.
+- Synthesis (`tune/stat_v7.txt`): 54,480 um2, V3 + 4,226 (V6: V3 + 5,170).
+  dbg_tx itself 3,181 um2 + 5 ICGs (V6: 4,309 + 1 ICG).
+- Marker after the samples instead of before (`v7m/rtl`, measurement only, not
+  adopted): 54,055 um2, another 426 um2 (0.8%).
+- Behaviour: `equiv/dbg_eq_tb.v` (`run_dbg_eq.sh`) compares every port, dbg_tx
+  included, with V6 on random UART traffic: 0 mismatches at SPS 2/8/16 when the debug
+  setting changes between packets. Turned on mid-packet, which codes it samples
+  differs (neither version defined it; now documented). `equiv/run_eq.sh` (original
+  ports vs f67a39c) passes at SPS 2/8/16; make test SPS=8, test_clock_stop pass.
+
+### Flow changes (digital/agent/pd)
+- `upsize.tcl`: buffers are built with odb calls (`odb_buffer`) instead of
+  insert_buffer, which segfaults here. A net with 2+ loads is split: the farther
+  half of the loads moves behind the buffer at their centroid. Clock cells are
+  recognised by instance name (CTS's clkbuf_*/delaybuf_*), so data fanout buffers
+  built from clkbuf cells can be split too.
+- `runner.py`, `PD_FIX_HOLD=1`: the signoff fix passes also fix hold. Detailed
+  routing cost up to 0.5 ns of hold slack against the GR estimate on the UART sh ->
+  PDU byte paths (deep gated capture trees). Each failing endpoint gets a dlyb_2 in
+  front of its D pin; LibreLane's hold checker is off during the passes and the
+  result is refused if any of the 9 corners still fails hold.
+- Recipe: as V3 (`tune/run_v.sh`), plus buffers on (`PD_NO_FIX_BUFFER=`) and
+  `PD_FIX_HOLD=1`, 8 fix passes. `tune/resign.py` reruns signoff from a stored END state.
+
+### Width sweep (V7)
+| width | result |
+|---|---|
+| 295 | detailed placement fails (post-GRT repair) |
+| 300-310 | hold after routing; fix passes end in GR congestion / DPL failure |
+| 315 | hold left after the fix passes (another run: GR congestion) |
+| 320 | 5 ss slew left after 8 passes (12 passes: runner crashed on a path-length bug at pass 10) |
+| 325 | ff hold -0.11 ns left |
+| **330** | **clean** |
+
+### V7 at 330 x 300 um (`layout_v7_330/`)
+| corner | slew / cap viol. | setup WS ns | hold WS ns |
+|---|---|---|---|
+| nom / min / max tt_025C_3v30 | 0 / 0 | 105.0 / 105.1 / 104.8 | 0.538 / 0.547 / 0.502 |
+| nom / min / max ss_125C_3v00 | 0 / 0 | 93.9 / 94.9 / 92.8 | 1.250 / 1.283 / 1.217 |
+| nom / min / max ff_n40C_3v60 | 0 / 0 | 108.2 / 108.3 / 108.1 | 0.210 / 0.218 / 0.184 |
+
+Fanout 0, Magic DRC 0, route DRC 0, LVS clean, antenna 0, XOR 0, KLayout foundry
+DRC (variant D) 0. 76,571 um2 of cells, 85.7%. Fix passes: 6, 78 changes (58
+upsized, 3 buffers, 17 hold delay cells). Post-layout netlist (unit delay): the 9
+UART tests, the dbg_tx test (all 80 offsets) and the 2 clock-stop tests pass
+(`tune/gl_final.sh`).
+
+Power, tt_025C_3v30, gate-level VCD (`power/run_power.sh`; debug on = `-DDBG_ON`,
+C2 00 before loading, TX window +20 us for the last debug bytes):
+
+| | V3 at 285 um | V7 debug off | V7 debug on |
+|---|---|---|---|
+| TX | 0.305 mW (389 us) | 0.319 mW (389 us) | 0.347 mW (409 us) |
+| idle | 0.126 mW | 0.139 mW | 0.139 mW |
+| UART load | 0.155 mW | 0.172 mW | 0.172 mW |
+| average, 1 packet / 100 ms | 127 uW | **140.2 uW** | **140.3 uW** |
+
+Debug on costs 0.1 uW at one packet per 100 ms. Off, the debug logic is clock-gated;
+the +13 uW idle over V3 is the bigger clock tree (5 more ICG clock pins, 85.7% vs
+90.7% full but 45 um wider) and the larger layout.

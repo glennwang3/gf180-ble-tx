@@ -1,0 +1,3 @@
+VCD info: dumpfile /tmp/pw_v7_w330_dbg_idle/a.vcd opened for output.
+WINDOW_NS 937500.000 1337500.000 400000.000
+/foss/designs/gf180-ble-tx-power/power_exp/power/pw_tb.v:89: $finish called at 1337500000 (1ps)

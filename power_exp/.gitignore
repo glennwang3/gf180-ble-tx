@@ -2,3 +2,5 @@ v*/run*/
 v*/t_*/
 v*/final_*/
 equiv/mut/
+v*/*_w[0-9]*/
+v*/w[0-9]*

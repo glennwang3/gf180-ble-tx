@@ -37,7 +37,10 @@ module ble_tx #(
   output reg  signed [CODE_W-1:0] fine_code,
   output reg               code_valid,     // fine_code belongs to the packet
   output reg               air_bit,        // raw air bit of the centre symbol
-  output reg               sym_strobe      // first sample of each symbol
+  output reg               sym_strobe,     // first sample of each symbol
+  // Sample counter within the symbol (for the debug UART). While a packet runs,
+  // the code on fine_code is sample sym_phase - 1 (mod SPS) of its symbol.
+  output wire [((SPS > 1) ? $clog2(SPS) : 1)-1:0] sym_phase
 );
 
   localparam integer PDU_MAX = 39;         // 2 + 37 byte legacy advertising PDU
@@ -100,6 +103,7 @@ module ble_tx #(
   wire [31:0] phase32 = {{(32-PW){1'b0}}, phase};
   wire last_phase = (phase32 == SPS - 1);
   assign busy = (state != S_IDLE);
+  assign sym_phase = phase;
 
   // Idle clock gate (power): the sequencer and the output registers hold their
   // value whenever the block is idle and no start arrives, so they are clocked only

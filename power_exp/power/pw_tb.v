@@ -76,6 +76,9 @@ module pw_tb;
     wait (code_valid);
     wait (!code_valid);
     @(negedge clk);
+`ifdef DBG_ON
+    repeat (2 * 80) @(negedge clk);                    // the last debug bytes go out
+`endif
 `ifdef WIN_TX
     dump_off; $finish;
 `endif

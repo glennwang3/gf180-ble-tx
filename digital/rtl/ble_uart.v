@@ -30,7 +30,8 @@
 // 0x80 (-128) only ever marks a packet. Sending the same packet with k = 0..79
 // gives every code of the 8 MS/s waveform. k above 79 sends the marker only.
 // Off after reset (k = 0); off, dbg_tx stays high and its logic is clock-gated. A
-// byte already being sent when it is turned off still finishes.
+// byte already being sent when it is turned off still finishes. Change the setting
+// between packets: turned on mid-packet, which codes it samples is not defined.
 //
 // There is no read path and no busy pin: uart_rx is the only connection to the
 // controller. A packet's air time is fixed by its length, (10 + len) x 8 us for
@@ -217,9 +218,20 @@ endmodule
 
 // Debug UART transmitter: a marker, then one fine_code every byte time (see the
 // header above). Clocked only while on and a packet or a byte is in progress.
+//
+// Area notes. The code index modulo one byte time (80 at SPS = 8) is not counted
+// here: its low bits are ble_tx's sample phase, so only the symbol index modulo
+// 10 is (k = 8 x symbol + sample, and k > 79 has symbol >= 10, which never
+// matches). Other SPS / CLKS_PER_BIT combinations count the index directly. The
+// marker 0x80 and the samples share one holding byte; the shift register shifts
+// in zeros and is idle when empty, so no bit counter is needed. Each register
+// group has its own clock gate instead of hold muxes.
 module ble_dbg_tx #(
+  parameter integer SPS          = 8,
   parameter integer CLKS_PER_BIT = 8,
-  parameter integer CODE_W       = 8
+  parameter integer CODE_W       = 8,
+  parameter integer SHARE_PHASE  = 1,     // 0: count the index here (for tests)
+  parameter integer PW           = (SPS > 1) ? $clog2(SPS) : 1
 ) (
   input  wire              clk,
   input  wire              rst_n,
@@ -229,67 +241,92 @@ module ble_dbg_tx #(
   input  wire              busy,       // ... by an idle ble_tx: a packet begins
   input  wire [CODE_W-1:0] code,       // fine_code
   input  wire              valid,      // code_valid
+  input  wire [PW-1:0]     phase,      // ble_tx sym_phase: code is sample phase - 1
   output wire              tx
 );
   localparam integer CW = (CLKS_PER_BIT > 1) ? $clog2(CLKS_PER_BIT) : 1;
   localparam integer BYTE_CLKS = 10 * CLKS_PER_BIT;          // one 8N1 byte
   localparam integer DIV_LAST_I = CLKS_PER_BIT - 1;
-  localparam integer IDX_LAST_I = BYTE_CLKS - 1;
   localparam [CW-1:0] DIV_LAST = DIV_LAST_I[CW-1:0];
-  localparam [6:0]    IDX_LAST = IDX_LAST_I[6:0];
+  localparam integer NSYM = BYTE_CLKS / SPS;                 // symbols per byte time
+  // the phase split works for a power-of-two SPS that divides the byte time
+  localparam SPLIT = (SHARE_PHASE != 0) && (SPS > 1) && ((1 << PW) == SPS) && (NSYM * SPS == BYTE_CLKS)
+                     && (NSYM <= (128 >> PW));
 
   wire mark = en & start & ~busy;    // ble_tx takes this start: packet begins
 
-  reg  [6:0] idx;        // code index modulo BYTE_CLKS
-  reg  [7:0] hold;       // next byte to send
-  reg        pend;       // hold is waiting
-  reg  [9:0] tsh;        // {stop, data LSB..MSB, start}, bit 0 on the pin
-  reg  [CW-1:0] tdiv;    // clock within the bit
-  reg  [3:0] tbits;      // bits left in this byte, 0 = idle
-
-  wire sample  = en & valid & (idx == k);
-  wire active  = (tbits != 4'd0);
-  wire last    = active & (tdiv == DIV_LAST) & (tbits == 4'd1);
-  wire can_ld  = ~active | last;
-  wire load    = can_ld & pend & en;
-
-  wire gclk;
-  ble_clk_gate u_cg (.clk(clk), .en((en & (mark | busy | valid | pend)) | active),
-                     .gclk(gclk));
-
-  // Control state is reset; the data registers (hold, tsh) are always written
-  // before they are used (hold by mark or sample before pend, tsh by load before
-  // active), so they have no reset.
-  always @(posedge gclk or negedge rst_n) begin
-    if (!rst_n) begin
-      idx <= 7'd0; pend <= 1'b0; tdiv <= {CW{1'b0}}; tbits <= 4'd0;
-    end else begin
-      // code index, from the first valid code of the packet
-      if (mark)       idx <= 7'd0;
-      else if (valid) idx <= (idx == IDX_LAST) ? 7'd0 : idx + 1'b1;
-
-      // queue: the marker, then the samples
-      if (mark | sample) pend <= 1'b1;
-      else if (load)     pend <= 1'b0;
-
-      // transmitter
-      if (load) begin
-        tdiv <= {CW{1'b0}}; tbits <= 4'd10;
-      end else if (active) begin
-        tdiv <= tdiv + 1'b1;
-        if (tdiv == DIV_LAST) tbits <= tbits - 1'b1;
-      end
+  // ------------------------------------------- code index == k
+  wire hit;                          // the code on fine_code now has index k (mod BYTE_CLKS)
+  generate
+    if (SPLIT) begin : g_split
+      localparam integer SW = (NSYM > 1) ? $clog2(NSYM) : 1;
+      localparam [SW-1:0] SYM_LAST = NSYM - 1;
+      localparam [PW-1:0] PH_ONE = 1;
+      reg  [SW-1:0] sym;             // symbol index modulo NSYM, from the first valid code
+      // the code now is the last of its symbol when phase has wrapped to 0
+      wire gclk_sym;
+      ble_clk_gate u_cg_sym (.clk(clk), .en(mark | (en & valid & (phase == {PW{1'b0}}))),
+                             .gclk(gclk_sym));
+      always @(posedge gclk_sym or negedge rst_n)
+        if (!rst_n)                sym <= {SW{1'b0}};
+        else if (mark)             sym <= {SW{1'b0}};
+        else if (sym == SYM_LAST)  sym <= {SW{1'b0}};
+        else                       sym <= sym + 1'b1;
+      wire [7-PW:0] ks = {1'b0, k[6:PW]};
+      assign hit = (ks == {{(8-PW-SW){1'b0}}, sym}) & (phase == k[PW-1:0] + PH_ONE);
+    end else begin : g_idx
+      localparam integer IDX_LAST_I = BYTE_CLKS - 1;
+      localparam [6:0] IDX_LAST = IDX_LAST_I[6:0];
+      reg [6:0] idx;                 // code index modulo BYTE_CLKS
+      wire gclk_idx;
+      ble_clk_gate u_cg_idx (.clk(clk), .en(mark | (en & valid)), .gclk(gclk_idx));
+      always @(posedge gclk_idx or negedge rst_n)
+        if (!rst_n)                idx <= 7'd0;
+        else if (mark)             idx <= 7'd0;
+        else                       idx <= (idx == IDX_LAST) ? 7'd0 : idx + 1'b1;
+      assign hit = (idx == k);
     end
-  end
+  endgenerate
 
-  always @(posedge gclk) begin
-    if (mark)        hold <= 8'h80;
-    else if (sample) hold <= code[CODE_W-1 -: 8];
-    if (load)                             tsh <= {1'b1, hold, 1'b0};
-    else if (active && tdiv == DIV_LAST)  tsh <= {1'b1, tsh[9:1]};
-  end
+  wire sample = en & valid & hit;
 
-  assign tx = active ? tsh[0] : 1'b1;
+  // ------------------------------------------- holding byte: the marker or a sample
+  reg  [7:0] hold;
+  wire gclk_hold;
+  ble_clk_gate u_cg_hold (.clk(clk), .en(mark | sample), .gclk(gclk_hold));
+  always @(posedge gclk_hold)        // written before pend is set, so no reset
+    hold <= mark ? 8'h80 : code[CODE_W-1 -: 8];
+
+  // ------------------------------------------- transmitter
+  // tsh = {stop, data LSB..MSB, start} at load, bit 0 on the pin; zeros shift in,
+  // so the byte is done when only the stop bit is left and its last clock ends.
+  reg  [9:0]    tsh;
+  reg  [CW-1:0] tdiv;      // clock within the bit
+  reg           pend;      // hold is waiting
+  wire active  = |tsh;
+  wire bit_end = (tdiv == DIV_LAST);
+  wire last    = (tsh == 10'd1) & bit_end;
+  wire load    = (~active | last) & pend & en;
+
+  wire gclk_sh;
+  ble_clk_gate u_cg_sh (.clk(clk), .en(load | (active & bit_end)), .gclk(gclk_sh));
+  always @(posedge gclk_sh or negedge rst_n)
+    if (!rst_n)     tsh <= 10'd0;
+    else if (load)  tsh <= {1'b1, hold, 1'b0};
+    else            tsh <= {1'b0, tsh[9:1]};
+
+  // pend and tdiv. tdiv only matters while active and load clears it, so it has no
+  // reset and may count in the idle cycles this gate is open.
+  wire gclk_c;
+  ble_clk_gate u_cg_c (.clk(clk), .en(mark | sample | load | active), .gclk(gclk_c));
+  always @(posedge gclk_c)
+    tdiv <= (load | bit_end) ? {CW{1'b0}} : tdiv + 1'b1;
+  always @(posedge gclk_c or negedge rst_n)
+    if (!rst_n)              pend <= 1'b0;
+    else if (mark | sample)  pend <= 1'b1;
+    else if (load)           pend <= 1'b0;
+
+  assign tx = tsh[0] | ~active;
 endmodule
 
 // ble_tx with the UART front end: the chip-level digital block.
@@ -315,6 +352,7 @@ module ble_tx_uart #(
   wire [5:0] wr_addr, channel;
   wire [7:0] wr_data;
   wire [6:0] dbg_k;
+  wire [((SPS > 1) ? $clog2(SPS) : 1)-1:0] sym_phase;
 
   ble_uart #(.CLKS_PER_BIT(CLKS_PER_BIT), .GAP_BITS(GAP_BITS)) u_uart (
     .clk(clk), .rst_n(rst_n), .uart_rx(uart_rx),
@@ -329,13 +367,13 @@ module ble_tx_uart #(
     .channel(channel), .start(start),
     .busy(busy),                 // not a pin: the controller times packets
     .fine_code(fine_code), .code_valid(code_valid),
-    .air_bit(air_bit), .sym_strobe(sym_strobe)
+    .air_bit(air_bit), .sym_strobe(sym_strobe), .sym_phase(sym_phase)
   );
 
-  ble_dbg_tx #(.CLKS_PER_BIT(CLKS_PER_BIT), .CODE_W(CODE_W)) u_dbg (
+  ble_dbg_tx #(.SPS(SPS), .CLKS_PER_BIT(CLKS_PER_BIT), .CODE_W(CODE_W)) u_dbg (
     .clk(clk), .rst_n(rst_n), .en(dbg_en), .k(dbg_k),
     .start(start), .busy(busy), .code(fine_code), .valid(code_valid),
-    .tx(dbg_tx)
+    .phase(sym_phase), .tx(dbg_tx)
   );
 
 endmodule
