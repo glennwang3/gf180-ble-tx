@@ -1,0 +1,17 @@
+OpenSTA 2.7.0 857316ff00 Copyright (c) 2025, Parallax Software, Inc.
+License GPLv3: GNU GPL version 3 <http://gnu.org/licenses/gpl.html>
+
+This is free software, and you are free to change and redistribute it
+under certain conditions; type `show_copying' for details. 
+This program comes with ABSOLUTELY NO WARRANTY; for details type `show_warranty'.
+Group                    Internal    Switching      Leakage        Total
+                            Power        Power        Power        Power (Watts)
+------------------------------------------------------------------------
+Sequential           3.103682e-04 9.056595e-06 6.984377e-08 3.194947e-04  39.3%
+Combinational        4.306499e-05 1.132556e-04 9.065431e-08 1.564112e-04  19.2%
+Clock                1.774950e-04 1.591553e-04 6.116651e-08 3.367115e-04  41.4%
+Macro                0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00   0.0%
+Pad                  0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00   0.0%
+------------------------------------------------------------------------
+Total                5.309284e-04 2.814675e-04 2.216656e-07 8.126175e-04 100.0%
+                            65.3%        34.6%         0.0%

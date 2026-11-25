@@ -61,7 +61,9 @@ Send each command as one burst, then pause.
 |---------|------|--------|
 | `00aa_aaaa` | `d0 d1 ...` | Write PDU bytes from address `a` (0 = header0, 1 = length, 2.. = payload); the address increments |
 | `01cc_cccc` | none | `channel = c` (latched by `ble_tx` at start; 37 after reset) |
-| `1xxx_xxxs` | none | `s = 1` pulses `start` |
+| `1xxx_xxx1` | none | pulses `start` |
+| `11xx_xxe0` | optional `k` | debug UART `dbg_tx` on (`e = 1`) or off (`e = 0`); a byte after it in the same burst sets the sample offset `k` (0..79; kept if not sent; 0 after reset) |
+| `10xx_xxx0` | none | no operation |
 
 A full 39-byte PDU loads in about 0.4 ms at 1 Mbaud. From Python:
 
@@ -77,12 +79,55 @@ time.sleep(400e-6)                                # on air; then the next packet
 `fine_code`, `code_valid`, `air_bit` and `sym_strobe` come straight out of
 `ble_tx`, as described above; its `busy` stays inside the block.
 
+### Debug UART (`dbg_tx`)
+
+`dbg_tx` is a second UART, an output: 8N1 at the same baud rate as `uart_rx`
+(1 Mbaud at SPS=8), idle high, so a USB-serial adapter that does 1 Mbaud (FTDI
+FT232R/FT232H, CP2102N, CH340) can capture it. It is off after reset; off, the
+pin stays high and its logic is clock-gated, so it costs no power. While it is on,
+each packet sends:
+
+1. the marker `0x80` when the start byte is taken. Codes stay within +-125, so
+   `0x80` (-128) never appears as a code;
+2. `fine_code` (signed, two's complement) at the packet's code indices `k`,
+   `k+80`, `k+160`, ... counted from its first valid code. One byte takes 80
+   clocks, so they come back to back: 37 or 38 codes for a 37-byte payload.
+
+A packet is deterministic, so sending it 80 times with `k = 0..79` gives every
+code of the 8 MS/s waveform (3008 for a 37-byte payload). `k` above 79 sends
+the marker only. Turning it off mid-packet lets the current byte finish. Change
+the setting between packets: turned on mid-packet, which codes it samples is not
+defined. The code index modulo 80 comes from `ble_tx`'s sample phase (its
+`sym_phase` port) and a symbol counter modulo 10, so the debug logic costs about
+3.5k um2 of cells (4.2k with its UART command decode).
+
+```python
+import serial, time
+tx = serial.Serial("/dev/tty.usbserial-CMD", 1_000_000)        # to uart_rx
+rx = serial.Serial("/dev/tty.usbserial-DBG", 1_000_000, timeout=0.01)  # from dbg_tx
+tx.write(bytes([0x00]) + pdu); time.sleep(0.001)
+tx.write(bytes([0x40 | 37]));  time.sleep(0.001)
+wave = {}
+for k in range(80):
+    tx.write(bytes([0xC2, k])); time.sleep(0.001)   # debug on, offset k
+    rx.reset_input_buffer()
+    tx.write(bytes([0x81])); tx.flush(); time.sleep(0.001)
+    data = rx.read(64)
+    i = data.index(0x80)                             # marker
+    for m, b in enumerate(data[i + 1:]):
+        wave[k + 80 * m] = b - 256 if b >= 128 else b
+codes = [wave[i] for i in sorted(wave)]              # full 8 MS/s waveform
+tx.write(bytes([0xC0]))                              # debug off
+```
+
+
 ## Running (IIC-OSIC-TOOLS container, from `/foss/designs/gf180-ble-tx/digital`)
 
 ```sh
 python3 scripts/gen_gauss_lut.py                          # only after changing step/SPS
 cd test && python3 test_ble_tx.py                         # RTL, SPS=2, 8 and 16
 python3 test_ble_tx_uart.py                               # the same through the UART pin
+python3 test_ble_dbg_tx.py                                # debug UART: 80 offsets rebuild the waveform
 cd ../synth && SPS=8 yosys -c synth.tcl                   # netlist + area report
 cd ../test && GL=1 SPS=8 python3 test_ble_tx.py           # gate-level sim of that netlist
 cd ../synth && TOP=ble_tx_uart SPS=8 yosys -c synth.tcl   # with the UART front end

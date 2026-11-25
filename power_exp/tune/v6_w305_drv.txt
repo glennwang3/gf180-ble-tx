@@ -1,0 +1,6 @@
+[INFO] Final PATH variable: /foss/tools/bin:/foss/tools/sak:/usr/local/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/foss/tools/kactus2:/foss/tools/klayout:/foss/tools/osic-multitool
+[INFO] Final PYTHONPATH variable: /usr/lib/python312.zip:/usr/lib/python3.12:/usr/lib/python3.12/lib-dynload:/usr/local/lib/python3.12/dist-packages:/usr/lib/python3/dist-packages:/foss/tools/ngspyce/local/lib/python3.12/dist-packages:/foss/tools/openems/local/lib/python3.12/dist-packages:/foss/tools/pyopus/local/lib/python3.12/dist-packages:/foss/tools/yosys/share/yosys/python3:/foss/tools/klayout/pymod:/foss/tools/vacask/lib/vacask/python
+DRV   3.07 fo=  6 _1760_/ZN                                aoi211_4                       _0399_
+DRV   3.00 fo=  2 _2173_/ZN                                nor2_1                         _0755_
+DRV   3.17 fo=  1 _2199_/ZN                                aoi22_1                        _0769_
+DRV   3.11 fo=  1 _2301_/ZN                                aoi21_1                        _0134_

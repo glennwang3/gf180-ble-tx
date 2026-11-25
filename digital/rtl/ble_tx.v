@@ -37,7 +37,10 @@ module ble_tx #(
   output reg  signed [CODE_W-1:0] fine_code,
   output reg               code_valid,     // fine_code belongs to the packet
   output reg               air_bit,        // raw air bit of the centre symbol
-  output reg               sym_strobe      // first sample of each symbol
+  output reg               sym_strobe,     // first sample of each symbol
+  // Sample counter within the symbol (for the debug UART). While a packet runs,
+  // the code on fine_code is sample sym_phase - 1 (mod SPS) of its symbol.
+  output wire [((SPS > 1) ? $clog2(SPS) : 1)-1:0] sym_phase
 );
 
   localparam integer PDU_MAX = 39;         // 2 + 37 byte legacy advertising PDU
@@ -47,13 +50,19 @@ module ble_tx #(
   // ---------------------------------------------------------------- buffer
   // Each byte has its own clock gate, so its flops are clocked only in the cycle
   // it is written and need no mux to hold their value the rest of the time.
-  reg [8*PDU_MAX-1:0] pdu;   // byte i is pdu[8*i +: 8]
+  // One gate in front of them all (power): the byte gates' own clock pins see
+  // the clock only in write cycles.
+  wire [8*PDU_MAX-1:0] pdu;  // byte i is pdu[8*i +: 8]
+  wire gclk_wr;
+  ble_clk_gate u_cg_wr (.clk(clk), .en(wr_en), .gclk(gclk_wr));
   genvar b;
   generate
     for (b = 0; b < PDU_MAX; b = b + 1) begin : g_pdu
       wire gclk;
-      ble_clk_gate u_cg (.clk(clk), .en(wr_en && wr_addr == b), .gclk(gclk));
-      always @(posedge gclk) pdu[8*b +: 8] <= wr_data;
+      ble_clk_gate u_cg (.clk(gclk_wr), .en(wr_en && wr_addr == b), .gclk(gclk));
+      reg [7:0] q;
+      always @(posedge gclk) q <= wr_data;
+      assign pdu[8*b +: 8] = q;
     end
   endgenerate
 
@@ -94,54 +103,77 @@ module ble_tx #(
   wire [31:0] phase32 = {{(32-PW){1'b0}}, phase};
   wire last_phase = (phase32 == SPS - 1);
   assign busy = (state != S_IDLE);
+  assign sym_phase = phase;
 
-  always @(posedge clk or negedge rst_n) begin
+  // Idle clock gate (power): the sequencer and the output registers hold their
+  // value whenever the block is idle and no start arrives, so they are clocked only
+  // while start | busy | busy_q. busy_q, a copy of busy one clock late on the free
+  // clock, gives the output registers the one edge after busy falls that clears
+  // them. The async reset needs no clock.
+  reg busy_q;
+  always @(posedge clk or negedge rst_n)
+    if (!rst_n) busy_q <= 1'b0;
+    else        busy_q <= busy;
+  wire gclk_run;
+  ble_clk_gate u_cg_run (.clk(clk), .en(start | busy | busy_q), .gclk(gclk_run));
+
+  // phase counts the clocks of a symbol on the idle-gated clock.
+  always @(posedge gclk_run or negedge rst_n) begin
+    if (!rst_n)
+      phase <= {PW{1'b0}};
+    else if (state == S_IDLE) begin
+      if (start) phase <= {PW{1'b0}};
+    end else
+      phase <= last_phase ? {PW{1'b0}} : phase + 1'b1;
+  end
+
+  // Symbol-rate gate (power): the rest of the sequencer changes only on the start
+  // edge in IDLE or on the last clock of a symbol, so it gets its own clock gate
+  // with that enable and no hold muxes: one edge per 1 us symbol instead of SPS.
+  wire gclk_sym;
+  ble_clk_gate u_cg_sym (.clk(clk), .en((state == S_IDLE & start) | (busy & last_phase)),
+                         .gclk(gclk_sym));
+
+  always @(posedge gclk_sym or negedge rst_n) begin
     if (!rst_n) begin
       state    <= S_IDLE;
       bit_idx  <= 9'd0;
       crc      <= 24'd0;
       wht      <= 7'd0;
-      phase    <= {PW{1'b0}};
       win      <= 10'd0;
       tail_cnt <= 2'd0;
       len_q    <= 6'd0;
-    end else if (state == S_IDLE) begin
-      if (start) begin
-        state    <= S_PRE;
-        bit_idx  <= 9'd0;
-        for (k = 0; k < 24; k = k + 1) crc[k] <= CRC_INIT[23-k];
-        wht      <= {1'b1, channel};
-        phase    <= {PW{1'b0}};
-        win      <= 10'd0;
-        tail_cnt <= 2'd0;
-        len_q    <= payload_len;
-      end
-    end else begin
-      phase <= last_phase ? {PW{1'b0}} : phase + 1'b1;
-      if (last_phase) begin
-        win <= {win[7:0], nxt_valid, nxt_bit};
-        bit_idx <= bit_idx + 1'b1;
-        if (state == S_PDU || state == S_CRC)
-          wht <= {wht[0], wht[6:4], wht[3] ^ wht[0], wht[2:1]};
-        case (state)
-          S_PRE: if (bit_idx == 9'd7) begin state <= S_AA; bit_idx <= 9'd0; end
-          S_AA:  if (bit_idx == 9'd31) begin state <= S_PDU; bit_idx <= 9'd0; end
-          S_PDU: begin
-            crc <= (pdu_bit ^ crc[0]) ? ({1'b1, crc[23:1]} ^ 24'h5A6000) : {1'b0, crc[23:1]};
-            if (bit_idx == pdu_bits - 1'b1) begin state <= S_CRC; bit_idx <= 9'd0; end
-          end
-          S_CRC: begin
-            crc <= {1'b0, crc[23:1]};
-            if (bit_idx == 9'd23) state <= S_TAIL;
-          end
-          S_TAIL: begin
-            // last bit reaches the centre after 2 shifts, then leaves the window
-            tail_cnt <= tail_cnt + 1'b1;
-            if (tail_cnt == 2'd2) state <= S_IDLE;
-          end
-          default: ;
-        endcase
-      end
+    end else if (state == S_IDLE) begin           // clocked only by start
+      state    <= S_PRE;
+      bit_idx  <= 9'd0;
+      for (k = 0; k < 24; k = k + 1) crc[k] <= CRC_INIT[23-k];
+      wht      <= {1'b1, channel};
+      win      <= 10'd0;
+      tail_cnt <= 2'd0;
+      len_q    <= payload_len;
+    end else begin                                // clocked only at last_phase
+      win <= {win[7:0], nxt_valid, nxt_bit};
+      bit_idx <= bit_idx + 1'b1;
+      if (state == S_PDU || state == S_CRC)
+        wht <= {wht[0], wht[6:4], wht[3] ^ wht[0], wht[2:1]};
+      case (state)
+        S_PRE: if (bit_idx == 9'd7) begin state <= S_AA; bit_idx <= 9'd0; end
+        S_AA:  if (bit_idx == 9'd31) begin state <= S_PDU; bit_idx <= 9'd0; end
+        S_PDU: begin
+          crc <= (pdu_bit ^ crc[0]) ? ({1'b1, crc[23:1]} ^ 24'h5A6000) : {1'b0, crc[23:1]};
+          if (bit_idx == pdu_bits - 1'b1) begin state <= S_CRC; bit_idx <= 9'd0; end
+        end
+        S_CRC: begin
+          crc <= {1'b0, crc[23:1]};
+          if (bit_idx == 9'd23) state <= S_TAIL;
+        end
+        S_TAIL: begin
+          // last bit reaches the centre after 2 shifts, then leaves the window
+          tail_cnt <= tail_cnt + 1'b1;
+          if (tail_cnt == 2'd2) state <= S_IDLE;
+        end
+        default: ;
+      endcase
     end
   end
 
@@ -163,7 +195,7 @@ module ble_tx #(
     end
   endgenerate
 
-  always @(posedge clk or negedge rst_n) begin
+  always @(posedge gclk_run or negedge rst_n) begin
     if (!rst_n) begin
       fine_code  <= {CODE_W{1'b0}};
       code_valid <= 1'b0;

@@ -1,0 +1,1 @@
+ble_tx_uart at 3.3 V, a small Bluetooth LE modulator with its one-pin UART front end, clock-gated for low idle power

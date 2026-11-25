@@ -1,0 +1,7 @@
+OpenSTA 2.7.0 857316ff00 Copyright (c) 2025, Parallax Software, Inc.
+License GPLv3: GNU GPL version 3 <http://gnu.org/licenses/gpl.html>
+
+This is free software, and you are free to change and redistribute it
+under certain conditions; type `show_copying' for details. 
+This program comes with ABSOLUTELY NO WARRANTY; for details type `show_warranty'.
+Error: cannot read file /foss/designs/gf180-ble-tx-power/power_exp/v3/run_w300_plresizerh0.5_f0/baseline_signoff_final/nl/ble_tx_uart.nl.v.

@@ -1,0 +1,2 @@
+KLAYOUT_DRC tables=63 violations=0
+  note: a rule table crashed (see console.log; mslot is a known deck bug)

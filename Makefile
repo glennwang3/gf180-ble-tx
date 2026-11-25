@@ -1,6 +1,6 @@
 # Shortcuts for the commands in digital/README.md and .github/workflows.
 #
-#   make test            model, RTL, edge, UART and full-chain tests (what CI runs)
+#   make test            model, RTL, edge, UART, debug-UART and full-chain tests (what CI runs)
 #   make rtl-test SPS=8  run a single SPS (default: 2, 8 and 16)
 #   make gl-test         synthesize, then simulate the gate-level netlist
 #   make gl-test TOP=ble_tx_uart  the same with the UART front end (also synth, sta)
@@ -13,9 +13,9 @@ SYNTH_SPS = $(or $(SPS),8)
 TOP ?= ble_tx
 GL_TEST = $(if $(filter ble_tx_uart,$(TOP)),test_ble_tx_uart.py,test_ble_tx.py)
 
-.PHONY: test model-test rtl-test edge-test uart-test chain-test synth gl-test sta lut help
+.PHONY: test model-test rtl-test edge-test uart-test dbg-test chain-test synth gl-test sta lut help
 
-test: model-test rtl-test edge-test uart-test chain-test
+test: model-test rtl-test edge-test uart-test dbg-test chain-test
 
 model-test:
 	cd model && pytest -q
@@ -29,6 +29,10 @@ edge-test:
 uart-test:
 	cd digital/test && python3 test_ble_tx_uart.py
 
+# debug UART (dbg_tx), SPS 8: all 80 sample offsets rebuild the waveform
+dbg-test:
+	cd digital/test && python3 test_ble_dbg_tx.py
+
 chain-test:
 	cd behavioral && python3 test_tx_chain.py
 
@@ -37,6 +41,7 @@ synth:
 
 gl-test: synth
 	cd digital/test && GL=1 SPS=$(SYNTH_SPS) python3 $(GL_TEST)
+	$(if $(filter ble_tx_uart,$(TOP)),cd digital/test && GL=1 DBG_KS="0 1 40 79" python3 test_ble_dbg_tx.py)
 
 sta: synth
 	cd digital/sta && TOP=$(TOP) SPS=$(SYNTH_SPS) sta -exit sta.tcl

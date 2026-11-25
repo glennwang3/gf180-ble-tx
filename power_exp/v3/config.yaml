@@ -1,0 +1,128 @@
+# ble_tx_uart: ble_tx with its UART front end (rtl/ble_uart.v), the chip-level
+# digital block. Same flow settings as designs/ble_tx/config.yaml, except the die
+# (the UART adds ~4.6k um2 of cells: 247 um no longer fits, 260 failed detailed
+# placement, 270 placed and routed) and MAX_FANOUT_CONSTRAINT 8, the value of the
+# clean cg330a signoff: at 6 the CTS buffers driving 8 sinks were reported as
+# fanout violations.
+#
+# Present values: the answer of the first search, runs/uart_s1 n12 (2026-11-18),
+# with the slew margin raised from its 22 to 26. CTS_CLK_MAX_WIRE_LENGTH 120,
+# CTS_DISTANCE_BETWEEN_BUFFERS 72, the rest as below. After the busy pin was removed
+# (7 ports), 22 left 2 max-slew violations at max_ss after five fix passes; 26 and
+# 30 both signed off clean, 26 with fewer cells. At 26 (runs/uart_nobusy_m26) it
+# signed off at 270 x 300 um with no violation of any kind: 62,980 um2 of cells,
+# 1.59 mW measured from a packet loaded over uart_rx, setup slack 100.5 ns and hold
+# slack 0.22 ns at the worst corner, five fix passes. Its post-layout netlist passes
+# digital/test/test_ble_tx_uart.py with unit delay and with the ss and ff SDF, and
+# the GDS is clean in the foundry KLayout DRC deck (variant D). The 270 um width is
+# the density floor's limit (pd/stages.py, DENSITY_FLOOR_CAP), so a search does not
+# try narrower dies from here.
+DESIGN_NAME: ble_tx_uart
+VERILOG_FILES:
+  - dir::rtl/ble_uart.v
+  - dir::rtl/ble_tx.v
+  - dir::rtl/ble_gauss_lut.v
+
+# 8 MHz clock, 8 samples per 1 us symbol: one 8 MS/s DAC code per clock. This is
+# the pass/fail timing target: a result needs setup slack >= 0 against it at tt
+# and at the worst corner (pd/ledger.py, SETUP_FLOOR_NS). Keep it in step with
+# digital/librelane/config.yaml.
+SYNTH_PARAMETERS: ["SPS=8"]
+CLOCK_PORT: clk
+CLOCK_PERIOD: 125
+
+# The whole Bluetooth chip has a 1400 x 300 um tapeout slot, and this block should
+# take as little of it as it can; the height is fixed at 300 um and the search can
+# narrow the width (DIE_WIDTH_UM, pd/stages.py). The settings below started from
+# designs/ble_tx/config.yaml (whose comments give their history on ble_tx alone).
+FP_SIZING: absolute
+DIE_AREA: [0, 0, 270, 300]
+PL_TARGET_DENSITY_PCT: 80
+PL_TIMING_DRIVEN: false
+PL_WIRE_LENGTH_COEF: 0.12
+IO_DELAY_CONSTRAINT: 10
+
+# Core margins top and bottom, in rows (3.92 um each). LibreLane's default of 4 left
+# the core 266.6 um tall in the 300 um die; 2 rows make it 282.2 um, 6% more core per
+# um of width. Measured with 2 rows, the clock tree below, fanout 7 and density at its
+# floor: 300 and 310 um wide signed off with no violation at any corner and no
+# DRC, LVS or antenna error (64,892 and 65,068 um2 of cells, 80% and 78% full).
+BOTTOM_MARGIN_MULT: 2
+TOP_MARGIN_MULT: 2
+
+# The ss_125C_4v50 corner breaks the 3 ns max-slew limit with default repair
+# (bit_idx fans out to the 39-byte PDU read mux). Repair with margin.
+# MAX_FANOUT_CONSTRAINT and DESIGN_REPAIR_MAX_SLEW_PCT are the baseline values; the
+# agent's placement branches override them (pd/stages.py). A result may have no slew or
+# capacitance violation at the typical or the slow corner (pd/ledger.py). The present
+# baseline has none after signoff's fix passes (one pass, two drivers upsized).
+MAX_FANOUT_CONSTRAINT: 8
+DESIGN_REPAIR_MAX_SLEW_PCT: 26
+GRT_DESIGN_REPAIR_MAX_SLEW_PCT: 30
+
+# The repair after placement picks the delay cell dlyb_1 as its buffer: 35 um2
+# against 13 um2 for buf_1, at the same drive limit. It inserted over 700 of them,
+# about a quarter of the cell area. Without delay cells it uses buf_1 and the
+# design is 18% smaller at the same power. Slew and capacitance violations left at
+# signoff are fixed there by upsizing their drivers (pd/runner.py, signoff).
+EXTRA_EXCLUDED_CELLS:
+  - gf180mcu_fd_sc_mcu7t5v0__dly*
+
+# Clock tree: with the defaults the clock root buffer (clkbuf_0_clk) carries 0.33 pF
+# against a 0.2 pF limit at the slow corner. A shorter clock wire and buffer spacing
+# clear that violation at no cost in area (measured from the baseline's placement):
+# 150 and 100 on the 1400 um die. On a die narrowed to about 300 um the clock-gated
+# design still overloaded its root at those values and 80 and 60 cleared it; the
+# clean 300 and 310 um runs of this netlist used 80 and 60. The CTS stage can change
+# both (pd/stages.py).
+# The power searches then signed off clean at 247 um with longer values: 138 and 85
+# (runs/pw1), then 145 and 110 with a 400 um cluster diameter, up to 40 sinks per leaf
+# buffer and clock buffers capped at clkbuf_2 (runs/pw2: 1.39 -> 1.18 mW measured from a
+# simulated packet, all of it in the clock network).
+CTS_CLK_MAX_WIRE_LENGTH: 120
+CTS_DISTANCE_BETWEEN_BUFFERS: 72
+CTS_SINK_CLUSTERING_MAX_DIAMETER: 400
+CTS_SINK_CLUSTERING_SIZE: 40
+# Clock buffers capped at clkbuf_2 (the agent's CTS_CLK_BUFFER_MAX_DRIVE 2): runs/pw2
+# removed the 14 clkbuf_8 of the main tree this way, most of its power cut.
+CTS_CLK_BUFFERS: [gf180mcu_fd_sc_mcu7t5v0__clkbuf_2]
+
+# Each of the 39 clock-gated PDU bytes gets its own small clock tree, built from
+# the root buffer cell. With the default clkbuf_16 those trees cost 25,000 um2.
+# clkbuf_4 signs off clean; clkbuf_2 left 2 slew violations at max_ss and
+# clkbuf_1 failed hold at the worst corner (measured from the baseline placement).
+CTS_ROOT_BUFFER: gf180mcu_fd_sc_mcu7t5v0__clkbuf_4
+
+# Locked: the default 'half' clock NDR fails detailed routing on
+# this PDK (DRT-0073).
+CTS_APPLY_NDR: none
+
+# Timing is judged by the agent flow's own gate from the reported slack, so
+# LibreLane's end-of-flow timing checkers match no corner; left on, they abort a
+# run and its results are lost. DRC, LVS and antenna keep their default strictness.
+SETUP_VIOLATION_CORNERS: [""]
+HOLD_VIOLATION_CORNERS: [""]
+
+# ---- power experiment (power_exp/): 3.3 V supply. LibreLane's gf180mcuD defaults
+# are the 5 V corners; these replace them for synthesis, repair, CTS and signoff.
+DEFAULT_CORNER: nom_tt_025C_3v30
+STA_CORNERS:
+  - nom_tt_025C_3v30
+  - nom_ss_125C_3v00
+  - nom_ff_n40C_3v60
+  - min_tt_025C_3v30
+  - min_ss_125C_3v00
+  - min_ff_n40C_3v60
+  - max_tt_025C_3v30
+  - max_ss_125C_3v00
+  - max_ff_n40C_3v60
+LIB:
+  "*_tt_025C_3v30": ["/foss/pdks/gf180mcuD/libs.ref/gf180mcu_fd_sc_mcu7t5v0/lib/gf180mcu_fd_sc_mcu7t5v0__tt_025C_3v30.lib"]
+  "*_ss_125C_3v00": ["/foss/pdks/gf180mcuD/libs.ref/gf180mcu_fd_sc_mcu7t5v0/lib/gf180mcu_fd_sc_mcu7t5v0__ss_125C_3v00.lib"]
+  "*_ff_n40C_3v60": ["/foss/pdks/gf180mcuD/libs.ref/gf180mcu_fd_sc_mcu7t5v0/lib/gf180mcu_fd_sc_mcu7t5v0__ff_n40C_3v60.lib"]
+VDD_PIN_VOLTAGE: 3.3
+# Not set: RUN_POST_GRT_DESIGN_REPAIR. At ss_125C_3v00 the repair after global
+# placement leaves ~200 slow-corner slew violations by global routing; LibreLane's
+# post-GRT repair clears them on a probe (213 -> 7) but then fails detailed placement
+# (DPL-0036) in this 270 x 300 um die. Signoff upsizes drivers instead
+# (PD_NO_FIX_BUFFER=1, power_exp/harden.py); what remains is reported.

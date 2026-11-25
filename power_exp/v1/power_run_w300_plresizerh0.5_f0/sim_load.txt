@@ -1,0 +1,3 @@
+VCD info: dumpfile /tmp/pw_v1_load/a.vcd opened for output.
+WINDOW_NS 24412.123 482412.123 458000.000
+/foss/designs/gf180-ble-tx-power/power_exp/power/pw_tb.v:66: $finish called at 482412123 (1ps)

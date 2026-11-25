@@ -72,6 +72,11 @@ HEADLINE = (
     *(f"design__max_{kind}_violation__count__corner:{c}"
       for c in (S.SLOW_CORNER, S.SLOW_CORNER_MAX) for kind in ("slew", "cap")),
     "design__max_fanout_violation__count",
+    # power-exp: the full 9-corner picture, for the zero-violation gate.
+    "design__xor_difference__count", "timing__hold__ws",
+    *(f"timing__{k}__ws__corner:{c}" for c in S.ALL_CORNERS for k in ("setup", "hold")),
+    *(f"design__max_{kind}_violation__count__corner:{c}"
+      for c in S.ALL_CORNERS for kind in ("slew", "cap")),
 )
 
 # What a stage's log is boiled down to before an agent reads it. The tools print
@@ -668,12 +673,12 @@ def fork(design_dir: str | Path, ancestor_state: str, stage: str, params: dict,
 # size. So there are five passes, and from the second on a driver that was upsized
 # before and still fails, or that has no larger size, gets a buffer (FIX_BUFFER)
 # at its output instead (pd/upsize.tcl).
-FIX_PASSES = 5
+FIX_PASSES = int(os.environ.get("PD_FIX_PASSES", "5"))   # power-exp: env override
 FIX_BUFFER = "gf180mcu_fd_sc_mcu7t5v0__buf_4"
 FIX_CORNERS = (S.FOM_CORNER, S.SLOW_CORNER, S.SLOW_CORNER_MAX)
 _UPSIZE_TCL = Path(__file__).with_name("upsize.tcl")
 _LIB = ("/foss/pdks/gf180mcuD/libs.ref/gf180mcu_fd_sc_mcu7t5v0/lib/"
-        "gf180mcu_fd_sc_mcu7t5v0__tt_025C_5v00.lib")
+        "gf180mcu_fd_sc_mcu7t5v0__tt_025C_3v30.lib")   # power-exp: 3.3 V
 _CHECK = re.compile(r"^(\S+)\s+([\d.]+)\s+([\d.]+)\s+-[\d.]+\s+\(VIOLATED\)")
 
 
@@ -701,8 +706,35 @@ def _violating_pins(run_dir: Path) -> dict:
     return pins
 
 
+# power-exp: PD_FIX_HOLD=1 also fixes hold at signoff. Detailed routing can cost
+# 0.5 ns of hold slack against the global-routing estimate on the gated PDU clock
+# trees. The passes then run with LibreLane's hold checker off, each hold endpoint
+# that failed at any corner gets a delay cell (HOLD_DELAY) in front of its D pin,
+# and the result is refused if hold still fails at any corner.
+FIX_HOLD = bool(os.environ.get("PD_FIX_HOLD"))
+HOLD_DELAY = os.environ.get("PD_HOLD_DELAY", "gf180mcu_fd_sc_mcu7t5v0__dlyb_2")
+_HOLD = re.compile(r"^\[hold [^\]]*\]\s+\S+\s+->\s+(\S+)\s+:\s+(-[\d.]+)")
+
+
+def _hold_pins(run_dir: Path) -> list[str]:
+    """Endpoints that failed hold at any corner, from the signoff violator lists."""
+    sta = [d for d in _step_dirs(run_dir) if d.name.endswith("openroad-stapostpnr")]
+    pins: set[str] = set()
+    for f in (sta[-1].glob("*/violator_list.rpt") if sta else []):
+        for line in f.read_text().splitlines():
+            m = _HOLD.match(line)
+            if m:
+                pins.add(m[1])
+    return sorted(pins)
+
+
+def _hold_fails(m: dict) -> bool:
+    return any(v is not None and v < 0 for k, v in m.items()
+               if k.startswith("timing__hold__ws__corner:"))
+
+
 def _upsize(state_json: str, pins: dict, dest: Path,
-            done: tuple[str, ...] = ()) -> tuple[str | None, list[str]]:
+            done: tuple[str, ...] = (), hold: tuple[str, ...] = ()) -> tuple[str | None, list[str]]:
     """A copy of a post-GR state with the violating pins' drivers upsized, or
     buffered where an earlier pass (`done`) upsized them already."""
     import subprocess
@@ -710,12 +742,19 @@ def _upsize(state_json: str, pins: dict, dest: Path,
     st = json.loads(snap.read_text())
     env = dict(os.environ, LIB=_LIB, IN_ODB=st["odb"], OUT_DIR=str(dest),
                PINS=" ".join(f"{p} {r:.4f}" for p, r in pins.items()),
-               DONE=" ".join(done), BUFFER=FIX_BUFFER)
+               DONE=" ".join(done), BUFFER=FIX_BUFFER,
+               HOLD_PINS=" ".join(hold), HOLD_DELAY=HOLD_DELAY)
+    # power-exp: at the 3.3 V corners pass 1 meets hundreds of slow-corner slew
+    # violations and OpenROAD segfaults in insert_buffer (dbBlock::makeNewName).
+    # PD_NO_FIX_BUFFER=1 makes the passes upsize only.
+    if os.environ.get("PD_NO_FIX_BUFFER"):
+        env.pop("BUFFER")
     r = subprocess.run(["openroad", "-exit", "-no_init", str(_UPSIZE_TCL)], env=env,
                        capture_output=True, text=True)
-    swaps = [l.split(": ", 1)[1] if l.startswith("UPSIZE: ") else "buffered " + l.split(": ", 1)[1]
-             for l in r.stdout.splitlines() if l.startswith(("UPSIZE: ", "BUFFER: "))]
-    swaps = [s for s in swaps if " has no larger size" not in s and " could not be buffered" not in s]
+    tags = {"UPSIZE: ": "", "BUFFER: ": "buffered ", "HOLD: ": "hold delay "}
+    swaps = [tags[l[:l.index(": ") + 2]] + l.split(": ", 1)[1]
+             for l in r.stdout.splitlines() if l.startswith(tuple(tags))]
+    swaps = [s for s in swaps if " has no larger size" not in s and " could not be " not in s]
     (dest / "upsize.log").write_text(r.stdout + r.stderr)
     if r.returncode != 0:
         return None, swaps
@@ -744,6 +783,8 @@ def signoff(design_dir: str | Path, end_state: str, params: dict,
     t0 = time.monotonic()
     start, frm, swaps, freed = end_state, S.SIGNOFF_START, [], 0
     passes = 0
+    if FIX_HOLD:   # back to config.yaml's [""]: LibreLane's hold checker matches no corner
+        params = {k: v for k, v in params.items() if k != "HOLD_VIOLATION_CORNERS"}
     while True:
         rd = run_dir if passes == 0 else run_dir.parent / f"{run_dir.name}_fix{passes}"
         rd.mkdir(parents=True, exist_ok=True)
@@ -758,7 +799,8 @@ def signoff(design_dir: str | Path, end_state: str, params: dict,
             res.freed_bytes = freed + _prune(rd)
             return res
         sm = _pick(state.metrics)
-        if passes == FIX_PASSES or not _electrical(sm):
+        hold = tuple(_hold_pins(rd)) if FIX_HOLD and _hold_fails(sm) else ()
+        if passes == FIX_PASSES or not (_electrical(sm) or hold):
             break
         pins = _violating_pins(rd)
         if passes == 0:
@@ -767,8 +809,8 @@ def signoff(design_dir: str | Path, end_state: str, params: dict,
             i = _find(_step_dirs(rd), S.IN_LOOP_STOP)
             mid = str(_step_dirs(rd)[i] / "state_out.json") if i is not None else None
         eco = run_dir.parent / f"{run_dir.name}_eco{passes + 1}"
-        upsized = tuple(s.split()[0] for s in swaps if not s.startswith("buffered "))
-        nxt, done = _upsize(mid, pins, eco, upsized) if pins and mid else (None, [])
+        upsized = tuple(s.split()[0] for s in swaps if not s.startswith(("buffered ", "hold ")))
+        nxt, done = _upsize(mid, pins, eco, upsized, hold) if (pins or hold) and mid else (None, [])
         if not nxt:
             break
         swaps += done
@@ -780,6 +822,11 @@ def signoff(design_dir: str | Path, end_state: str, params: dict,
         return RunResult(False, time.monotonic() - t0, error=err, freed_bytes=freed + _prune(rd))
     seconds = time.monotonic() - t0
     sm.update({"eco__passes": passes, "eco__upsized_cells": len(swaps)})
+    if FIX_HOLD and _hold_fails(sm):
+        return RunResult(False, seconds, error="hold violations left after the fix passes: "
+                         + ", ".join(k.split(":")[1] for k, v in sm.items()
+                                     if k.startswith("timing__hold__ws__corner:") and v < 0),
+                         signoff_metrics=sm, freed_bytes=freed)
     spent = _stage_seconds(rd)
     if keep != "all":
         final = rd / "final"
