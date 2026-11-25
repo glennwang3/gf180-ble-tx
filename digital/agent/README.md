@@ -1,6 +1,8 @@
 # Agent-driven layout of the BLE modulator
 
-An agentic LibreLane flow for `ble_tx`.
+An agentic LibreLane flow for `ble_tx` and for `ble_tx_uart`, the block with its
+UART front end (`--design designs/ble_tx_uart`; its answer is in
+`../../tapeout/ble_tx_uart`).
 Four language-model agents tune the backend flow (placement, clock tree, global
 routing) and the best result is taken through detailed routing, DRC and LVS to a
 GDS:
@@ -50,9 +52,14 @@ fails, so a search never compares the two kinds of figure. A design without
 The packet window leaves out idle time; extend `power_tb.v` to score that too.
 
 A result scores 0 if any of these fail at signoff: setup slack below 0 ns
-against the 125 ns clock, at tt **or** at the worst corner (ss_125C_4v50);
+against the 125 ns clock, at tt **or** at the worst corner (ss_125C_4v50 at 5 V; ss_125C_3v00 for the 3.3 V
+`ble_tx_uart`, whose config also fails a run on setup or hold at any corner);
 hold slack below 0 at tt; power or die area above 1.05x the baseline; any
-DRC, LVS, antenna or routing error. During the search, results whose
+max-slew or max-capacitance violation at tt or the slow corners, or any
+max-fanout violation (signoff's fix passes upsize and buffer drivers for the first
+two, up to `FIX_PASSES` times (`PD_FIX_PASSES`, default 5), but not for fanout;
+with `PD_FIX_HOLD=1` they also add hold delay cells); any DRC, LVS, antenna or
+routing error. During the search, results whose
 post-global-route estimates miss the 8 MHz gate are never candidates.
 
 ## Where to configure it
@@ -93,7 +100,9 @@ chmod 600 ~/.config/openrouter/key
 
 ```bash
 ./venv/bin/python -m pd.baseline                  # untouched flow, remembered afterwards
-./venv/bin/python -m pd.stages                    # the seven knobs and their ranges
+# the signed-off ble_tx_uart layout (tapeout/ble_tx_uart), 3.3 V, 330 x 300 um
+PD_FIX_HOLD=1 PD_FIX_PASSES=8 ./venv/bin/python -m pd.baseline --design designs/ble_tx_uart
+./venv/bin/python -m pd.stages                    # the 12 knobs (FP 1, PL 5, CTS 5, GR 1) and their ranges
 
 # free dry run: fake model, real LibreLane
 ./venv/bin/python harness/mock_openrouter.py &
@@ -101,12 +110,14 @@ chmod 600 ~/.config/openrouter/key
 
 # a real search
 ./venv/bin/python -m agents.graph --runs 20 --usd 1.00 --work runs/NAME
+# the same for the block with its UART front end (add --design to pd.baseline too)
+./venv/bin/python -m agents.graph --design designs/ble_tx_uart --runs 20 --usd 1.50 --work runs/NAME
 
 ./venv/bin/python tools/view_run.py runs/NAME     # runs/NAME/run.html
 ./venv/bin/python tools/compare_runs.py runs/A runs/B
 ```
 
-The signed-off layout of the answer is in `runs/NAME/signoff/<node>_final/gds/ble_tx.gds`.
+The signed-off layout of the answer is in `runs/NAME/signoff/<node>_final/gds/<design>.gds`.
 `designs/spm` is LibreLane's small example, for checking the plumbing in a minute.
 
 ## How it is set up for ble_tx
@@ -119,7 +130,10 @@ The signed-off layout of the answer is in `runs/NAME/signoff/<node>_final/gds/bl
   prompts say that slack beyond 8 MHz earns nothing (`agents/prompts.py`).
 - `pd/selftest.py` checks the gate; its other checks run with the gate off,
   as they were written for a design that misses its clock.
-- The prompts name the design (ble_tx, fixed 8 MHz clock and die, power and cell
-  area as the score) and the max-slew caveat from `designs/ble_tx/config.yaml`.
+- The prompts name the design (ble_tx, fixed 8 MHz clock, die width searched,
+  score from objective) and the max-slew caveat from `designs/ble_tx/config.yaml`.
+  A design folder can replace the design-specific parts with `about.txt` and
+  `navigator_notes.txt` (`agents/prompts.py`, `for_design`), as
+  `designs/ble_tx_uart` does.
   The stop agent's prompt states the stopping rule, reading its numbers from
   `agents/policy.py`.

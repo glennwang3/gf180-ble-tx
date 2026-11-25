@@ -1,8 +1,8 @@
 # Digital modulator
 
-`ble_tx` turns a legacy advertising PDU into a stream of signed 8-bit DAC
-codes for the PLL's modulation input: preamble, access address, PDU and CRC24 (whitened), Gaussian filtered
-(BT = 0.5), one code per clock. It matches `model/ble_adv.py` bit for bit:
+`ble_tx` turns a legacy advertising PDU into a stream of signed 8-bit frequency
+codes for the analog modulation input: preamble, access address, PDU and CRC24
+(whitened), Gaussian filtered (BT = 0.5), one code per clock. It matches `model/ble_adv.py` bit for bit:
 
 ```python
 air_bits(pdu, channel)                                    # air_bit at each sym_strobe
@@ -16,9 +16,12 @@ fine_codes(frequency_trajectory(bits, SPS), 2e3)          # fine_code while code
 | `rtl/ble_uart.v` | UART receiver and command decoder `ble_uart`, and the chip-level top `ble_tx_uart` (UART + `ble_tx`) |
 | `scripts/gen_gauss_lut.py` | Regenerates the LUT from the model (`--step-hz`, `--sps`, `--width`) |
 | `test/test_ble_tx.py` | cocotb: compares RTL or gate-level netlist against the model |
+| `test/test_ble_tx_edge.py` | cocotb: corner cases (all 40 channels, length limits, reset, writes while busy) |
 | `test/test_ble_tx_uart.py` | cocotb: the same through the single UART pin, RTL or gate level |
-| `synth/synth.tcl` | Quick Yosys synthesis onto `gf180mcu_fd_sc_mcu7t5v0` |
-| `librelane/config.yaml` | LibreLane RTL-to-GDS flow |
+| `synth/synth.tcl` | Quick Yosys synthesis onto `gf180mcu_fd_sc_mcu7t5v0` (`TOP=ble_tx_uart` for the chip-level block) |
+| `sta/sta.tcl`, `sta/ble_tx.sdc` | Pre-layout timing (below) |
+| `librelane/config.yaml` | Plain LibreLane RTL-to-GDS flow for `ble_tx` |
+| `agent/` | Agent-driven LibreLane flow; `agent/designs/ble_tx_uart` gives the signed-off layout in `../tapeout/ble_tx_uart` |
 
 ## Interface
 
@@ -31,9 +34,9 @@ clock edge that takes `start`; `fine_code` ramps into it from about 2 symbols,
 because each output sample needs the symbols up to 1.5 symbols ahead.
 
 `SPS` is the clock in MHz (samples per 1 us symbol). The default is 8: an
-8 MHz clock gives one code per clock for the 8 MS/s DAC. SPS 2 and 16 are also
-generated and tested. Codes are 8-bit signed, 2 kHz/LSB, range -125..125
-(+-250 kHz deviation); the DAC and VCO modulation gain set the real Hz/LSB.
+8 MHz clock gives one code per clock, 8 MS/s. SPS 2 and 16 are also generated
+and tested. Codes are 8-bit signed, 2 kHz/LSB, range -125..125 (+-250 kHz
+deviation); the analog modulation gain sets the real Hz/LSB.
 
 ## Serial interface (`ble_tx_uart`)
 
@@ -144,7 +147,9 @@ tt_025C_5v00 and ff_n40C_5v50 corners with the constraints in
 30% of the period for I/O on each side, 1 ns setup / 0.25 ns hold uncertainty
 for the ideal clock, and the 3 ns max-slew limit LibreLane signs off against.
 There are no wire parasitics yet, so expect post-layout slack to be a few ns
-lower.
+lower. These are the script's 5 V corners (and `synth/synth.tcl` maps onto the
+tt_025C_5v00 library); the chip runs at 3.3 V, and `ble_tx_uart` is signed off at
+tt_025C_3v30, ss_125C_3v00 and ff_n40C_3v60 by the agent flow (`agent/designs/ble_tx_uart`).
 
 ```sh
 cd synth && SPS=8 yosys -c synth.tcl          # netlist

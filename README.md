@@ -3,21 +3,20 @@
 A transmit-only Bluetooth Low Energy (1M PHY, 2.4 GHz GFSK) beacon on the
 GF180MCU open PDK, built with open-source tools.
 
-The first chip sends legacy advertising packets that a phone BLE scanner can
-see. It uses a crystal-calibrated, open-loop 2.4 GHz LC DCO with direct GFSK
-modulation through a fine capacitor bank, plus a switching PA at about 0 dBm.
-A closed-loop PLL is planned for the second chip. See [docs/plan.md](docs/plan.md).
+The chip sends legacy advertising packets that a phone BLE scanner can see.
+This repository holds its digital part: the modulator that builds each packet and
+turns it into GFSK frequency codes, and the one-pin UART interface it is loaded
+through, with a debug UART output (`dbg_tx`). It runs at 3.3 V. The analog blocks on the same chip are designed by teammates and are not
+covered here. See [docs/plan.md](docs/plan.md).
 
 ## Layout
 
 | Folder     | Contents |
 |------------|----------|
 | `model/`   | Python golden model: packet build, CRC24, whitening, GFSK trajectory, decode |
-| `em/`      | Inductor and passive EM models (OpenEMS, FastHenry2, gdsfactory) |
-| `analog/`  | xschem schematics, ngspice/Xyce testbenches, layouts for DCO, PA, dividers |
-| `digital/` | Verilog modulator, FLL calibration, SPI; cocotb tests; LibreLane config |
-| `tapeout/` | Chip top-level in the shuttle template, DRC/LVS runs |
-| `board/`   | KiCad bring-up board: crystal, RF match, antenna |
+| `behavioral/` | The modulator RTL driving placeholder models of the analog chain, to check its RF output |
+| `digital/` | Verilog modulator, its one-pin UART front end and `dbg_tx` debug UART (FLL calibration to come); cocotb tests; Yosys, OpenSTA, LibreLane and the agent-driven layout flow |
+| `tapeout/` | Signed-off blocks for the chip top level (now `ble_tx_uart`, 330 x 300 um at 3.3 V); later the top level in the shuttle template |
 
 ## Golden model
 
@@ -30,8 +29,8 @@ pytest -q
 
 ## Tools
 
-IIC-OSIC-TOOLS container with the `gf180mcuD` PDK, xschem, ngspice, Xyce,
-KLayout, Magic, Netgen, OpenEMS, LibreLane, cocotb, Icarus Verilog.
+IIC-OSIC-TOOLS container with the `gf180mcuD` PDK, Yosys, OpenSTA, LibreLane,
+KLayout, Magic, Netgen, Verilator, cocotb and Icarus Verilog.
 
 ## License
 
