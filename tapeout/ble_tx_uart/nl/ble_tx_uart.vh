@@ -10,6 +10,7 @@ module ble_tx_uart(
   output[7:0] fine_code,
   output code_valid,
   output air_bit,
-  output sym_strobe
+  output sym_strobe,
+  output dbg_tx
 );
 endmodule
