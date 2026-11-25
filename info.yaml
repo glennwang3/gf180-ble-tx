@@ -16,7 +16,7 @@ project:
   team: "Brown University Group 3"                      
   discord: ""                   
   description: "This project implements a BLE 4.0 LE transmitter in GF180MCU using a custom mixed signal design. A custom PLL, DAC and CRC whitening and Gaussian Filter were implemented to meet BT 4.0 specifications."  
-  lvs_config: "/lvs_config.json"
+  lvs_config: "lvs_config.json"
   gf_def_ready: false            # data ready for def generation with global foundries' pad frame
   ws_def_ready: false           # data ready for def generation with wafer space pad frame
   drc_ready: false               # data ready for integration and DRC
