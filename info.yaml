@@ -72,6 +72,10 @@ pins:
     io_type: input_cmos
   - name: clk 
     io_type: input_schmitt
+  - name: clk_fdbk
+    io_type: bidirectional
+  - name: v_ctrl
+    io_type: analog
   - name: Tx
     io_type: input_cmos
   - name: ANT
