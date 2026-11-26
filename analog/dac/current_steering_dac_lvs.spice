@@ -1,0 +1,31 @@
+** GF180 KLayout LVS reference generated from the xschem netlist
+.subckt current_steering_dac voutp voutn d6 d7b d3 d5b d5 d1 d6b d3b d7 d2b d2 d1b d4 d0b d0 d4b vb vss
+m1 voutp d0 net1 vss nfet_03v3 L=1u W=2u
+m2 voutn d0b net1 vss nfet_03v3 L=1u W=2u
+m7 net1 vb vss vss nfet_03v3 L=1u W=2u
+m3 voutp d1 net2 vss nfet_03v3 L=1u W=4u
+m4 voutn d1b net2 vss nfet_03v3 L=1u W=4u
+m5 net2 vb vss vss nfet_03v3 L=1u W=4u
+m6 voutp d2 net3 vss nfet_03v3 L=1u W=8u
+m8 voutn d2b net3 vss nfet_03v3 L=1u W=8u
+m9 net3 vb vss vss nfet_03v3 L=1u W=8u
+m10 voutp d3 net4 vss nfet_03v3 L=1u W=16u
+m11 voutn d3b net4 vss nfet_03v3 L=1u W=16u
+m12 net4 vb vss vss nfet_03v3 L=1u W=16u
+m13 voutp d4 net5 vss nfet_03v3 L=1u W=32u
+m14 voutn d4b net5 vss nfet_03v3 L=1u W=32u
+m15 net5 vb vss vss nfet_03v3 L=1u W=32u
+m16 voutp d5 net6 vss nfet_03v3 L=1u W=64u
+m17 voutn d5b net6 vss nfet_03v3 L=1u W=64u
+m18 net6 vb vss vss nfet_03v3 L=1u W=64u
+m19 voutp d6 net7 vss nfet_03v3 L=1u W=64u
+m20 voutn d6b net7 vss nfet_03v3 L=1u W=64u
+m21 net7 vb vss vss nfet_03v3 L=1u W=64u
+m22 net7 vb vss vss nfet_03v3 L=1u W=64u
+m23 voutp d7 net8 vss nfet_03v3 L=1u W=64u
+m24 voutn d7b net8 vss nfet_03v3 L=1u W=64u
+m25 net8 vb vss vss nfet_03v3 L=1u W=64u
+m26 net8 vb vss vss nfet_03v3 L=1u W=64u
+m27 net8 vb vss vss nfet_03v3 L=1u W=64u
+m28 net8 vb vss vss nfet_03v3 L=1u W=64u
+.ends current_steering_dac

@@ -1,0 +1,63 @@
+** sch_path: /foss/designs/gf180-ble-tx/analog/dac/dac_sim.sch
+**.subckt dac_sim
+R1 net2 voutn 150
+V1 net2 0 3
+R2 net3 voutp 150
+V2 net3 0 3
+V3 net1 0 0.8
+X1 d0 d0b d1 d1b d2 d2b d3 d3b d4 d4b d5 d5b d6 d6b d7 d7b voutp voutn net1 0 current_steering_dac
+
+**** begin user architecture code
+
+
+
+.include /foss/pdks/gf180mcuD/libs.tech/ngspice/design.ngspice
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice typical
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice mimcap_typical
+
+** Eight-bit binary input stimulus
+** Each input code is held for 125 ns
+** The complete 0-to-255 sweep takes 32 us
+
+VD0 d0 0 PULSE(0 3.3 125n 1n 1n 124n 250n)
+BD0 d0b 0 V=3.3-V(d0)
+VD1 d1 0 PULSE(0 3.3 250n 1n 1n 249n 500n)
+BD1 d1b 0 V=3.3-V(d1)
+VD2 d2 0 PULSE(0 3.3 500n 1n 1n 499n 1000n)
+BD2 d2b 0 V=3.3-V(d2)
+VD3 d3 0 PULSE(0 3.3 1000n 1n 1n 999n 2000n)
+BD3 d3b 0 V=3.3-V(d3)
+VD4 d4 0 PULSE(0 3.3 2000n 1n 1n 1999n 4000n)
+BD4 d4b 0 V=3.3-V(d4)
+VD5 d5 0 PULSE(0 3.3 4000n 1n 1n 3999n 8000n)
+BD5 d5b 0 V=3.3-V(d5)
+VD6 d6 0 PULSE(0 3.3 8000n 1n 1n 7999n 16000n)
+BD6 d6b 0 V=3.3-V(d6)
+VD7 d7 0 PULSE(0 3.3 16000n 1n 1n 15999n 32000n)
+BD7 d7b 0 V=3.3-V(d7)
+
+.control
+set num_threads=1
+set numdgt=14
+option method=gear
+save v(voutp) v(voutn) i(v1) i(v2) i(v3)
+tran 100p 32u 0 100p
+let vdiff = v(voutp)-v(voutn)
+set filetype=binary
+write postpex.raw v(voutp) v(voutn) vdiff i(v1) i(v2) i(v3)
+set wr_singlescale
+wrdata postpex.samples vdiff i(v1) i(v2) i(v3)
+quit
+.endc
+
+
+
+**** end user architecture code
+**.ends
+
+* expanding   symbol:  current_steering_dac.sym # of pins=20
+** sym_path: /foss/designs/gf180-ble-tx/analog/dac/current_steering_dac.sym
+** sch_path: /foss/designs/gf180-ble-tx/analog/dac/current_steering_dac.sch
+.include current_steering_dac_rcx.spice
+
+.end

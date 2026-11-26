@@ -1,0 +1,35 @@
+Conditions: 3.0 V supply, 0.8 V bias, 150 ohms per output, nominal models.
+Input edges are aligned with 1 ns ramps and 125 ns dwell per code.
+Settling uses each run's endpoint-derived half-LSB tolerance and the last band crossing relative to 0.5 ns after each nominal code edge.
+
+prelayout completed: 321538 transient samples through 32.000 us
+Differential endpoints 0.12356398, -0.12356398 V
+Full-scale swing 0.24712797 Vpp, half-LSB band 0.484565 mV
+Average 3 V power 2.47138529 mW
+Average bias power 0.65805308 nW
+Settled monotonicity violations 0: []
+Endpoint DNL range -0.051152, 0.124046 LSB
+Endpoint INL range -0.110888, 0.110888 LSB
+Unsettled transitions: 0
+Midscale 127 to 128: 0.637678 ns; peak error 4.350637 mV
+63 to 64: 0.782656 ns; peak error 3.649937 mV
+191 to 192: 0.763891 ns; peak error 5.918107 mV
+223 to 224: 0.740470 ns; peak error 5.616317 mV
+31 to 32: 0.728769 ns; peak error 3.483520 mV
+159 to 160: 0.682343 ns; peak error 4.840901 mV
+
+postpex completed: 321538 transient samples through 32.000 us
+Differential endpoints 0.12289909, -0.12289900 V
+Full-scale swing 0.24579810 Vpp, half-LSB band 0.481957 mV
+Average 3 V power 2.45810353 mW
+Average bias power 0.51372086 nW
+Settled monotonicity violations 0: []
+Endpoint DNL range -0.548111, 0.109260 LSB
+Endpoint INL range -0.350735, 0.350731 LSB
+Unsettled transitions: 0
+Midscale 127 to 128: 1.206178 ns; peak error 11.743743 mV
+63 to 64: 1.269871 ns; peak error 12.764065 mV
+31 to 32: 1.224346 ns; peak error 13.297513 mV
+127 to 128: 1.206178 ns; peak error 11.743743 mV
+15 to 16: 1.174610 ns; peak error 10.136987 mV
+95 to 96: 1.149764 ns; peak error 11.598346 mV

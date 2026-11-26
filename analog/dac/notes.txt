@@ -1,2 +1,76 @@
 ngspice was not loading the gf180mcuD library correctly, so 
 I had to explicitly load the capacitor
+
+name=s1 only_toplevel=false value="
+
+.include /foss/pdks/gf180mcuD/libs.tech/ngspice/design.ngspice
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice typical
+.lib /foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice mimcap_typical
+
+** Eight-bit binary input stimulus
+** Each input code is held for 125 ns
+** The complete 0-to-255 sweep takes 32 us
+
+VD0  D0  0 PULSE(0   3.3 125n 1n 1n 125n 250n)
+VD0B D0b 0 PULSE(3.3 0   125n 1n 1n 125n 250n)
+
+VD1  D1  0 PULSE(0   3.3 250n 1n 1n 250n 500n)
+VD1B D1b 0 PULSE(3.3 0   250n 1n 1n 250n 500n)
+
+VD2  D2  0 PULSE(0   3.3 500n 1n 1n 500n 1u)
+VD2B D2b 0 PULSE(3.3 0   500n 1n 1n 500n 1u)
+
+VD3  D3  0 PULSE(0   3.3 1u 1n 1n 1u 2u)
+VD3B D3b 0 PULSE(3.3 0   1u 1n 1n 1u 2u)
+
+VD4  D4  0 PULSE(0   3.3 2u 1n 1n 2u 4u)
+VD4B D4b 0 PULSE(3.3 0   2u 1n 1n 2u 4u)
+
+VD5  D5  0 PULSE(0   3.3 4u 1n 1n 4u 8u)
+VD5B D5b 0 PULSE(3.3 0   4u 1n 1n 4u 8u)
+
+VD6  D6  0 PULSE(0   3.3 8u 1n 1n 8u 16u)
+VD6B D6b 0 PULSE(3.3 0   8u 1n 1n 8u 16u)
+
+VD7  D7  0 PULSE(0   3.3 16u 1n 1n 16u 32u)
+VD7B D7b 0 PULSE(3.3 0   16u 1n 1n 16u 32u)
+
+.control 
+
+**tran 1n 32u
+
+** Display the binary inputs
+**plot v(D0) v(D1) v(D2) v(D3)
+**plot v(D4) v(D5) v(D6) v(D7)
+
+**plot v(voutp)
+**plot v(voutp)-v(voutn)
+
+set method=gear
+option method=gear
+
+tran 100p 32u 0 20p
+
+let vdiff = v(voutp)-v(voutn)
+let vcm = (v(voutp)+v(voutn))/2
+
+plot vdiff
+plot vcm
+
+plot vdiff xlimit 15.95u 16.05u
+
+plot v(d7) v(d7b) xlimit 15.95u 16.05u
+
+plot v(d0) v(d0b) xlimit 15.95u 16.05u
+
+plot v(voutp) v(voutn) xlimit 15.95u 16.05u
+
+
+set wr_singlescale
+set wr_vecnames
+wrdata dac_output.txt v(voutp) v(voutn) v(voutp)-v(voutn)
+
+
+.endc
+
+"

@@ -1,0 +1,27 @@
+v {xschem version=3.4.8RC file_version=1.3}
+K {type=subcircuit
+format="@name @pinlist @symname"
+spectre_format="@name ( @pinlist ) @symname"
+template="name=x1"
+}
+T {@symname} -103.5 -6 0 0 0.3 0.3 {}
+T {@name} 135 -72 0 0 0.2 0.2 {}
+P 4 5 130 -60 -130 -60 -130 60 130 60 130 -60 {}
+B 5 147.5 -52.5 152.5 -47.5 {name=3v3 dir=inout}
+L 7 130 -50 150 -50 {}
+T {3v3} 125 -54 0 1 0.2 0.2 {}
+B 5 147.5 -32.5 152.5 -27.5 {name=out dir=inout}
+L 7 130 -30 150 -30 {}
+T {out} 125 -34 0 1 0.2 0.2 {}
+B 5 147.5 -12.5 152.5 -7.5 {name="diff_in+" dir=inout}
+L 7 130 -10 150 -10 {}
+T {"diff_in+"} 125 -14 0 1 0.2 0.2 {}
+B 5 147.5 7.5 152.5 12.5 {name="diff_in-" dir=inout}
+L 7 130 10 150 10 {}
+T {"diff_in-"} 125 6 0 1 0.2 0.2 {}
+B 5 147.5 27.5 152.5 32.5 {name="Tail_Bias" dir=inout}
+L 7 130 30 150 30 {}
+T {"Tail_Bias"} 125 26 0 1 0.2 0.2 {}
+B 5 147.5 47.5 152.5 52.5 {name=vss dir=inout}
+L 7 130 50 150 50 {}
+T {vss} 125 46 0 1 0.2 0.2 {}
