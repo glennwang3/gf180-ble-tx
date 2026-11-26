@@ -1,5 +1,5 @@
-* E03_PLL_LF_L: LVS reference of GDS cell E03_PLL_LF_L (from PLL_LF_L.spice, subckt PLL_LF_L)
-.subckt E03_PLL_LF_L VCTRL VSS LF_RZ
+* E03_PLL_LF_L10: LVS reference of GDS cell E03_PLL_LF_L10 (from PLL_LF_L10.spice, subckt PLL_LF_L10)
+.subckt E03_PLL_LF_L10 VCTRL VSS LF_RZ
 XRZ_0 VCTRL RZ_n1 VSS ppolyf_u_1k r_width=1u r_length=15.08u
 XRZ_1 RZ_n1 RZ_n2 VSS ppolyf_u_1k r_width=1u r_length=15.08u
 XRZ_2 RZ_n2 RZ_n3 VSS ppolyf_u_1k r_width=1u r_length=15.08u
@@ -224,4 +224,10 @@ XC2N180 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
 XC2N181 LF_RZ VSS cap_nmos_03v3 c_width=20.4u c_length=6u
 XC1N0 VCTRL VSS cap_nmos_03v3 c_width=27u c_length=6u
 XC1N1 VCTRL VSS cap_nmos_03v3 c_width=27u c_length=6u
-.ends E03_PLL_LF_L
+XC1M0 VSS VCTRL cap_mim_2f0_m5m6_noshield c_width=28.16u c_length=25.45u
+XC1M1 VSS VCTRL cap_mim_2f0_m5m6_noshield c_width=28.16u c_length=25.45u
+XC1M2 VSS VCTRL cap_mim_2f0_m5m6_noshield c_width=28.16u c_length=25.45u
+XC1M3 VSS VCTRL cap_mim_2f0_m5m6_noshield c_width=28.16u c_length=25.45u
+XC1M4 VSS VCTRL cap_mim_2f0_m5m6_noshield c_width=28.16u c_length=25.45u
+XC1M5 VSS VCTRL cap_mim_2f0_m5m6_noshield c_width=28.16u c_length=25.45u
+.ends E03_PLL_LF_L10

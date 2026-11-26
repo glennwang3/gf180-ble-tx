@@ -52,21 +52,41 @@ block has a GDS and an extracted SPICE netlist. Details are in
 
 ## Top-level integration (`build/`)
 
-`build/gds/E03.gds` (top cell `E03`) integrates the low-cap Schottky-doubler VCO,
-a graded self-biased buffer chain and the 50 µm class-C PA device, the A01
-prescaler, divider, PFD and charge pump, the 3.3 V VCO supply regulator
-(VDD_VCO = 1.40 V + 0.65·VCTRL), a bias block (~0.47 µA charge pump, 1.7 V
-TAIL_BIAS), a stacked loop filter (440 kΩ, 143.6 pF, 1.29 pF) and the BLE
-UART/modulator, on the six-metal GF180MCU E stack. All other cells carry the
-`E03_` prefix; the top-level pins are the `info.yaml` pins (`vdd`, `vss`,
-`reset_n`, `clk`, `Tx`, `ANT`). Details, checks and rebuild commands are in
-[build/README.md](build/README.md). Earlier integrations: `A01_topcell`
-(commit f8b50d8) and the XOR-doubler `PLL_COMPACT` (commit b418248).
+`build/gds/E03.gds` (top cell `E03`) integrates:
 
-- **Checks:** DRC 0 on `E03.gds`. LVS against `build/spice/` matches uniquely (22,902 devices, 12,522 nets). The connectivity check finds no problems.
-- **RF after PEX (TT):** channel 0 at +0.09 dBm into 100 Ω (20 % drain efficiency); TT lock to channel 0 without cycle slips.
+- the low-cap Schottky-doubler VCO;
+- a graded self-biased buffer chain and the 50 µm class-C PA device;
+- the A01 prescaler, divider and charge pump;
+- a three-state TSPC PFD with frequency detection (`TS_PFD`, Centurelli et al., Fig. 4);
+- the 3.3 V VCO supply regulator (VDD_VCO = 1.40 V + 0.65·VCTRL);
+- a bias block (~0.47 µA charge pump, 1.7 V TAIL_BIAS);
+- a stacked loop filter (440 kΩ, 143.6 pF, C1 10 pF);
+- the BLE UART/modulator.
+
+It uses the six-metal GF180MCU E stack. All other cells carry the `E03_` prefix. The top-level pins are the
+`info.yaml` pins (`vdd`, `vss`, `reset_n`, `clk`, `Tx`, `ANT`). Details, checks and rebuild commands are in
+[build/README.md](build/README.md).
+
+Earlier integrations:
+
+- the A01-PFD / C1 1.29 pF `E03` (commit ac855a7);
+- `A01_topcell` (commit f8b50d8);
+- the XOR-doubler `PLL_COMPACT` (commit b418248).
+
+- **Checks:** DRC 0 on `E03.gds`. LVS against `build/spice/` matches uniquely (23,002 devices, 12,573 nets).
+- **After PEX:**
+  - TT channel 0 locks in 253 µs, and a cold start locks in 673 µs.
+  - Reference spurs are −46 dBc at ±1 MHz.
+  - The full-chip transmit at TT and FF demodulates 01010101 correctly.
+  - The class-C PA delivers +4.2 dBm at TT and +5.1 dBm at FF into 100 Ω, at 42–47 % drain efficiency.
 - **LVS config:** the root [`lvs_config.json`](lvs_config.json) points at `build/gds/E03.gds` and the reference netlists in `build/spice/`.
-- **Open:** ±1 MHz reference spurs at TT/FF (CP ripple through the regulator), no RF output at SS/125 °C, the A01 PFD has no frequency detection, and REF_1M, VTUNE (DAC) and CFG are not yet on pads.
+- **Open:**
+  - The 3.3 V draw is about 6.2–6.8 mA, against a ~5 mA supply.
+  - The harmonics need an off-chip low-pass filter.
+  - The FF closed-loop run had one cycle slip. It did not reproduce in 446 targeted PFD cycles and is probably numerical, but that is not confirmed.
+  - The GFSK deviation is about 19 % high at FF without calibration.
+  - There is no RF output at SS/125 °C.
+  - REF_1M, VTUNE (DAC) and CFG are not yet on pads.
 
 ## Golden model
 

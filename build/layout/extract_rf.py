@@ -11,7 +11,7 @@ from route_top import chain_label
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, os.environ.get("PEX_OUT", "pex_rf"))
 KEEP = tuple(os.environ.get("PEX_KEEP", "vco,chain,prescaler,reg,bias").split(","))
-_land = json.load(open(os.path.join(HERE, "pins.json")))["land"]
+_land = json.load(open(os.path.join(HERE, BT.PINS_JSON)))["land"]
 VSS_CHAIN = next((x, y) for n, b, x, y in _land if n == "VSS" and b == "chain")
 CPI_BIAS = next((x, y) for n, b, x, y in _land if n == "CP_IBIAS" and b == "bias")      # MT escape landings
 TB_BIAS = next((x, y) for n, b, x, y in _land if n == "TAIL_BIAS" and b == "bias")
@@ -31,14 +31,17 @@ LOOP_PORTS = [("VDD", (53, 10), 146.12, -75.07), ("VSS", (53, 10), 108.2, 15.0),
               ("VDD_VCO", (53, 10), 5.0, -1.75), ("REF_1M", (36, 10), 89.11, 32.10), ("FB_1M", (42, 10), 75.5, 32.10),
               ("UPB", (53, 10), 80.80, 30.47), ("DN", (53, 10), 83.45, 29.52), ("CP_IBIAS", (53, 10), *CPI_BIAS),
               ("TAIL_BIAS", (53, 10), *TB_BIAS)]
+if BT.PFD_TS:      # TS_PFD: REF_1M / UPB / DN ports on its pin landings (MetalTop)
+    LOOP_PORTS = [((n, (53, 10), *BT.ts_pt({"REF_1M": "R", "UPB": "UPB", "DN": "DN"}[n]))
+                   if n in ("REF_1M", "UPB", "DN") else (n, ld, x, y)) for n, ld, x, y in LOOP_PORTS]
 if os.environ.get("PEX_LOOP"):
     PORTS = LOOP_PORTS
 
 
 def main():
     os.makedirs(OUT, exist_ok=True)
-    ly = db.Layout(); ly.read(os.path.join(HERE, "PLL_COMPACT.gds"))
-    top = ly.cell("PLL_COMPACT")
+    ly = db.Layout(); ly.read(os.path.join(HERE, BT.TOP + ".gds"))
+    top = ly.cell(BT.TOP)
     keep_cells = {BT.PLACE[k][1] for k in KEEP}
     for inst in list(top.each_inst()):
         if inst.cell.name.split("$")[0] not in keep_cells:

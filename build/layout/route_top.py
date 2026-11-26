@@ -87,8 +87,27 @@ def hand_routes(d):
     d.stack(-4.71, 24.26, "m2", "m4", "MC")
     d.wire("m4", (-4.71, 24.26), (22.28, 24.26), 0.40, "MC")
     d.stack(22.28, 24.26, "m3", "m4", "MC")
-    # FB_1M: divider clk_feedback (M3, 73.56 32.10) -> PFD F_VCO (M3, 77.79 32.10)
-    d.wire("m3", (73.56, 32.10), (77.79, 32.10), 0.40, "FB_1M")
+    if BT.PFD_TS:
+        # FB_1M: divider clk_feedback (M3, 73.56 32.10) -> stack to MT just outside the divider; grid-routed to TS_PFD V
+        d.wire("m3", (73.56, 32.10), (76.60, 32.10), 0.40, "FB_1M")
+        d.stack(76.60, 32.10, "m3", "mt", "FB_1M")
+        for pin, net in (("R", "REF_1M"), ("V", "FB_1M"), ("UPB", "UPB"), ("DN", "DN"), ("3v3", "VDD"), ("vss", "VSS")):
+            x, y = BT.ts_pt(pin)
+            near = db.Box(round((x - 0.8) * U), round((y - 0.8) * U), round((x + 0.8) * U), round((y + 0.8) * U))
+            if db.Region(d.top.begin_shapes_rec_touching(d.ly.layer(*LAY["v5"]), near)).is_empty():
+                d.stack(x, y, "m5", "mt", net)                    # TS_PFD boundary ports are on M5
+            else:                                                 # TS_PFD already brings the net up to MT here
+                d.rect("m5", x - 0.3, y - 0.3, x + 0.3, y + 0.3, net)
+                d.rect("mt", x - 0.4, y - 0.4, x + 0.4, y + 0.4, net)
+            # the port's own net arrives inside TS_PFD right at the port: register that metal as own for the grid router
+            win = db.Box(round((x - 1.5) * U), round((y - 0.5) * U), round((x + 1.5) * U), round((y + 2.0) * U))
+            for l in ("m5", "mt"):
+                for p in (db.Region(d.top.begin_shapes_rec_touching(d.ly.layer(*LAY[l]), win)) & db.Region(win)).each():
+                    b = p.bbox()
+                    d.shapes.append((l, (b.left / U, b.bottom / U, b.right / U, b.top / U), net))
+    else:
+        # FB_1M: divider clk_feedback (M3, 73.56 32.10) -> PFD F_VCO (M3, 77.79 32.10)
+        d.wire("m3", (73.56, 32.10), (77.79, 32.10), 0.40, "FB_1M")
     # RF_DRV1: VCO doubler (self-biased 1st inverter output, M1 x -20.04..-16.64 y 4.06..7.02) -> straight M3
     # west to the chain's S1 gate pin; ~14 um
     d.stack(-19.6, RF_PIN[1], "m1", "m3", "RF_DRV1")
@@ -133,9 +152,16 @@ PINS = [
 ]
 
 
+TS_LAND = [("REF_1M", "tspfd", *BT.ts_pt("R")), ("FB_1M", "tspfd", *BT.ts_pt("V")), ("FB_1M", "divider", 76.60, 32.10),
+           ("UPB", "tspfd", *BT.ts_pt("UPB")), ("DN", "tspfd", *BT.ts_pt("DN")),
+           ("VDD", "tspfd", *BT.ts_pt("3v3")), ("VSS", "tspfd", *BT.ts_pt("vss"))]
+
+
 def escapes(ly, top, d):
     terms = []
     for net, blk, lev, x, y in PINS:
+        if BT.PFD_TS and blk == "pfd":
+            continue
         terms.append({"block": blk, "pin": net, "net": net,
                       "pins": [{"pin": net, "level": lev, "xy": [round(x * U), round(y * U)]}]})
     r = Router(ly, top, terms)
@@ -226,7 +252,7 @@ class Grid:
     def free(self, net, l, c):
         b = self.blk[(l, c)]
         o = self.own.get((net, l, c))
-        return (b == 0) if o is None else (b - o == 0)
+        return (b == 0) if o is None else (b - o <= 0)       # <= : a shape registered twice as own stays free
 
     def route(self, net, src, dst, c, win):
         """A* from a set of (i,j,layer) sources to a set of targets; layers 0=m5 1=mt"""
@@ -401,11 +427,15 @@ PORTS = [  # (name, layer, x, y)  labels at the pin metal
 
 def main():
     order = ["UPB", "DN", "CP_IBIAS", "VCTRL", "PRESCALED", "TAIL_BIAS", "RST_N", "VSS", "VDD"]
+    if BT.PFD_TS:
+        order = ["FB_1M"] + order
     for attempt in range(12):
         ly, top, cells = BT.assemble()
         d = Draw(ly, top)
         hand_routes(d)
         land = escapes(ly, top, d) if attempt == 0 else escapes_quiet(ly, top, d)
+        if BT.PFD_TS:
+            land = land + [tuple(t) for t in TS_LAND]
         try:
             grid_route(ly, top, d, land, order)
             break
@@ -416,13 +446,15 @@ def main():
     else:
         raise SystemExit("routing failed")
     for name, l, x, y in PORTS:
+        if BT.PFD_TS and name == "REF_1M":
+            name, l, x, y = "REF_1M", "mt", *BT.ts_pt("R")
         d.label(l, name, x, y)
     for net, blk, x, y in land:
         d.label("mt", net, x, y)
-    ly.write(os.path.join(HERE, "PLL_COMPACT.gds"))
-    json.dump({"land": land, "order": order}, open(os.path.join(HERE, "pins.json"), "w"), indent=1)
+    ly.write(os.path.join(HERE, BT.TOP + ".gds"))
+    json.dump({"land": land, "order": order}, open(os.path.join(HERE, BT.PINS_JSON), "w"), indent=1)
     b = top.dbbox()
-    print(f"wrote PLL_COMPACT.gds  bbox {b.left:.2f},{b.bottom:.2f} .. {b.right:.2f},{b.top:.2f}")
+    print(f"wrote {BT.TOP}.gds  bbox {b.left:.2f},{b.bottom:.2f} .. {b.right:.2f},{b.top:.2f}")
 
 
 def escapes_quiet(ly, top, d):

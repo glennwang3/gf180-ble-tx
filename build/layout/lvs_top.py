@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Top-level LVS of PLL_COMPACT.
+Top-level LVS of PLL_COMPACT (or PLL_TSPFD with PFD_VARIANT=ts).
 
 Reference = one instance per macro, each macro's netlist taken from its own (independently verified)
 extraction / LVS reference, wired by the intended top-level net map below.
-Layout    = PLL_COMPACT flattened, ALL labels removed, then exactly one label per top-level net
+Layout    = the top cell flattened, ALL labels removed, then exactly one label per top-level net
             (so magic cannot join nets through same-name labels).
 """
 import json
@@ -15,7 +15,8 @@ import klayout.db as db
 import build_top as BT
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "lvs_top")
+OUT = os.path.join(HERE, ("lvs_top_ts" if BT.PFD_TS else "lvs_top") + ("_c1" if BT.LF10 else ""))
+TOPN = BT.TOP
 VCO_REF = os.path.join(HERE, "vco_lc", "ref_lc.spice")      # vco_lc/make_ref.py
 from route_top import chain_label  # noqa: E402
 PA_PIN = chain_label("PA_DRAIN")
@@ -35,8 +36,11 @@ MAP = {
     "chain": {"RF_DRV1": "RF_DRV1", "VDD": "VDD", "VSS": "VSS", "PA_DRAIN": "PA_DRAIN"},
     "bias": {"VDD": "VDD", "VSS": "VSS", "IBIAS": "CP_IBIAS", "TAIL_BIAS": "TAIL_BIAS"},
 }
+MAP["tspfd"] = {"R": "REF_1M", "V": "FB_1M", "UPB": "UPB", "DN": "DN", "3v3": "VDD", "vss": "VSS"}
 OWN_REF = {"reg": ("VCO_REG_L.spice", "VCO_REG_L"), "lf": ("PLL_LF_L.spice", "PLL_LF_L"),
            "chain": ("RF_CHAIN_PA.spice", "RF_CHAIN_PA"), "bias": ("PLL_BIAS.spice", "PLL_BIAS")}
+if BT.LF10:
+    OWN_REF["lf"] = ("PLL_LF_L10.spice", "PLL_LF_L10")
 TX0 = (-340.0, -95.0)
 TOP_LABELS = [  # net, layer(l, d), x, y  -- one per net
     ("CORE_CLK", (53, 10), -8.0, 20.0), ("MC", (46, 10), 10.0, 24.26), ("FB_1M", (42, 10), 75.5, 32.10),
@@ -50,6 +54,10 @@ TOP_LABELS = [  # net, layer(l, d), x, y  -- one per net
     ("SYM_STROBE", (42, 10), TX0[0] + 269.72, TX0[1] + 225.40),
 ] + [(f"FINE_CODE[{i}]", (36, 10), TX0[0] + x, TX0[1] + 0.28) for i, x in
      enumerate((251.16, 262.36, 226.52, 225.40, 227.64, 264.60, 263.48, 239.96))]
+
+
+if BT.PFD_TS:
+    TOP_LABELS = [((n, (53, 10), *BT.ts_pt("R")) if n == "REF_1M" else (n, ld, x, y)) for n, ld, x, y in TOP_LABELS]
 
 
 def sh(cmd):
@@ -66,6 +74,8 @@ def macro_refs():
     """self-extract the A01 macros (flattened, own labels kept)"""
     refs = {}
     for key in ("prescaler", "divider", "pfd", "pump", "tx"):
+        if key not in BT.PLACE:
+            continue
         gds, cell = BT.PLACE[key][0], BT.PLACE[key][1]
         d = os.path.join(OUT, "ref_" + key)
         os.makedirs(d, exist_ok=True)
@@ -92,13 +102,15 @@ def macro_refs():
         print(f"ref {key}: {n.strip()} devices")
         refs[key] = (os.path.join(d, name + ".spice"), name)
     refs["vco"] = (VCO_REF, "Differential_VCO_LC")
+    if BT.PFD_TS:
+        refs["tspfd"] = ("/foss/designs/pll_compact/pfd/ref_pfd.spice", "TS_PFD")
     for k, (f, n) in OWN_REF.items():
         refs[k] = (os.path.join(HERE, f), n)
     return refs
 
 
 def reference(refs):
-    lines = ["* PLL_COMPACT top-level LVS reference"]
+    lines = [f"* {TOPN} top-level LVS reference"]
     seen = set()
     for key, (f, n) in refs.items():
         if f not in seen:
@@ -106,23 +118,23 @@ def reference(refs):
             seen.add(f)
     nets = sorted({l[0] for l in TOP_LABELS} | {"VDD", "VSS", "VCTRL", "PRESCALED", "UPB", "DN", "CP_IBIAS",
                                                  "TAIL_BIAS", "RST_N"})
-    lines.append(".subckt PLL_COMPACT " + " ".join(nets))
+    lines.append(f".subckt {TOPN} " + " ".join(nets))
     for key, (f, n) in refs.items():
         ports = subckt_ports(f, n)
         conn = [MAP[key].get(p, f"{key}_{re.sub(r'[^A-Za-z0-9_]', '_', p)}") for p in ports]
         lines.append(f"X{key} " + " ".join(conn) + f" {n}")
-    lines.append(".ends PLL_COMPACT")
+    lines.append(f".ends {TOPN}")
     return "\n".join(lines) + "\n", nets
 
 
 def layout():
-    ly = db.Layout(); ly.read(os.path.join(HERE, "PLL_COMPACT.gds"))
-    top = ly.cell("PLL_COMPACT")
+    ly = db.Layout(); ly.read(os.path.join(HERE, f"{TOPN}.gds"))
+    top = ly.cell(TOPN)
     top.flatten(True)
     for li in ly.layer_indexes():
         if ly.get_info(li).datatype == 10:
             top.shapes(li).clear()
-    land = json.load(open(os.path.join(HERE, "pins.json")))["land"]
+    land = json.load(open(os.path.join(HERE, BT.PINS_JSON)))["land"]
     done = set(l[0] for l in TOP_LABELS)
     labels = list(TOP_LABELS)
     for net, blk, x, y in land:
@@ -132,7 +144,7 @@ def layout():
     for net, (l, d), x, y in labels:
         top.shapes(ly.layer(l, d)).insert(db.Text(net, db.Trans(round(x * 1000), round(y * 1000))))
     ly.cleanup()
-    f = os.path.join(OUT, "PLL_COMPACT_flat.gds")
+    f = os.path.join(OUT, f"{TOPN}_flat.gds")
     ly.write(f)
     return f
 
@@ -141,10 +153,10 @@ if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
     refs = macro_refs()
     ref, nets = reference(refs)
-    open(os.path.join(OUT, "PLL_COMPACT_ref.spice"), "w").write(ref)
+    open(os.path.join(OUT, f"{TOPN}_ref.spice"), "w").write(ref)
     f = layout()
-    n = sh(f"bash {HERE}/ext.sh {f} PLL_COMPACT {OUT}")
+    n = sh(f"bash {HERE}/ext.sh {f} {TOPN} {OUT}")
     print(f"layout: {n.strip()} devices")
     setup = "/foss/pdks/gf180mcuD/libs.tech/netgen/gf180mcuD_setup.tcl"
-    sh(f"cd {OUT} && netgen -batch lvs 'PLL_COMPACT.spice PLL_COMPACT' 'PLL_COMPACT_ref.spice PLL_COMPACT' {setup} lvs.report > netgen.log 2>&1")
+    sh(f"cd {OUT} && netgen -batch lvs '{TOPN}.spice {TOPN}' '{TOPN}_ref.spice {TOPN}' {setup} lvs.report > netgen.log 2>&1")
     print(sh(f"grep -E 'Final result|Circuits match|do not match|Netlists match|Number of devices|Number of nets' {OUT}/lvs.report | tail -6"))

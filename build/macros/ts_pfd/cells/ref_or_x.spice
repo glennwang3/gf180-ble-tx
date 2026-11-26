@@ -1,0 +1,8 @@
+.subckt x2_Input_Or A B Y nor_out 3v3 vss
+XM1 mid B 3v3 3v3 pfet_03v3 L=0.28u W=1.12u
+XM2 nor_out A mid 3v3 pfet_03v3 L=0.28u W=1.12u
+XM3 nor_out A vss vss nfet_03v3 L=0.28u W=0.56u
+XM4 nor_out B vss vss nfet_03v3 L=0.28u W=0.56u
+XM5 Y nor_out 3v3 3v3 pfet_03v3 L=0.28u W=1.12u
+XM6 Y nor_out vss vss nfet_03v3 L=0.28u W=0.56u
+.ends

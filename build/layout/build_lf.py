@@ -155,7 +155,7 @@ def build(ly):
     cmim = 2 * K * (1.99e-3 * wf * hf + 0.2383e-3 * 2 * (wf + hf))
     print(f"{NAME}: bbox {b.left:.2f},{b.bottom:.2f} .. {b.right:.2f},{b.top:.2f} ({b.width():.1f} x {b.height():.1f}); "
           f"plates {2 * K} x {wf}x{hf}; C2 = {cmim:.1f} (MIM) + {cmos:.1f} (MOS @1.6V) = {cmim + cmos:.1f} pF")
-    return top, dict(nmos=nmos, wp=wf, hp=hf, nplates=2 * K, rz=rz)
+    return top, dict(nmos=nmos, wp=wf, hp=hf, nplates=2 * K, rz=rz, Hb=Hb, Wb=Wb, xl=xl, xr=xr, xv=xv, fx=fx)
 
 
 def netlist(info):

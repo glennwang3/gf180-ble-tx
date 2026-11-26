@@ -26,9 +26,11 @@ L = "/foss/designs/pll_compact/layout"
 # C2 (LF_RZ) node of the extracted loop: the DC operating point does not set it (the cap_nmos model leaves it near
 # 0.47 V, an .ic on the internal node is ignored, and Rz*C2 ~ 63 us >> the 10 us precharge).  So each run gets a
 # private copy of LOOP_PART with a precharge source on the C2 net, active for the same 10 us (env C2IC=0: off).
-LOOP = f"{L}/pex_loop/LOOP_PART_rcpex.spice"
-C2NODE = next(l.split()[1] for l in open(LOOP) if "cap_nmos_03v3" in l and "c_width=20.4u" in l)
-C2PRE = os.environ.get("C2IC", "1") == "1"
+LOOP = os.environ.get("LOOPNET", f"{L}/pex_loop/LOOP_PART_rcpex.spice")   # LOOPNET: e.g. pex_loop_ts (TS_PFD)
+C2NODE = next(l.split()[1] for l in open(LOOP) if "cap_nmos" in l and "c_width=20.4u" in l)
+COLD = os.environ.get("COLD") == "1"
+UIC = COLD or os.environ.get("UIC") == "1"   # skip the DC op (all nodes 0 V); the 10 us precharge then sets VCTRL / C2          # cold start: VDD ramps 0 -> 3.3 V in 10 us, no precharge at all
+C2PRE = os.environ.get("C2IC", "1") == "1" and not COLD
 libs = "\n".join(f'.lib "/foss/pdks/gf180mcuD/libs.tech/ngspice/sm141064.ngspice" {x}'
                  for x in (LIB, "res_" + LIB, "mimcap_" + LIB, "moscap_" + LIB, "cap_mim"))
 deck = f"""PLL lock {case}
@@ -36,10 +38,11 @@ deck = f"""PLL lock {case}
 {libs}
 .include "{'loop.spice' if C2PRE else LOOP}"
 .temp {TEMP}
-.options method=gear reltol=1e-3 abstol=1e-12 vntol=1e-6 itl4=100
-Vdd VDD 0 3.3
-Vref REF 0 PULSE(0 3.3 0 1n 1n 499n 1u)
+.options method=gear reltol={os.environ.get("RELTOL", "1e-3")} abstol=1e-12 vntol=1e-6 itl4=100{" rshunt=" + os.environ.get("RSHUNT", "1e12") if UIC else ""}
+{"Vdd VDD 0 PWL(0 0 10u 3.3)" if COLD else "Vdd VDD 0 3.3"}
+Vref REF 0 PULSE(0 3.3 0 {os.environ.get("REFTR", "1n")} {os.environ.get("REFTR", "1n")} 499n 1u)
 XL VDD_VCO VDD 0 UPB DN IB TB {PFD_IN} VCTRL LOOP_PART
+{("CC1X VCTRL 0 " + os.environ["C1X"] + "  $ extra C1 (ripple cap), ideal") if os.environ.get("C1X") else "* C1 as laid out"}
 * VCO buffer tail gate on TAIL_BIAS
 XTAIL TD TB 0 0 nfet_03v3 w=1u l=0.28u
 VTD TD 0 1.0
@@ -47,18 +50,18 @@ VTD TD 0 1.0
 RVCO VDD_VCO 0 {RVCO}
 CVCO VDD_VCO 0 2p
 BN NN 0 V = (time < {THOP}u) ? {N0} : {N1}
-BF FF 0 V = ({F0} + {KV}*(v(vdd_vco)-{V0}))/v(nn)
+BF FF 0 V = max({F0} + {KV}*(v(vdd_vco)-{V0}), 0)/v(nn)
 BPH 0 PH I = v(ff)
 CPH PH 0 1
-BFB FB 0 V = 1.65 + 1.65*tanh(30*sin(6.283185307*v(ph) - 1.0))
+BFB FB 0 V = 1.65 + 1.65*tanh({os.environ.get("FBSHARP", "30")}*sin(6.283185307*v(ph) - 1.0))
 * precharge VCTRL (and C2 through Rz) to VCTRL0, released at 10 us
-BPRE VCTRL 0 I = (time < 10u) ? (v(vctrl)-{v0})/1k : 0
+{"* cold start: no VCTRL precharge" if COLD else f"BPRE VCTRL 0 I = (time < 10u) ? (v(vctrl)-{v0})/1k : 0"}
 .ic v(ph)=0
 .control
 set noaskquit
 set num_threads=1
 save v(vctrl) v(vdd_vco) v(ff) v(nn) v(ib) v(xl.{C2NODE})
-tran 2n {T}u 0 4n
+tran {os.environ.get("TSTEP", "2n")} {T}u 0 {os.environ.get("TMAX", "4n")}{" uic" if UIC else ""}
 let frf = 2*v(nn)*v(ff)
 let ftgt = 2e6*v(nn)
 wrdata out.txt v(vctrl) v(vdd_vco) frf ftgt v(ib) v(xl.{C2NODE})
@@ -70,7 +73,7 @@ os.makedirs(case, exist_ok=True)
 if C2PRE:
     net = open(LOOP).read().splitlines()
     i = max(k for k, l in enumerate(net) if l.startswith(".ends"))
-    net.insert(i, f"BPREC2 {C2NODE} VSS I = (time < 10u) ? (v({C2NODE})-v(VSS)-{v0})/1k : 0")
+    net.insert(i, f"BPREC2 {C2NODE} 0 I = (time < 10u) ? (v({C2NODE})-{v0})/10k : 0")   # global ground, 10k: stays smooth when the local VSS bounces
     open(f"{case}/loop.spice", "w").write(chr(10).join(net) + chr(10))
 open(f"{case}/t.sp", "w").write(deck)
 open(f"{case}/.spiceinit", "w").write("set ngbehavior=hsa\n")

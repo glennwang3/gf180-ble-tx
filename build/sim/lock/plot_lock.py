@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.ticker
 
 out, cases = sys.argv[1], sys.argv[2:]
 fig, ax = plt.subplots(4, len(cases), figsize=(7.2 * len(cases), 12), sharex="col", squeeze=False)
@@ -21,10 +22,11 @@ for j, case in enumerate(cases):
     ea[: k // 2] = np.nan                                 # moving-average edges are not valid
     ea[-k // 2:] = np.nan
     a = ax[:, j]
-    a[0].plot(t, (f - ft) / 1e6, lw=0.3, color="0.75", label="instantaneous")
-    a[0].plot(tu, ea / 1e6, lw=1.4, color="C3", label="1 us average")
-    a[0].axhline(0, color="k", lw=0.6)
-    a[0].set_ylabel("f_RF - f_target [MHz]")
+    a[0].plot(t, f / 1e9, lw=0.3, color="0.75", label="instantaneous")
+    a[0].plot(tu, (ea + np.interp(tu, t, ft)) / 1e9, lw=1.4, color="C3", label="1 us average")
+    a[0].plot(t, ft / 1e9, lw=0.8, color="k", ls="--", label="target")
+    a[0].set_ylabel("f_RF [GHz]")
+    a[0].yaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter("%.3f"))
     a[0].legend(loc="lower right")
     a[1].plot(tu, ea / 1e3, lw=1.2, color="C3")
     a[1].axhspan(-50, 50, color="C2", alpha=0.12, label="+-50 kHz (+-21 ppm)")

@@ -26,12 +26,16 @@ import json
 import klayout.db as db
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "..", "tapeout_e03")
 TEAM = "E03"
 STD = "gf180mcu_fd_sc_"
 PAD = {"VDD": "vdd", "VSS": "vss", "RST_N": "reset_n", "CLK_8M": "clk", "UART_RX": "Tx", "PA_DRAIN": "ANT"}
 sys.path.insert(0, HERE)
 import lvs_top as LT  # noqa: E402  (TOP_LABELS, macro reference files)
+BT = LT.BT
+# source top: PLL_COMPACT by default; PFD_VARIANT=ts (+ LF_VARIANT=c10) exports PLL_TSPFD(_C1) into tapeout_e03_ts(c1)
+SRC_TOP = BT.TOP
+OUT = os.path.join(HERE, "..", "tapeout_e03" + ("_ts" if BT.PFD_TS else "") + ("c1" if BT.LF10 else ""))
+SRC_REF = os.path.join(LT.OUT, f"{SRC_TOP}_ref.spice")       # lvs_top.py output for this variant
 
 L = HERE
 # reference file, subckt name in it, GDS cell name in PLL_COMPACT.gds
@@ -53,13 +57,36 @@ def cname(name):
     return name if name.startswith(STD) else f"{TEAM}_{name}"
 
 
+def ts_pfd_ref():
+    """TS_PFD reference in one file: the user's TSPC / gate cells (tspc_check refs) with their subckts renamed to the
+    E03_ GDS cell names (magic's x2_* -> the GDS 2_* names), plus the TS_PFD subckt (renamed later by export_spice)"""
+    P = "/foss/designs/pll_compact"
+    parts = [f"{P}/tspc_check/ref_l028.spice", f"{P}/tspc_check/ref_R_lbl.spice", f"{P}/tspc_check/ref_and2_x.spice",
+             f"{P}/tspc_check/ref_and_x.spice", f"{P}/tspc_check/ref_or_x.spice", f"{P}/pfd/ref_pfd.spice"]
+    txt = "\n".join(re.sub(r"^\.(include|lib)\b.*$", "", open(f).read(), flags=re.M | re.I) for f in parts)
+    ren = [("x2_Input_And_Inv_Input", "2_Input_And_Inv_Input"), ("x2_Input_And", "2_Input_And"),
+           ("x2_Input_Or", "2_Input_Or"), ("SR_FlipFlop", "SR_FlipFlop"), ("R_FlipFlop", "R_FlipFlop")]
+    for old, gds in ren:
+        txt = re.sub(rf"(?<![\w$]){re.escape(old)}(?![\w$])", cname(gds), txt)
+    os.makedirs(LT.OUT, exist_ok=True)
+    f = os.path.join(LT.OUT, "ts_pfd_all.spice")
+    open(f, "w").write(txt)
+    return f
+
+
+if BT.PFD_TS:
+    REFS = [r for r in REFS if r[2] != "Phase_Detector_FE"] + [(ts_pfd_ref(), "TS_PFD", "TS_PFD")]
+if BT.LF10:
+    REFS = [r for r in REFS if r[2] != "PLL_LF_L"] + [(f"{L}/PLL_LF_L10.spice", "PLL_LF_L10", "PLL_LF_L10")]
+
+
 def pnet(net):
     return PAD.get(net, net)
 
 
 def top_labels():
     """the lvs_top.py label set (named top-level nets), pad nets renamed"""
-    land = json.load(open(os.path.join(L, "pins.json")))["land"]
+    land = json.load(open(os.path.join(L, BT.PINS_JSON)))["land"]
     labels, done = [], set()
     for net, ld, x, y in LT.TOP_LABELS:
         labels.append((pnet(net), ld, x, y)); done.add(net)
@@ -70,8 +97,8 @@ def top_labels():
 
 
 def export_gds():
-    ly = db.Layout(); ly.read(os.path.join(L, "PLL_COMPACT.gds"))
-    top = ly.cell("PLL_COMPACT")
+    ly = db.Layout(); ly.read(os.path.join(L, f"{SRC_TOP}.gds"))
+    top = ly.cell(SRC_TOP)
     bb = top.bbox()
     for li in ly.layer_indexes():                       # top-cell labels -> the lvs_top set
         sh = top.shapes(li)
@@ -111,22 +138,22 @@ def export_spice():
         open(f, "w").write(f"* {new}: LVS reference of GDS cell {new} (from {os.path.basename(path)}, subckt {old})\n"
                            + rename_subckt(txt, old, new))
         files.append(f)
-    top = open(os.path.join(L, "lvs_top", "PLL_COMPACT_ref.spice")).read()
+    top = open(SRC_REF).read()
     lines = [l for l in top.splitlines() if not l.lower().startswith(".include")]
     out = []
     for l in lines:
-        if l.startswith(".subckt PLL_COMPACT") or l.startswith("X") or l.startswith("+"):
+        if l.startswith(f".subckt {SRC_TOP} ") or l.startswith("X") or l.startswith("+"):
             for a, b in PAD.items():
                 l = re.sub(rf"(?<![\w\[\]]){re.escape(a)}(?![\w\[\]])", b, l)
             if l.startswith("X"):
                 t = l.split()
                 t[-1] = model.get(t[-1], t[-1])
                 l = " ".join(t)
-            l = l.replace(".subckt PLL_COMPACT ", f".subckt {TEAM} ")
+            l = l.replace(f".subckt {SRC_TOP} ", f".subckt {TEAM} ")
         if l.startswith(".ends"):
             l = f".ends {TEAM}"
         out.append(l)
-    out[0] = (f"* {TEAM} top-level LVS reference (PLL_COMPACT renamed for the tapeout; pads: "
+    out[0] = (f"* {TEAM} top-level LVS reference ({SRC_TOP} renamed for the tapeout; pads: "
               + ", ".join(f"{a}->{b}" for a, b in PAD.items()) + ").\n* Macro subckts: macros/*.spice, "
               "all listed in lvs_config.json LVS_SPICE_FILES.")
     ftop = os.path.join(OUT, "spice", f"{TEAM}_lvs.spice")

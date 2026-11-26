@@ -2,7 +2,7 @@
 <report-database>
  <description>DRC Run Report at</description>
  <original-file/>
- <generator>drc: script='/foss/designs/pll_compact/tapeout_e03/drc/main.drc'</generator>
+ <generator>drc: script='/foss/designs/pll_compact/tapeout_e03_tsc1/drc/main.drc'</generator>
  <top-cell>E03</top-cell>
  <tags>
  </tags>

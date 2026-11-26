@@ -36,6 +36,25 @@ PLACE = {
     "tx": (f"{REPO}/tapeout/ble_tx_uart/gds/ble_tx_uart.gds", "ble_tx_uart", 0, False, -340.0, -95.0),
 }
 
+# PFD_VARIANT=ts: the three-state PFD (TS_PFD, Centurelli et al. Fig. 4, from the user's TSPC cells) replaces the A01
+# Phase_Detector_FE; it sits above the divider / bias (x 76 .. 156, y 72 .. 98).  Writes PLL_TSPFD.
+PFD_TS = os.environ.get("PFD_VARIANT") == "ts"
+TS0 = (76.0, 98.5)
+TS_PIN = {"R": (4.0, -26.0), "V": (10.0, -26.0), "DN": (16.0, -26.0), "UPB": (22.0, -26.0),
+          "vss": (30.0, -26.0), "3v3": (38.0, -26.0)}         # TS_PFD boundary ports (M5, below its bottom row)
+ts_pt = lambda name: (round(TS0[0] + TS_PIN[name][0], 3), round(TS0[1] + TS_PIN[name][1], 3))
+PINS_JSON = "pins_tspfd.json" if PFD_TS else "pins.json"
+if PFD_TS:
+    TOP = "PLL_TSPFD"
+    del PLACE["pfd"]
+    PLACE["tspfd"] = ("/foss/designs/Tri_State_Phase_Detector/TS_PFD.gds", "TS_PFD", 0, False, *TS0)
+# LF_VARIANT=c10: PLL_LF_L10 (C1 10 pF: + 8.7 pF MIM row above the filter, build_lf10.py).  Writes <TOP>_C1.
+LF10 = os.environ.get("LF_VARIANT") == "c10"
+if LF10:
+    TOP = TOP + "_C1"
+    PINS_JSON = PINS_JSON.replace(".json", "_c1.json")
+    PLACE["lf"] = (f"{HERE}/PLL_LF_L10.gds", "PLL_LF_L10", 0, False, 176.7, -100.67)
+
 
 def trans(rot, mirror, dx, dy):
     return db.Trans(rot, mirror, round(dx * U), round(dy * U))

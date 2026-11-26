@@ -1,0 +1,10 @@
+.subckt x2_Input_And_Inv_Input A B Y A_b nand_out 3v3 vss
+XM1 A_b A 3v3 3v3 pfet_03v3 L=0.28u W=1.12u
+XM2 A_b A vss vss nfet_03v3 L=0.28u W=0.56u
+XM3 nand_out A_b 3v3 3v3 pfet_03v3 L=0.28u W=1.12u
+XM4 nand_out B 3v3 3v3 pfet_03v3 L=0.28u W=1.12u
+XM5 nand_out B mid vss nfet_03v3 L=0.28u W=0.56u
+XM6 mid A_b vss vss nfet_03v3 L=0.28u W=0.56u
+XM7 Y nand_out 3v3 3v3 pfet_03v3 L=0.28u W=1.12u
+XM8 Y nand_out vss vss nfet_03v3 L=0.28u W=0.56u
+.ends

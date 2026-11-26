@@ -1,19 +1,4 @@
 
-Circuit 1 cell pfet_03v3 and Circuit 2 cell pfet_03v3 are black boxes.
-Warning: Equate pins:  cell pfet_03v3 is a placeholder, treated as a black box.
-Warning: Equate pins:  cell pfet_03v3 is a placeholder, treated as a black box.
-
-Subcircuit pins:
-Circuit 1: pfet_03v3                       |Circuit 2: pfet_03v3                       
--------------------------------------------|-------------------------------------------
-1                                          |1                                          
-2                                          |2                                          
-3                                          |3                                          
-4                                          |4                                          
----------------------------------------------------------------------------------------
-Cell pin lists are equivalent.
-Device classes pfet_03v3 and pfet_03v3 are equivalent.
-
 Circuit 1 cell nfet_03v3 and Circuit 2 cell nfet_03v3 are black boxes.
 Warning: Equate pins:  cell nfet_03v3 is a placeholder, treated as a black box.
 Warning: Equate pins:  cell nfet_03v3 is a placeholder, treated as a black box.
@@ -28,6 +13,21 @@ Circuit 1: nfet_03v3                       |Circuit 2: nfet_03v3
 ---------------------------------------------------------------------------------------
 Cell pin lists are equivalent.
 Device classes nfet_03v3 and nfet_03v3 are equivalent.
+
+Circuit 1 cell pfet_03v3 and Circuit 2 cell pfet_03v3 are black boxes.
+Warning: Equate pins:  cell pfet_03v3 is a placeholder, treated as a black box.
+Warning: Equate pins:  cell pfet_03v3 is a placeholder, treated as a black box.
+
+Subcircuit pins:
+Circuit 1: pfet_03v3                       |Circuit 2: pfet_03v3                       
+-------------------------------------------|-------------------------------------------
+1                                          |1                                          
+2                                          |2                                          
+3                                          |3                                          
+4                                          |4                                          
+---------------------------------------------------------------------------------------
+Cell pin lists are equivalent.
+Device classes pfet_03v3 and pfet_03v3 are equivalent.
 
 Circuit 1 cell nfet_05v0 and Circuit 2 cell nfet_05v0 are black boxes.
 Warning: Equate pins:  cell nfet_05v0 is a placeholder, treated as a black box.
@@ -114,12 +114,17 @@ Cell pin lists are equivalent.
 Device classes ppolyf_u_1k and ppolyf_u_1k are equivalent.
 Flattening unmatched subcell E03_32_33_Complete_Prescaler in circuit E03 (1)(1 instance)
 Flattening unmatched subcell E03_ble_feedback_divider in circuit E03 (1)(1 instance)
-Flattening unmatched subcell E03_Phase_Detector_FE in circuit E03 (1)(1 instance)
 Flattening unmatched subcell E03_Charge_Pump_FE in circuit E03 (1)(1 instance)
 Flattening unmatched subcell E03_ble_tx_uart in circuit E03 (1)(1 instance)
 Flattening unmatched subcell E03_Differential_VCO_LC in circuit E03 (1)(1 instance)
+Flattening unmatched subcell E03_TS_PFD in circuit E03 (1)(1 instance)
+Flattening unmatched subcell E03_SR_FlipFlop in circuit E03 (1)(2 instances)
+Flattening unmatched subcell E03_R_FlipFlop in circuit E03 (1)(2 instances)
+Flattening unmatched subcell E03_2_Input_And in circuit E03 (1)(1 instance)
+Flattening unmatched subcell E03_2_Input_Or in circuit E03 (1)(2 instances)
+Flattening unmatched subcell E03_2_Input_And_Inv_Input in circuit E03 (1)(3 instances)
 Flattening unmatched subcell E03_VCO_REG_L in circuit E03 (1)(1 instance)
-Flattening unmatched subcell E03_PLL_LF_L in circuit E03 (1)(1 instance)
+Flattening unmatched subcell E03_PLL_LF_L10 in circuit E03 (1)(1 instance)
 Flattening unmatched subcell E03_RF_CHAIN_PA in circuit E03 (1)(1 instance)
 Flattening unmatched subcell E03_PLL_BIAS in circuit E03 (1)(1 instance)
 
@@ -134,29 +139,109 @@ pfet_05v0 (12061->11350)                   |pfet_05v0 (12061->11350)
 nfet_05v0 (11934->11346)                   |nfet_05v0 (11934->11346)                   
 cap_nmos_03v3 (213->12)                    |cap_nmos_03v3 (213->12)                    
 ppolyf_u (8->2)                            |ppolyf_u (8->2)                            
-pfet_03v3 (131->66)                        |pfet_03v3 (131->66)                        
+pfet_03v3 (178->113)                       |pfet_03v3 (178->113)                       
 ppolyf_u_1k (91->16)                       |ppolyf_u_1k (91->16)                       
-nfet_03v3 (120->89)                        |nfet_03v3 (120->89)                        
-cap_mim_2f0_m5m6_noshield (17)             |cap_mim_2f0_m5m6_noshield (17)             
+nfet_03v3 (167->136)                       |nfet_03v3 (167->136)                       
+cap_mim_2f0_m5m6_noshield (23)             |cap_mim_2f0_m5m6_noshield (23)             
 sc_diode (2)                               |sc_diode (2)                               
 diode_nd2ps_06v0 (1)                       |diode_nd2ps_06v0 (1)                       
 diode_pd2nw_06v0 (1)                       |diode_pd2nw_06v0 (1)                       
-Number of devices: 22902                   |Number of devices: 22902                   
-Number of nets: 12522                      |Number of nets: 12522                      
+Number of devices: 23002                   |Number of devices: 23002                   
+Number of nets: 12573                      |Number of nets: 12573                      
 ---------------------------------------------------------------------------------------
 Resolving symmetries by property value.
 Resolving symmetries by pin name.
 Resolving symmetries by net name.
-Netlists match with 70 symmetries.
+Netlists match with 71 symmetries with property errors.
+nfet_03v3:21957 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF3/nfet_03v3:M6:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 5.6e-07   circuit2: 3.6e-07   (delta=43.5%, cutoff=1%)
+nfet_03v3:4905 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF4/nfet_03v3:M6:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 5.6e-07   circuit2: 3.6e-07   (delta=43.5%, cutoff=1%)
+nfet_03v3:8818 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF3/nfet_03v3:M10:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 5.6e-07   circuit2: 3.6e-07   (delta=43.5%, cutoff=1%)
+nfet_03v3:16685 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF4/nfet_03v3:M10:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 5.6e-07   circuit2: 3.6e-07   (delta=43.5%, cutoff=1%)
+nfet_03v3:23201 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF3/nfet_03v3:M11:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 5.6e-07   circuit2: 3.6e-07   (delta=43.5%, cutoff=1%)
+nfet_03v3:6174 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF4/nfet_03v3:M11:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 5.6e-07   circuit2: 3.6e-07   (delta=43.5%, cutoff=1%)
+nfet_03v3:21397 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF4/nfet_03v3:M12:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 5.6e-07   circuit2: 3.6e-07   (delta=43.5%, cutoff=1%)
+nfet_03v3:20097 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF4/nfet_03v3:M7:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 5.6e-07   circuit2: 3.6e-07   (delta=43.5%, cutoff=1%)
+nfet_03v3:2112 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF3/nfet_03v3:M12:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 5.6e-07   circuit2: 3.6e-07   (delta=43.5%, cutoff=1%)
+nfet_03v3:920 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF3/nfet_03v3:M7:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 5.6e-07   circuit2: 3.6e-07   (delta=43.5%, cutoff=1%)
+nfet_03v3:15165 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF4/nfet_03v3:M3:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 5.6e-07   circuit2: 3.6e-07   (delta=43.5%, cutoff=1%)
+nfet_03v3:7243 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF3/nfet_03v3:M3:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 5.6e-07   circuit2: 3.6e-07   (delta=43.5%, cutoff=1%)
+nfet_03v3:15292 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF3/nfet_03v3:M8:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 5.6e-07   circuit2: 3.6e-07   (delta=43.5%, cutoff=1%)
+nfet_03v3:13456 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF4/nfet_03v3:M8:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 5.6e-07   circuit2: 3.6e-07   (delta=43.5%, cutoff=1%)
+pfet_03v3:8126 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF3/pfet_03v3:M2:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 1.12e-06   circuit2: 7.2e-07   (delta=43.5%, cutoff=1%)
+pfet_03v3:14012 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF3/pfet_03v3:M4:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 1.12e-06   circuit2: 7.2e-07   (delta=43.5%, cutoff=1%)
+pfet_03v3:22854 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF4/pfet_03v3:M2:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 1.12e-06   circuit2: 7.2e-07   (delta=43.5%, cutoff=1%)
+pfet_03v3:8749 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF4/pfet_03v3:M4:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 1.12e-06   circuit2: 7.2e-07   (delta=43.5%, cutoff=1%)
+pfet_03v3:23828 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF4/pfet_03v3:M5:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 1.12e-06   circuit2: 7.2e-07   (delta=43.5%, cutoff=1%)
+pfet_03v3:9158 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF3/pfet_03v3:M5:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 1.12e-06   circuit2: 7.2e-07   (delta=43.5%, cutoff=1%)
+pfet_03v3:16499 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF3/pfet_03v3:M13:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 1.12e-06   circuit2: 7.2e-07   (delta=43.5%, cutoff=1%)
+pfet_03v3:6308 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF4/pfet_03v3:M13:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 1.12e-06   circuit2: 7.2e-07   (delta=43.5%, cutoff=1%)
+pfet_03v3:18311 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF3/pfet_03v3:M9:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 1.12e-06   circuit2: 7.2e-07   (delta=43.5%, cutoff=1%)
+pfet_03v3:4422 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF4/pfet_03v3:M9:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 1.12e-06   circuit2: 7.2e-07   (delta=43.5%, cutoff=1%)
+pfet_03v3:12978 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF3/pfet_03v3:M1:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 1.12e-06   circuit2: 7.2e-07   (delta=43.5%, cutoff=1%)
+pfet_03v3:7696 vs. E03_TS_PFD:tspfd/E03_R_FlipFlop:FF4/pfet_03v3:M1:
+ l circuit1: 2.8e-07   circuit2: 3.6e-07   (delta=25%, cutoff=1%)
+ w circuit1: 1.12e-06   circuit2: 7.2e-07   (delta=43.5%, cutoff=1%)
 
 Subcircuit pins:
 Circuit 1: E03                             |Circuit 2: E03                             
 -------------------------------------------|-------------------------------------------
 ANT                                        |ANT                                        
+VCTRL                                      |VCTRL                                      
 VDD_VCO                                    |VDD_VCO                                    
-REF_1M                                     |REF_1M                                     
+UPB                                        |UPB                                        
 CORE_CLK                                   |CORE_CLK                                   
 PRESCALED                                  |PRESCALED                                  
+DN                                         |DN                                         
 FB_1M                                      |FB_1M                                      
 reset_n                                    |reset_n                                    
 vss                                        |vss                                        
@@ -176,21 +261,22 @@ CODE_VALID                                 |CODE_VALID
 SYM_STROBE                                 |SYM_STROBE                                 
 MC                                         |MC                                         
 CP_IBIAS                                   |CP_IBIAS                                   
-VCTRL                                      |VCTRL                                      
 TAIL_BIAS                                  |TAIL_BIAS                                  
 CFG[4]                                     |CFG[4]                                     
 CFG[2]                                     |CFG[2]                                     
 CFG[1]                                     |CFG[1]                                     
 CFG[3]                                     |CFG[3]                                     
-DN                                         |DN                                         
 vdd                                        |vdd                                        
 VTUNE                                      |VTUNE                                      
+REF_1M                                     |REF_1M                                     
 CFG[5]                                     |CFG[5]                                     
-UPB                                        |UPB                                        
 RF_DRV1                                    |RF_DRV1                                    
 ---------------------------------------------------------------------------------------
 Cell pin lists are equivalent.
 Device classes E03 and E03 are equivalent.
 
 Final result: Circuits match uniquely.
-.
+Property errors were found.
+
+The following cells had property errors:
+ E03

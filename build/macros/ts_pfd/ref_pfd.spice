@@ -1,0 +1,20 @@
+* Three-state PFD (Centurelli et al., Fig. 4) from the fixed cells - LVS reference
+.include /foss/designs/pll_compact/tspc_check/ref_l028.spice
+.include /foss/designs/pll_compact/tspc_check/ref_R_lbl.spice
+.include /foss/designs/pll_compact/tspc_check/ref_and2_x.spice
+.include /foss/designs/pll_compact/tspc_check/ref_and_x.spice
+.include /foss/designs/pll_compact/tspc_check/ref_or_x.spice
+.subckt TS_PFD R V UP UPB DN 3v3 vss
+* SR_FlipFlop 3v3 D set CLK_In CLK_Out CLK_Outb reset vss net3 net5 net8
+XFF1 3v3 3v3 SR R UP UPq RS vss a3 a5 a8 SR_FlipFlop
+XFF2 3v3 3v3 SV V DN DNq RS vss b3 b5 b8 SR_FlipFlop
+* R_FlipFlop D CLK_In 3v3 vss reset CLK_Out CLK_Outb net2 net5
+XFF3 FZR R 3v3 vss SR ER ERb c2 c5 R_FlipFlop
+XFF4 FZV V 3v3 vss SV EV EVb d2 d5 R_FlipFlop
+XRS UP DN RS rsn 3v3 vss x2_Input_And
+XFZR UP RS FZR fzrn 3v3 vss x2_Input_Or
+XFZV DN RS FZV fzvn 3v3 vss x2_Input_Or
+XSR FZR ER SR sra srn 3v3 vss x2_Input_And_Inv_Input
+XSV FZV EV SV sva svn 3v3 vss x2_Input_And_Inv_Input
+XUPB UP 3v3 UPB upa upn 3v3 vss x2_Input_And_Inv_Input
+.ends
